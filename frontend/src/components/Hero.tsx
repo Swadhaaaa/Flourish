@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Sparkles, Play, Shield, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 
 export function Hero() {
@@ -50,9 +51,9 @@ export function Hero() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
                 >
-                    <button className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(238,180,180,0.3)] hover:shadow-[0_0_30px_rgba(238,180,180,0.5)]">
+                    <Link to="/login" className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(238,180,180,0.3)] hover:shadow-[0_0_30px_rgba(238,180,180,0.5)]">
                         Start Your Journey
-                    </button>
+                    </Link>
                     <button className="px-8 py-3 rounded-full bg-surface border border-white/10 text-white font-medium hover:bg-white/5 transition-all flex items-center gap-2">
                         <Play className="w-4 h-4 fill-current" />
                         Watch Demo
