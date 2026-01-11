@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+
+# Environment Variables
+.env
+.env.local
+
+# Database
+*.sqlite
+*.db
+
+# Logs
+*.log
