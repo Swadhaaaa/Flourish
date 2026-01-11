@@ -29,7 +29,8 @@ export function DashboardOverview() {
         // 2. Fetch AI Boundary Check (The "Scheduler" simulation)
         const fetchBoundaryStatus = async () => {
             try {
-                const res = await fetch("http://localhost:8000/api/ai/boundary-check");
+                const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+                const res = await fetch(`${API_URL}/api/ai/boundary-check`);
                 const data = await res.json();
                 setBoundaryAlert(data);
             } catch (error) {
@@ -41,7 +42,8 @@ export function DashboardOverview() {
         // 3. Fetch Workload Insight
         const fetchWorkloadInsight = async () => {
             try {
-                const res = await fetch("http://localhost:8000/api/ai/workload-insight");
+                const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+                const res = await fetch(`${API_URL}/api/ai/workload-insight`);
                 const data = await res.json();
                 setWorkloadInsight(data);
             } catch (error) {

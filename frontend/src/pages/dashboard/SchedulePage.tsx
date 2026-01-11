@@ -10,7 +10,8 @@ export function SchedulePage() {
         if (!input.trim()) return;
         setIsLoading(true);
         try {
-            const res = await fetch("http://localhost:8000/api/ai/auto-schedule", {
+            const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+            const res = await fetch(`${API_URL}/api/ai/auto-schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: input }),
