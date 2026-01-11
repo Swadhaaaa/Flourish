@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+xgboost
+faker
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+langchain
+langchain-community
+openai
+pytest
+httpx
