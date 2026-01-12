@@ -315,8 +315,74 @@ class AIService:
         if not insights:
             insights.append("Your reflection suggests a balanced state. Keep monitoring your energy.")
 
+        # Music Recommendation Logic
+        if metrics["StressLevel"] > 7 or metrics["BurnoutRisk"] == "High":
+            metrics["music_recommendation"] = {
+                "track": "Rain Sounds",
+                "category": "Calm",
+                "reason": "High stress detected. Rain sounds can lower cortisol levels."
+            }
+        elif metrics["WorkHoursPerWeek"] > 50 or exh_count > 0:
+            metrics["music_recommendation"] = {
+                "track": "Deep Focus (40Hz)",
+                "category": "Focus",
+                "reason": "High workload detected. Gamma waves (40Hz) help maintain concentration."
+            }
+        elif metrics["SleepQuality"] == "Low":
+            metrics["music_recommendation"] = {
+                "track": "Theta Waves",
+                "category": "Sleep",
+                "reason": "Sleep issues detected. Theta waves encourage deep relaxation."
+            }
+        else:
+            metrics["music_recommendation"] = {
+                "track": "Forest Ambience",
+                "category": "Flow",
+                "reason": "Balanced state. Nature sounds promote sustained creative flow."
+            }
+
         return {
             "metrics": metrics,
             "insights": insights,
             "analysis_summary": f"Detected {metrics['BurnoutRisk']} risk indicators based on emotional tone."
         }
+
+    def get_workload_insight(self, priority_tasks: int, meeting_hours: float):
+        """
+        Returns a workload analysis summary and music recommendation.
+        """
+        insight = {
+            "title": "Manageable Load",
+            "summary": "Your schedule looks balanced.",
+            "action": "Plan Ahead",
+            "recommendation": "Take 15-min breaks every 2 hours.",
+            "music_recommendation": {
+                "track": "Lo-Fi Beats",
+                "category": "Flow"
+            }
+        }
+        
+        if meeting_hours > 4:
+            insight = {
+                "title": "Meeting Heavy",
+                "summary": f"{meeting_hours} hours of meetings today.",
+                "action": "Protect Focus Time",
+                "recommendation": "Block out 1 hour for deep work before your calls.",
+                "music_recommendation": {
+                    "track": "Rain Sounds",
+                    "category": "Calm"
+                }
+            }
+        elif priority_tasks >= 3:
+            insight = {
+                "title": "High Focus Required",
+                "summary": f"{priority_tasks} high-priority tasks pending.",
+                "action": "Start Deep Work",
+                "recommendation": "Tackle the hardest task first. Use the Pomodoro technique.",
+                "music_recommendation": {
+                    "track": "Deep Focus (40Hz)",
+                    "category": "Focus"
+                }
+            }
+            
+        return insight

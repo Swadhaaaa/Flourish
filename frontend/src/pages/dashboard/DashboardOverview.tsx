@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { auth, db } from "../../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { TrendingUp, Activity, Brain, Clock, AlertCircle, ChevronRight, CheckCircle2, Circle, Heart } from "lucide-react";
+import { TrendingUp, Activity, Brain, Clock, ChevronRight, CheckCircle2, Circle, Heart, Music, Play } from "lucide-react";
+import { MusicPlayer } from "../../components/MusicPlayer";
 
 export function DashboardOverview() {
     const [userName, setUserName] = useState("Friend");
-    const [boundaryAlert, setBoundaryAlert] = useState<any>(null);
     const [workloadInsight, setWorkloadInsight] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -26,20 +26,7 @@ export function DashboardOverview() {
             }
         });
 
-        // 2. Fetch AI Boundary Check (The "Scheduler" simulation)
-        const fetchBoundaryStatus = async () => {
-            try {
-                const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-                const res = await fetch(`${API_URL}/api/ai/boundary-check`);
-                const data = await res.json();
-                setBoundaryAlert(data);
-            } catch (error) {
-                console.error("Failed to fetch AI brain:", error);
-            }
-        };
-        fetchBoundaryStatus();
-
-        // 3. Fetch Workload Insight
+        // 2. Fetch Workload Insight
         const fetchWorkloadInsight = async () => {
             try {
                 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -55,8 +42,23 @@ export function DashboardOverview() {
         return () => unsubscribe();
     }, []);
 
+    const [isMusicOpen, setIsMusicOpen] = useState(false);
+    const [suggestedTrack, setSuggestedTrack] = useState<string | undefined>(undefined);
+
+    const handleOpenMusic = (track?: string) => {
+        setSuggestedTrack(track);
+        setIsMusicOpen(true);
+        setIsModalOpen(false); // Close modal if open
+    };
+
     return (
         <div className="space-y-8">
+            <MusicPlayer
+                isOpen={isMusicOpen}
+                onClose={() => setIsMusicOpen(false)}
+                initialTrack={suggestedTrack}
+            />
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -118,16 +120,64 @@ export function DashboardOverview() {
                                 <div className="flex-1">
                                     <h3 className="text-lg font-semibold text-white mb-1">{workloadInsight.title}</h3>
                                     <p className="text-muted mb-4">{workloadInsight.summary}</p>
-                                    <button
-                                        onClick={() => setIsModalOpen(true)}
-                                        className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-sm transition-all hover:border-primary/50"
-                                    >
-                                        {workloadInsight.action}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setIsModalOpen(true)}
+                                            className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-sm transition-all hover:border-primary/50"
+                                        >
+                                            {workloadInsight.action}
+                                        </button>
+                                        {workloadInsight.music_recommendation && (
+                                            <button
+                                                onClick={() => handleOpenMusic(workloadInsight.music_recommendation.track)}
+                                                className="px-5 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-medium text-sm transition-all flex items-center gap-2"
+                                            >
+                                                <Music size={14} />
+                                                Play "{workloadInsight.music_recommendation.track}"
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Sonic Sanctuary Card */}
+                    <div className="p-1 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20 shadow-lg shadow-purple-900/10">
+                        <div className="p-6 rounded-[30px] bg-[#0f0814]/90 backdrop-blur-xl h-full flex items-center justify-between relative overflow-hidden group">
+                            {/* Ambient Background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 rounded-lg bg-white/10 text-white">
+                                        <Music size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white">Sonic Sanctuary</h3>
+                                </div>
+                                <p className="text-muted text-sm mb-4 max-w-sm">
+                                    Escape into curated ambient soundscapes designed to restore your focus and calm.
+                                </p>
+                                <button
+                                    onClick={() => handleOpenMusic()}
+                                    className="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-white/10"
+                                >
+                                    <Play size={16} fill="currentColor" />
+                                    Enter Sanctuary
+                                </button>
+                            </div>
+
+                            {/* Visual Decor */}
+                            <div className="hidden sm:flex gap-1 items-end h-16 mr-8 opacity-60">
+                                <div className="w-2 h-8 bg-indigo-400 rounded-full animate-pulse" />
+                                <div className="w-2 h-12 bg-purple-400 rounded-full animate-pulse delay-75" />
+                                <div className="w-2 h-16 bg-pink-400 rounded-full animate-pulse delay-150" />
+                                <div className="w-2 h-10 bg-indigo-400 rounded-full animate-pulse delay-100" />
+                                <div className="w-2 h-6 bg-purple-400 rounded-full animate-pulse delay-200" />
+                            </div>
+                        </div>
+                    </div>
+
 
                     {/* Today's Focus */}
                     <div className="p-6 rounded-3xl bg-surface/50 border border-white/10 backdrop-blur-sm">
@@ -158,23 +208,6 @@ export function DashboardOverview() {
                         </div>
                     </div>
 
-                    {/* Critical Boundary Alert (Dynamic from AI) */}
-                    {boundaryAlert && boundaryAlert.status === "red" && (
-                        <div className="p-6 rounded-3xl bg-rose-950/20 border border-rose-500/20 backdrop-blur-sm flex items-start gap-4 animate-pulse">
-                            <div className="p-2 rounded-full bg-rose-500/10 text-rose-400 mt-1">
-                                <AlertCircle className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-rose-200 mb-1">{boundaryAlert.title}</h3>
-                                <p className="text-rose-200/70 text-sm mb-3">
-                                    {boundaryAlert.message}
-                                </p>
-                                <button className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 text-xs font-semibold transition-all">
-                                    Configure Boundaries
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Right Column (1/3) */}
@@ -187,6 +220,16 @@ export function DashboardOverview() {
                             <ActionButton icon={Clock} label="View Schedule" />
                             <ActionButton icon={Heart} label="Track Mood" />
                             <ActionButton icon={Brain} label="Mental Check-in" />
+                            <button
+                                onClick={() => handleOpenMusic('focus')}
+                                className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Music className="w-4 h-4 text-muted group-hover:text-white transition-colors" />
+                                    <span className="text-sm font-medium text-white">Focus Mode</span>
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-muted/50 group-hover:text-white transition-colors" />
+                            </button>
                         </div>
                     </div>
 
@@ -235,21 +278,42 @@ export function DashboardOverview() {
                         </div>
 
                         <div className="bg-white/5 rounded-2xl p-6 mb-6">
-                            <p className="text-white text-lg leading-relaxed">
+                            <p className="text-white text-lg leading-relaxed mb-4">
                                 {workloadInsight.recommendation}
                             </p>
+                            {workloadInsight.music_recommendation && (
+                                <div className="p-3 rounded-xl bg-black/20 border border-white/5 flex items-center gap-3">
+                                    <div className="p-2 rounded-full bg-primary/20 text-primary">
+                                        <Music size={16} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted uppercase font-bold">Suggested Ambience</p>
+                                        <p className="text-white text-sm font-medium">{workloadInsight.music_recommendation.track}</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-col sm:flex-row">
                             <button
                                 onClick={() => setIsModalOpen(false)}
                                 className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
                             >
                                 Dismiss
                             </button>
-                            <button className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-                                Apply Change
-                            </button>
+                            {workloadInsight.music_recommendation ? (
+                                <button
+                                    onClick={() => handleOpenMusic(workloadInsight.music_recommendation.track)}
+                                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary to-violet-600 text-white font-semibold hover:contrast-125 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                                >
+                                    <Play size={18} fill="currentColor" />
+                                    Listen Now
+                                </button>
+                            ) : (
+                                <button className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+                                    Apply Change
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
