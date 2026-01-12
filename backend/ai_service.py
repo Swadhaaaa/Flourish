@@ -192,3 +192,131 @@ class AIService:
              "schedule": schedule,
              "analysis": "Optimized for Peak Performance: Heavy lifting scheduled for 9AM."
         }
+    def analyze_work_reflection(self, text: str):
+        """
+        Analyzes a journal entry/reflection to infer quantitative metrics and qualitative insights.
+        """
+        import re
+        lower_text = text.lower()
+        
+        # Base metrics (1-10 scale)
+        metrics = {
+            "StressLevel": 5,
+            "JobSatisfaction": 6,
+            "WorkLifeBalanceScore": 6,
+            "SleepQuality": "Medium",
+            "BurnoutRisk": "Low",
+            "EmotionalExhaustion": 4, 
+            "Depersonalization": 3,   
+            "PersonalAccomplishment": 7,
+            "WorkHoursPerWeek": 40,  # Default
+            "SleepHours": 7.0        # Default
+        }
+        
+        # --- Heuristic Analysis Dictionaries ---
+        negative_keywords = [
+            "terrible", "burnout", "awful", "hate", "quit", "crying", "anxious", "anxiety", 
+            "panic", "drowning", "overwhelmed", "hopeless", "can't cope", "dread"
+        ]
+        
+        exhaustion_keywords = [
+            "tired", "exhausted", "exhausting", "busy", "long hours", "overtime", 
+            "deadlines", "pressure", "drained", "fatigue", "no energy", "depleted"
+        ]
+        
+        positive_keywords = [
+            "great", "love", "excited", "happy", "win", "accomplished", "proud", 
+            "grateful", "connection", "supported", "energized", "flow", "learning"
+        ]
+        
+        sleep_negative_keywords = [
+            "insomnia", "awake", "couldn't sleep", "barely sleep", "restless", "woke up"
+        ]
+
+        detachment_keywords = [
+            "don't care", "numb", "cynical", "whatever", "boring", "useless", 
+            "pointless", "robot", "going through motions"
+        ]
+
+        # --- Regex Extraction for Hours ---
+        # Look for patterns like "10 hours", "9-10 hours", "6 hrs"
+        work_hours_match = re.search(r'(\d+)(?:-(\d+))?\s*(?:hours?|hrs?)\s*(?:a day|daily|work)', lower_text)
+        if work_hours_match:
+            # If range "9-10", take average. If single "10", take value.
+            val = float(work_hours_match.group(1))
+            if work_hours_match.group(2):
+                val = (val + float(work_hours_match.group(2))) / 2
+            
+            # Convert daily to weekly if detected (assuming 5 days)
+            # Simple heuristic: if < 16, assume daily. If > 20, assume weekly.
+            if val < 16:
+                 metrics["WorkHoursPerWeek"] = val * 5
+            else:
+                 metrics["WorkHoursPerWeek"] = val
+
+        sleep_hours_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\s*(?:sleep|night)', lower_text)
+        if sleep_hours_match:
+             metrics["SleepHours"] = float(sleep_hours_match.group(1))
+
+        # --- Scoring Logic ---
+        
+        # Check specific keyword counts
+        neg_count = sum(1 for w in negative_keywords if w in lower_text)
+        exh_count = sum(1 for w in exhaustion_keywords if w in lower_text)
+        pos_count = sum(1 for w in positive_keywords if w in lower_text)
+        sleep_count = sum(1 for w in sleep_negative_keywords if w in lower_text)
+        detach_count = sum(1 for w in detachment_keywords if w in lower_text)
+
+        # Update Metrics based on counts
+        if neg_count > 0 or exh_count > 0:
+            metrics["StressLevel"] = min(10, 5 + (neg_count * 2) + exh_count)
+            metrics["JobSatisfaction"] = max(1, 6 - neg_count - (exh_count * 0.5))
+            metrics["EmotionalExhaustion"] = min(10, 4 + exh_count + (neg_count * 1.5))
+            metrics["WorkLifeBalanceScore"] = max(1, 6 - exh_count)
+
+        if pos_count > 0:
+            metrics["JobSatisfaction"] = min(10, metrics["JobSatisfaction"] + (pos_count * 1.5))
+            metrics["PersonalAccomplishment"] = min(10, 7 + pos_count)
+            metrics["StressLevel"] = max(1, metrics["StressLevel"] - pos_count)
+            metrics["EmotionalExhaustion"] = max(1, metrics["EmotionalExhaustion"] - pos_count)
+
+        if sleep_count > 0:
+            metrics["SleepQuality"] = "Low"
+        
+        if metrics["SleepHours"] < 6:
+             metrics["SleepQuality"] = "Low"
+             metrics["StressLevel"] = min(10, metrics["StressLevel"] + 1)
+             metrics["EmotionalExhaustion"] = min(10, metrics["EmotionalExhaustion"] + 1)
+        
+        if detach_count > 0:
+            metrics["Depersonalization"] = min(10, 3 + (detach_count * 2))
+            metrics["JobSatisfaction"] = max(1, metrics["JobSatisfaction"] - detach_count)
+
+        # Calculate Overall Burnout Risk
+        # Formula: High Exhaustion + High Depersonalization + Low Accomplishment = Burnout
+        risk_score = (metrics["EmotionalExhaustion"] * 0.5) + (metrics["Depersonalization"] * 0.3) + ((10 - metrics["PersonalAccomplishment"]) * 0.2)
+        
+        if risk_score > 7 or (metrics["EmotionalExhaustion"] > 8 and metrics["SleepHours"] < 6):
+            metrics["BurnoutRisk"] = "High"
+        elif risk_score > 4:
+            metrics["BurnoutRisk"] = "Moderate"
+
+        # Generate Insights
+        insights = []
+        if metrics["BurnoutRisk"] == "High":
+            insights.append("You are showing signs of high emotional exhaustion. Prioritize rest immediately.")
+        if metrics["SleepQuality"] == "Low" or metrics["SleepHours"] < 6:
+            insights.append(f"Your sleep ({metrics['SleepHours']}h) is below recommended levels. Consider a 'no screens' rule after 9 PM.")
+        if metrics["PersonalAccomplishment"] > 8:
+            insights.append("You're continuously achieving great things. Take a moment to celebrate!")
+        if metrics["WorkHoursPerWeek"] > 50:
+             insights.append(f"You are working ~{metrics['WorkHoursPerWeek']} hours/week. This is a major burnout risk factor.")
+
+        if not insights:
+            insights.append("Your reflection suggests a balanced state. Keep monitoring your energy.")
+
+        return {
+            "metrics": metrics,
+            "insights": insights,
+            "analysis_summary": f"Detected {metrics['BurnoutRisk']} risk indicators based on emotional tone."
+        }

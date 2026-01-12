@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Smile, Meh, Frown, Sparkles, Wind, PenLine } from "lucide-react";
+import { Smile, Meh, Frown, Sparkles, Wind, PenLine, Activity, Brain, Heart, Zap } from "lucide-react";
 
 export function WellnessPage() {
     const [mood, setMood] = useState<string | null>(null);
     const [reflection, setReflection] = useState("");
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysis, setAnalysis] = useState<any>(null);
 
     const moods = [
         { icon: Smile, label: "Great", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
@@ -12,6 +14,25 @@ export function WellnessPage() {
         { icon: Frown, label: "Low", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
         { icon: Frown, label: "Stressed", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
     ];
+
+    const handleSaveReflection = async () => {
+        if (!reflection.trim()) return;
+        setIsAnalyzing(true);
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+            const res = await fetch(`${API_URL}/api/ai/analyze-reflection`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: reflection })
+            });
+            const data = await res.json();
+            setAnalysis(data);
+        } catch (error) {
+            console.error("Failed to analyze reflection", error);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
@@ -68,11 +89,69 @@ export function WellnessPage() {
                         </div>
                     </div>
 
-                    <div className="mt-4 flex justify-end">
-                        <button className="px-6 py-2 rounded-full bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30 transition-all font-medium text-sm">
-                            Save Reflection
+                    <div className="mt-4 flex justify-between items-center">
+                        <span className="text-xs text-muted italic">
+                            {isAnalyzing ? "AI is analyzing your reflection..." : "Your entries remain private."}
+                        </span>
+                        <button
+                            onClick={handleSaveReflection}
+                            disabled={isAnalyzing || !reflection}
+                            className="px-6 py-2 rounded-full bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30 transition-all font-medium text-sm flex items-center gap-2">
+                            {isAnalyzing ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                            {isAnalyzing ? "Analyzing..." : "Save & Analyze"}
                         </button>
                     </div>
+
+                    {/* Analysis Results */}
+                    {analysis && (
+                        <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                    <Brain className="w-5 h-5 text-primary" /> AI Insights
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <MetricCard
+                                        label="Stress Level"
+                                        value={analysis.metrics.StressLevel}
+                                        max={10}
+                                        icon={Activity}
+                                        color={analysis.metrics.StressLevel > 7 ? "text-rose-400" : "text-emerald-400"}
+                                    />
+                                    <MetricCard
+                                        label="Burnout Risk"
+                                        value={analysis.metrics.BurnoutRisk}
+                                        isText
+                                        icon={Zap}
+                                        color={analysis.metrics.BurnoutRisk === "High" ? "text-rose-400" : analysis.metrics.BurnoutRisk === "Moderate" ? "text-yellow-400" : "text-emerald-400"}
+                                    />
+                                    <MetricCard
+                                        label="Emotional Exhaustion"
+                                        value={analysis.metrics.EmotionalExhaustion}
+                                        max={10}
+                                        icon={Wind}
+                                        color={analysis.metrics.EmotionalExhaustion > 6 ? "text-orange-400" : "text-emerald-400"}
+                                    />
+                                    <MetricCard
+                                        label="Personal Accomplishment"
+                                        value={analysis.metrics.PersonalAccomplishment}
+                                        max={10}
+                                        icon={Heart}
+                                        color={analysis.metrics.PersonalAccomplishment > 6 ? "text-primary" : "text-muted"}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    {analysis.insights.map((insight: string, idx: number) => (
+                                        <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 text-sm text-white/90">
+                                            <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                                            {insight}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Grounding Exercise */}
@@ -160,5 +239,31 @@ function TipItem({ icon, text }: any) {
             <span className="text-lg not-italic">{icon}</span>
             <span>{text}</span>
         </li>
+    )
+}
+
+function MetricCard({ label, value, max, icon: Icon, color, isText }: any) {
+    return (
+        <div className="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-2 text-muted text-xs font-medium">
+                <Icon className={`w-3 h-3 ${color}`} />
+                {label}
+            </div>
+            <div className="flex items-end justify-between">
+                {isText ? (
+                    <span className={`text-lg font-bold ${color}`}>{value}</span>
+                ) : (
+                    <div className="flex items-baseline gap-1">
+                        <span className={`text-lg font-bold ${color}`}>{value}</span>
+                        <span className="text-xs text-muted">/{max}</span>
+                    </div>
+                )}
+            </div>
+            {!isText && (
+                <div className="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                    <div className={`h-full ${color.replace('text-', 'bg-')}`} style={{ width: `${(value / max) * 100}%` }} />
+                </div>
+            )}
+        </div>
     )
 }

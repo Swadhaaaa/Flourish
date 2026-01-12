@@ -106,6 +106,32 @@ async def auto_schedule(request: ScheduleRequest):
     """
     return ai_service.generate_auto_schedule(request.text)
 
+# --- Burnout Prediction ---
+from burnout_service import BurnoutPredictor
+
+burnout_predictor = BurnoutPredictor()
+
+@app.post("/api/ai/burnout-prediction")
+async def predict_burnout(data: dict = Body(...)):
+    """
+    Predicts burnout risk based on user profile data.
+    """
+    try:
+        return burnout_predictor.predict(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ReflectionRequest(BaseModel):
+    text: str
+
+@app.post("/api/ai/analyze-reflection")
+async def analyze_reflection(request: ReflectionRequest):
+    """
+    Analyzes unstructured text to auto-fill assessment metrics.
+    """
+    return ai_service.analyze_work_reflection(request.text)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

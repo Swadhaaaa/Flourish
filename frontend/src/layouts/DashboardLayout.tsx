@@ -4,12 +4,12 @@ import {
     LayoutDashboard,
     Activity,
     Heart,
-    Settings,
     LogOut,
     Sparkles,
     Menu,
     Calendar,
-    Shield
+    Shield,
+    User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { auth } from "../lib/firebase";
@@ -29,7 +29,8 @@ export function DashboardLayout() {
         { icon: Shield, label: "Tone Shield", path: "/dashboard/shield" },
         { icon: Activity, label: "Workload", path: "/dashboard/workload" },
         { icon: Heart, label: "Wellness", path: "/dashboard/wellness" },
-        { icon: Settings, label: "Settings", path: "/dashboard/settings" },
+        { icon: Sparkles, label: "Burnout Check", path: "/dashboard/assessment" },
+        { icon: User, label: "Profile", path: "/dashboard/profile" },
     ];
 
     return (
