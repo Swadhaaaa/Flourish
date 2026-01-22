@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Sparkles, ChevronLeft, Info, AlertTriangle, Mail, CheckCircle2, X, Send, History, MessageSquareQuote, ShieldCheck, User, Search, Fingerprint } from 'lucide-react';
+import type { Variants } from 'framer-motion';
+import { Shield, Sparkles, ChevronLeft, Info, Mail, CheckCircle2, X, ShieldCheck, User, Fingerprint } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const containerVariants = {
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
@@ -13,7 +14,7 @@ const containerVariants = {
     }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
         opacity: 1,
@@ -159,7 +160,7 @@ export default function ToneShield() {
                             { label: 'Stress Level', val: 'Moderate', emoji: '😐', color: 'orange', text: 'Moderate' },
                             { label: 'Burnout Risk', val: '45%', emoji: null, color: 'rose', text: '45%' },
                             { label: 'Period Cycle', val: '8 days', emoji: null, color: 'pink', text: '8 Days In' },
-                        ].map((item, idx) => (
+                        ].map((item) => (
                             <motion.div
                                 key={item.label}
                                 variants={itemVariants}

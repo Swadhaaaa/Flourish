@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useMode } from '../context/ModeContext';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCircle, X, ChevronRight } from 'lucide-react';
@@ -9,13 +9,14 @@ import { UserCircle, X, ChevronRight } from 'lucide-react';
 const MainLayout = () => {
     const { mode, switchMode } = useMode();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [showProfilePopup, setShowProfilePopup] = useState(false);
     const [showHomeModal, setShowHomeModal] = useState(false);
     const [homeStep, setHomeStep] = useState(1);
 
-    // Only show sidebar in specific modes, not on landing or selection
-    const showSidebar = mode === 'home' || mode === 'work';
+    // Only show sidebar in specific modes or profile
+    const showSidebar = mode === 'home' || mode === 'work' || location.pathname.startsWith('/profile');
 
     useEffect(() => {
         // 1. Initial Profile Onboarding Prompt

@@ -7,20 +7,38 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+import { useAuth } from '../../context/AuthContext';
+
 const ProfileSetup = () => {
     const navigate = useNavigate();
+    const { updateUserProfile } = useAuth();
     const [step, setStep] = useState(1);
     const [isComplete, setIsComplete] = useState(false);
+    const [formData, setFormData] = useState({
+        age: '', gender: 'Female', country: '', dependents: '0',
+        jobRole: '', department: '', yearsExp: '', salaryRange: '< 50k', teamSize: '',
+        workHours: '', commute: '', remoteMode: 'Fully Remote', caregiving: ''
+    });
 
-    const nextStep = () => {
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const nextStep = async () => {
         if (step < 3) {
             setStep(step + 1);
         } else {
             setIsComplete(true);
-            localStorage.setItem('work-setup-complete', 'true');
-            setTimeout(() => {
-                navigate('/work/dashboard');
-            }, 2000);
+            try {
+                await updateUserProfile(formData);
+                localStorage.setItem('work-setup-complete', 'true');
+                setTimeout(() => {
+                    navigate('/work/dashboard');
+                }, 2000);
+            } catch (error) {
+                console.error("Failed to save profile:", error);
+                // Optionally handle error UI here
+            }
         }
     };
 
@@ -95,11 +113,11 @@ const ProfileSetup = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="Age" placeholder="e.g. 28" />
-                                        <SelectField label="Gender" options={['Female', 'Male', 'Non-binary', 'Other']} />
+                                        <InputField label="Age" placeholder="e.g. 28" value={formData.age} onChange={(v) => handleChange('age', v)} />
+                                        <SelectField label="Gender" options={['Female', 'Male', 'Non-binary', 'Other']} value={formData.gender} onChange={(v) => handleChange('gender', v)} />
                                     </div>
-                                    <InputField label="Country" placeholder="e.g. India" icon={<MapPin className="w-4 h-4" />} />
-                                    <SelectField label="Dependents" options={['0', '1', '2', '3+']} />
+                                    <InputField label="Country" placeholder="e.g. India" icon={<MapPin className="w-4 h-4" />} value={formData.country} onChange={(v) => handleChange('country', v)} />
+                                    <SelectField label="Dependents" options={['0', '1', '2', '3+']} value={formData.dependents} onChange={(v) => handleChange('dependents', v)} />
                                 </div>
                             )}
 
@@ -112,14 +130,14 @@ const ProfileSetup = () => {
                                         <h3 className="text-xl font-black text-slate-800 tracking-tight">Professional Info</h3>
                                     </div>
 
-                                    <InputField label="Job Role" placeholder="e.g. Product Manager" />
+                                    <InputField label="Job Role" placeholder="e.g. Product Manager" value={formData.jobRole} onChange={(v) => handleChange('jobRole', v)} />
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="Department" placeholder="e.g. Engineering" />
-                                        <InputField label="Years at Company" placeholder="e.g. 3" />
+                                        <InputField label="Department" placeholder="e.g. Engineering" value={formData.department} onChange={(v) => handleChange('department', v)} />
+                                        <InputField label="Years at Company" placeholder="e.g. 3" value={formData.yearsExp} onChange={(v) => handleChange('yearsExp', v)} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <SelectField label="Salary Range" options={['< 50k', '50k - 100k', '100k - 200k', '200k+']} />
-                                        <InputField label="Team Size" placeholder="e.g. 12" />
+                                        <SelectField label="Salary Range" options={['< 50k', '50k - 100k', '100k - 200k', '200k+']} value={formData.salaryRange} onChange={(v) => handleChange('salaryRange', v)} />
+                                        <InputField label="Team Size" placeholder="e.g. 12" value={formData.teamSize} onChange={(v) => handleChange('teamSize', v)} />
                                     </div>
                                 </div>
                             )}
@@ -134,11 +152,11 @@ const ProfileSetup = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="Work Hours / Week" placeholder="e.g. 40" />
-                                        <InputField label="Avg Commute (min)" placeholder="e.g. 45" />
+                                        <InputField label="Work Hours / Week" placeholder="e.g. 40" value={formData.workHours} onChange={(v) => handleChange('workHours', v)} />
+                                        <InputField label="Avg Commute (min)" placeholder="e.g. 45" value={formData.commute} onChange={(v) => handleChange('commute', v)} />
                                     </div>
-                                    <SelectField label="Remote Work Mode" options={['Fully Remote', 'Hybrid', 'On-site']} />
-                                    <InputField label="Caregiving Hours / Day" placeholder="e.g. 2" />
+                                    <SelectField label="Remote Work Mode" options={['Fully Remote', 'Hybrid', 'On-site']} value={formData.remoteMode} onChange={(v) => handleChange('remoteMode', v)} />
+                                    <InputField label="Caregiving Hours / Day" placeholder="e.g. 2" value={formData.caregiving} onChange={(v) => handleChange('caregiving', v)} />
                                 </div>
                             )}
 
@@ -180,13 +198,15 @@ const ProfileSetup = () => {
     );
 };
 
-const InputField = ({ label, placeholder, icon }: { label: string, placeholder: string, icon?: React.ReactNode }) => (
+const InputField = ({ label, placeholder, icon, value, onChange }: { label: string, placeholder: string, icon?: React.ReactNode, value?: string, onChange?: (val: string) => void }) => (
     <div className="space-y-1.5 flex-1 group">
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
         <div className="relative">
             {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300">{icon}</div>}
             <input
                 type="text"
+                value={value}
+                onChange={(e) => onChange?.(e.target.value)}
                 placeholder={placeholder}
                 className={cn(
                     "w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pr-6 focus:bg-white focus:border-[#FF8A71]/10 focus:ring-4 focus:ring-orange-100/50 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-300",
@@ -197,11 +217,15 @@ const InputField = ({ label, placeholder, icon }: { label: string, placeholder: 
     </div>
 );
 
-const SelectField = ({ label, options }: { label: string, options: string[] }) => (
+const SelectField = ({ label, options, value, onChange }: { label: string, options: string[], value?: string, onChange?: (val: string) => void }) => (
     <div className="space-y-1.5 flex-1 group">
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-        <select className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-6 focus:bg-white focus:border-[#FF8A71]/10 focus:ring-4 focus:ring-orange-100/50 outline-none transition-all font-bold text-slate-800 appearance-none cursor-pointer">
-            {options.map(opt => <option key={opt}>{opt}</option>)}
+        <select
+            value={value}
+            onChange={(e) => onChange?.(e.target.value)}
+            className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 px-6 focus:bg-white focus:border-[#FF8A71]/10 focus:ring-4 focus:ring-orange-100/50 outline-none transition-all font-bold text-slate-800 appearance-none cursor-pointer"
+        >
+            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
     </div>
 );

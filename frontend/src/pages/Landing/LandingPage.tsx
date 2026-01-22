@@ -3,16 +3,51 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Mail, Lock, User, Github, Chrome, Facebook, X, Fingerprint, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { signIn, signUp, googleSignIn } = useAuth();
     const [showAuth, setShowAuth] = useState(false);
     const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleAuthAction = () => {
-        // Mocking successful auth
-        navigate('/mode-select');
+    // Form States
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleAuthAction = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            if (authMode === 'login') {
+                await signIn(email, password);
+            } else {
+                await signUp(email, password, name);
+            }
+            setShowAuth(false);
+            navigate('/mode-select');
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Authentication failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setError('');
+        try {
+            await googleSignIn();
+            setShowAuth(false);
+            navigate('/mode-select');
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Google Sign In failed');
+        }
     };
 
     return (
@@ -172,6 +207,13 @@ const LandingPage = () => {
                                 </button>
                             </div>
 
+                            {/* ERROR MESSAGE */}
+                            {error && (
+                                <div className="bg-rose-50 border border-rose-100 text-rose-500 text-xs font-bold p-3 rounded-xl mb-4 text-center">
+                                    {error}
+                                </div>
+                            )}
+
                             <div className="space-y-4 relative z-10">
                                 <AnimatePresence mode="wait">
                                     <motion.div
@@ -188,6 +230,8 @@ const LandingPage = () => {
                                                 <input
                                                     type="text"
                                                     placeholder="Full Name"
+                                                    value={name}
+                                                    onChange={(e) => setName(e.target.value)}
                                                     className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#FF8A71]/20 rounded-[1.5rem] py-5 pl-16 pr-6 focus:ring-4 focus:ring-orange-100/50 transition-all font-bold text-slate-700 outline-none placeholder:text-slate-300"
                                                 />
                                             </div>
@@ -197,6 +241,8 @@ const LandingPage = () => {
                                             <input
                                                 type="email"
                                                 placeholder="Email Address"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#FF8A71]/20 rounded-[1.5rem] py-5 pl-16 pr-6 focus:ring-4 focus:ring-orange-100/50 transition-all font-bold text-slate-700 outline-none placeholder:text-slate-300"
                                             />
                                         </div>
@@ -205,6 +251,8 @@ const LandingPage = () => {
                                             <input
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="Password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#FF8A71]/20 rounded-[1.5rem] py-5 pl-16 pr-16 focus:ring-4 focus:ring-orange-100/50 transition-all font-bold text-slate-700 outline-none placeholder:text-slate-300"
                                             />
                                             <button
@@ -227,10 +275,11 @@ const LandingPage = () => {
 
                             <button
                                 onClick={handleAuthAction}
-                                className="w-full bg-slate-900 text-white font-black py-5 rounded-[1.8rem] mt-8 shadow-2xl shadow-slate-200 active:scale-[0.98] transition-all text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 group"
+                                disabled={loading}
+                                className="w-full bg-slate-900 text-white font-black py-5 rounded-[1.8rem] mt-8 shadow-2xl shadow-slate-200 active:scale-[0.98] transition-all text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 group disabled:opacity-50"
                             >
-                                <span>{authMode === 'login' ? 'Sign In' : 'Create Account'}</span>
-                                <Fingerprint className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                <span>{loading ? 'Processing...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}</span>
+                                {!loading && <Fingerprint className="w-6 h-6 group-hover:scale-110 transition-transform" />}
                             </button>
 
                             <div className="flex items-center gap-6 my-10">
@@ -240,7 +289,7 @@ const LandingPage = () => {
                             </div>
 
                             <div className="flex gap-4">
-                                <button className="flex-1 h-16 bg-slate-50 rounded-[1.2rem] flex items-center justify-center border-2 border-transparent hover:border-[#FF8A71]/10 hover:bg-white transition-all group active:scale-95 shadow-sm">
+                                <button onClick={handleGoogleLogin} className="flex-1 h-16 bg-slate-50 rounded-[1.2rem] flex items-center justify-center border-2 border-transparent hover:border-[#FF8A71]/10 hover:bg-white transition-all group active:scale-95 shadow-sm">
                                     <Chrome className="w-6 h-6 text-slate-400 group-hover:text-[#FF8A71] group-hover:scale-110 transition-all" />
                                 </button>
                                 <button className="flex-1 h-16 bg-slate-50 rounded-[1.2rem] flex items-center justify-center border-2 border-transparent hover:border-[#FF8A71]/10 hover:bg-white transition-all group active:scale-95 shadow-sm">

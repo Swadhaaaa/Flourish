@@ -1,21 +1,50 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Activity, Calendar, Zap, AlertTriangle, CheckCircle, Clock, Phone, Truck } from 'lucide-react';
+import { Shield, Activity, Calendar, Zap, AlertTriangle, CheckCircle, Clock, Phone, Truck, User, Save, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api } from '../../services/api';
+import { checkBoundary, getWorkloadInsight } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';;
 
 export default function WorkDashboard() {
+    const { user, userProfile, updateUserProfile } = useAuth();
     const [boundaryCheck, setBoundaryCheck] = useState<any>(null);
     const [workloadInsight, setWorkloadInsight] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    // Profile Modal State
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [savingProfile, setSavingProfile] = useState(false);
+
+    useEffect(() => {
+        if (!loading && user && userProfile) {
+            if (!userProfile.name || userProfile.name.trim() === '') {
+                setShowProfileModal(true);
+            }
+        }
+    }, [user, userProfile, loading]);
+
+    const handleSaveProfile = async () => {
+        if (!nameInput.trim()) return;
+        setSavingProfile(true);
+        try {
+            await updateUserProfile({ name: nameInput });
+            setShowProfileModal(false);
+        } catch (error) {
+            console.error("Failed to update profile", error);
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
     useEffect(() => {
         const fetchData = async () => {
+            // ... existing fetchData logic ...
             try {
                 const [boundary, workload] = await Promise.all([
-                    api.checkBoundary(),
-                    api.getWorkloadInsight()
+                    checkBoundary(),
+                    getWorkloadInsight()
                 ]);
                 setBoundaryCheck(boundary);
                 setWorkloadInsight(workload);
@@ -28,6 +57,7 @@ export default function WorkDashboard() {
         fetchData();
     }, []);
 
+    // ... statCards definition ...
     const statCards = [
         {
             title: "Tone Shield",
@@ -73,7 +103,7 @@ export default function WorkDashboard() {
 
     return (
         <div className="space-y-8 relative min-h-[calc(100vh-4rem)]">
-            {/* Peachy-Purple Cloud Background Elements */}
+            {/* ... background elements ... */}
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
                 <motion.div
                     animate={{
@@ -110,7 +140,7 @@ export default function WorkDashboard() {
                 className="relative z-10"
             >
                 <h1 className="text-4xl font-display font-black text-foreground tracking-tighter flex items-center">
-                    {"Hello Ayushi".split("").map((char, index) => (
+                    {`Hello ${userProfile?.name?.split(' ')[0] || 'Friend'}`.split("").map((char, index) => (
                         <motion.span
                             key={index}
                             initial={{ y: -120, opacity: 0 }}
@@ -241,6 +271,50 @@ export default function WorkDashboard() {
                     </Link>
                 ))}
             </motion.div>
+            {/* Profile Completion Modal */}
+            {showProfileModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+
+                        <div className="relative z-10">
+                            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-[#FF8A71] mb-6 shadow-sm">
+                                <User className="w-8 h-8" />
+                            </div>
+
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Complete Profile</h2>
+                            <p className="text-slate-500 text-sm font-bold mb-8">We noticed your profile is missing a name. Let's fix that to personalize your experience.</p>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Your Name</label>
+                                    <input
+                                        type="text"
+                                        value={nameInput}
+                                        onChange={(e) => setNameInput(e.target.value)}
+                                        placeholder="e.g. Your Name"
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF8A71] text-slate-900 dark:text-white font-bold placeholder:text-slate-300 transition-all"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleSaveProfile}
+                                    disabled={savingProfile || !nameInput.trim()}
+                                    className="w-full bg-[#FF8A71] hover:bg-[#ff7a5c] text-white font-black py-4 rounded-xl shadow-lg shadow-orange-200 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                                >
+                                    {savingProfile ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                    <span>Save Profile</span>
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

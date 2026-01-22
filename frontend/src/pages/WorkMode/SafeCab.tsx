@@ -46,7 +46,7 @@ export default function SafeCab() {
 
     // Scheduling states
     const [selectedDate, setSelectedDate] = useState('22 Jan 2026');
-    const [selectedTime, setSelectedTime] = useState('08:30 PM');
+    const [selectedTime] = useState('08:30 PM');
     const [showCalendar, setShowCalendar] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showReminderPopup, setShowReminderPopup] = useState(false);
@@ -456,8 +456,8 @@ export default function SafeCab() {
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm ${member.color === 'rose' ? 'bg-rose-100 text-rose-500' :
-                                                member.color === 'blue' ? 'bg-blue-100 text-blue-500' :
-                                                    member.color === 'purple' ? 'bg-purple-100 text-purple-500' : 'bg-emerald-100 text-emerald-500'
+                                            member.color === 'blue' ? 'bg-blue-100 text-blue-500' :
+                                                member.color === 'purple' ? 'bg-purple-100 text-purple-500' : 'bg-emerald-100 text-emerald-500'
                                             }`}>
                                             {member.initial}
                                         </div>

@@ -1,9 +1,10 @@
 import { useTheme } from '../context/ThemeContext';
 import { useMode } from '../context/ModeContext';
 import { cn } from '../lib/utils';
-import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid, Plus } from 'lucide-react';
+import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -13,10 +14,17 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     const { theme, setTheme } = useTheme();
     const { switchMode } = useMode();
+    const { userProfile } = useAuth();
+    const { mode } = useMode(); // Get mode from context
     const location = useLocation();
     const navigate = useNavigate();
     const isHome = location.pathname.startsWith('/home');
     const isWork = location.pathname.startsWith('/work');
+    const isProfile = location.pathname.startsWith('/profile');
+
+    // Safely access profile data
+    const displayName = userProfile?.displayName || 'User';
+    const jobRole = userProfile?.jobRole || 'Set Role';
 
     const homeItems = [
         { icon: Heart, label: 'Period Tracker', path: '/home/period-tracker' },
@@ -35,9 +43,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         { icon: User, label: 'Profile', path: '/profile' },
     ];
 
-    const items = isHome ? homeItems : (isWork ? workItems : []);
+    const items = (isHome || mode === 'home') ? homeItems : workItems; // Default to work items if ambiguous or profile
 
-    if (!isHome && !isWork) return null;
+    if (!isHome && !isWork && !isProfile) return null;
 
     return (
         <motion.div
@@ -67,7 +75,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                     )}
                 >
                     <img
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ayushi&backgroundColor=ffdfbf"
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName || 'User'}&backgroundColor=ffdfbf`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                     />
@@ -80,8 +88,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                             exit={{ opacity: 0, y: -10 }}
                             className="text-center"
                         >
-                            <p className="text-[10px] font-black text-[#FF8A71] uppercase tracking-[0.2em] mb-1 font-mono">Product Designer</p>
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Ayushi Ranjan</h3>
+                            <p className="text-[10px] font-black text-[#FF8A71] uppercase tracking-[0.2em] mb-1 font-mono">{jobRole}</p>
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight">{displayName}</h3>
                         </motion.div>
                     )}
                 </AnimatePresence>

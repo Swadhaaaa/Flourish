@@ -1,6 +1,7 @@
-import { Plus, Search, Calendar as CalendarIcon, Clock, CheckCircle2, Circle, Clock4, MoreHorizontal, ChevronRight, Bell, Target, TrendingUp, Layers, X, ChevronLeft, Sparkles, Send, Flag, AlertCircle, GripVertical } from 'lucide-react';
+import { Plus, Search, Clock, CheckCircle2, Clock4, ChevronRight, Bell, Target, Layers, X, Sparkles, Send, Flag, GripVertical } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { generateSchedule } from '../../services/api';
 
 const INITIAL_TASKS = [
     {
@@ -62,6 +63,36 @@ export default function AutoSchedule() {
     const [showAddTask, setShowAddTask] = useState(false);
     const [showPriorityPopup, setShowPriorityPopup] = useState(false);
     const [showAIPopup, setShowAIPopup] = useState(false);
+    const [aiPrompt, setAIPrompt] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleAIPlan = async () => {
+        if (!aiPrompt) return;
+        setLoading(true);
+        try {
+            const data = await generateSchedule(aiPrompt);
+            if (data.schedule) {
+                // Map AI schedule to tasks
+                // This is a simplified mapping, real app would merge or replace
+                const newTasks = data.schedule.map((item: any, idx: number) => ({
+                    id: Date.now() + idx,
+                    title: item.task,
+                    desc: `${item.energy} Energy • ${item.duration}`,
+                    time: item.time,
+                    status: 'todo',
+                    color: item.energy === 'High' ? 'bg-rose-400' : item.energy === 'Medium' ? 'bg-orange-400' : 'bg-emerald-400',
+                    priority: item.energy,
+                    progress: 0
+                }));
+                setTasks(newTasks);
+                setShowAIPopup(false);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#FFF8F5] text-slate-900 font-sans -m-8 relative overflow-hidden flex flex-col">
@@ -448,13 +479,18 @@ export default function AutoSchedule() {
                                 <div className="space-y-4">
                                     <textarea
                                         rows={4}
+                                        value={aiPrompt}
+                                        onChange={(e) => setAIPrompt(e.target.value)}
                                         placeholder="E.g. I need more focus time in the morning, move all meetings after 2 PM..."
                                         className="w-full bg-orange-50/30 border-none rounded-[2rem] p-6 text-sm focus:ring-2 focus:ring-[#FF8A71]/20 resize-none placeholder:text-orange-200 text-slate-800"
                                     />
                                 </div>
-                                <button className="w-full bg-[#FF8A71] text-white font-black py-5 rounded-[1.5rem] flex items-center justify-center gap-4 shadow-xl shadow-orange-100 group active:scale-95 transition-all">
-                                    <span className="uppercase tracking-widest text-sm font-black">Plan Schedule</span>
-                                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                <button
+                                    onClick={handleAIPlan}
+                                    disabled={loading}
+                                    className="w-full bg-[#FF8A71] text-white font-black py-5 rounded-[1.5rem] flex items-center justify-center gap-4 shadow-xl shadow-orange-100 group active:scale-95 transition-all disabled:opacity-50">
+                                    <span className="uppercase tracking-widest text-sm font-black">{loading ? 'Planning...' : 'Plan Schedule'}</span>
+                                    {!loading && <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
                                 </button>
                             </div>
                         </motion.div>

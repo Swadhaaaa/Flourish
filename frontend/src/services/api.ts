@@ -1,45 +1,73 @@
-const API_URL = 'http://localhost:8000/api/ai';
+import axios from 'axios';
 
-export const api = {
-    // Tone Shield
-    analyzeTone: async (message: string, sender: string) => {
-        const res = await fetch(`${API_URL}/tone-shield`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: message, sender })
-        });
-        return res.json();
+const API_URL = import.meta.env.VITE_API_URL || 'https://tea-hack.onrender.com';
+
+export const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
     },
+});
 
-    // Auto Schedule
-    autoSchedule: async (text: string) => {
-        const res = await fetch(`${API_URL}/auto-schedule`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
-        });
-        return res.json();
-    },
-
-    // Burnout
-    predictBurnout: async (data: any) => {
-        const res = await fetch(`${API_URL}/burnout-prediction`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        return res.json();
-    },
-
-    // Boundary Check (Simulated)
-    checkBoundary: async () => {
-        const res = await fetch(`${API_URL}/boundary-check`);
-        return res.json();
-    },
-
-    // Workload Insight (Simulated)
-    getWorkloadInsight: async () => {
-        const res = await fetch(`${API_URL}/workload-insight`);
-        return res.json();
+export const checkBoundary = async () => {
+    try {
+        const response = await api.get('/api/ai/boundary-check');
+        return response.data;
+    } catch (error) {
+        console.error('Boundary Check Error:', error);
+        return { status: 'green', title: 'All Clear', message: 'System active' };
     }
 };
+
+export const getWorkloadInsight = async () => {
+    try {
+        const response = await api.get('/api/ai/workload-insight');
+        return response.data;
+    } catch (error) {
+        console.error('Workload Insight Error:', error);
+        return { title: 'Insight Unavailable', recommendation: 'Could not fetch data' };
+    }
+};
+
+
+export const analyzeReflection = async (text: string) => {
+    try {
+        const response = await api.post('/api/ai/analyze-reflection', { text });
+        return response.data;
+    } catch (error) {
+        console.error('Reflection Analysis Error:', error);
+        throw error;
+    }
+};
+
+export const predictBurnout = async (metrics: any) => {
+    try {
+        const response = await api.post('/api/ai/burnout-prediction', metrics);
+        return response.data;
+    } catch (error) {
+        console.error('Burnout Prediction Error:', error);
+        throw error;
+    }
+};
+
+export const generateSchedule = async (text: string) => {
+    try {
+        const response = await api.post('/api/ai/auto-schedule', { text });
+        return response.data;
+    } catch (error) {
+        console.error('Schedule Generation Error:', error);
+        throw error;
+    }
+};
+
+export const analyzeEmail = async (content: string, sender: string) => {
+    try {
+        const response = await api.post('/api/ai/tone-shield', { content, sender });
+        return response.data;
+    } catch (error) {
+        console.error('Email Analysis Error:', error);
+        throw error;
+    }
+};
+
+export default api;
