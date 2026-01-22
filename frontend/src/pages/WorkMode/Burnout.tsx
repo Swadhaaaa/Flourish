@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Activity, Sparkles, Zap
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 import { analyzeReflection, predictBurnout } from '../../services/api';
 
 const InputRange = ({ label, value, onChange, min = 1, max = 10, isDark }: any) => (
@@ -62,8 +63,7 @@ export default function BurnoutPage() {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    // State removed to fix build error
-    // const [result, setResult] = useState(null);
+    const [result, setResult] = useState<{ risk: string, probability: number, isHigh: boolean } | null>(null);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -116,26 +116,131 @@ export default function BurnoutPage() {
         }
     };
 
+    // Access profile for enrichment
+    const { userProfile } = useAuth(); // Assuming this is available from context imported above
+
     const handlePrediction = async () => {
         setIsLoading(true);
         try {
-            // Validate and sanitize payload
+            // Helper to safe parse int
+            const val = (v: any, def: number) => parseInt(v, 10) || def;
+
+            // Construct Full Payload matching Backend Schema
             const payload = {
-                ...metrics,
-                sleep: parseInt(metrics.sleep, 10) || 7, // Convert "7" or "9+" to number
-                mentalHealth: metrics.mentalHealth // Backend likely handles categorical string
+                // 1. Profile / Demographics (from UserProfile or Defaults)
+                Age: val(userProfile?.age, 30),
+                Gender: userProfile?.gender || "Female",
+                Country: userProfile?.country || "USA",
+                JobRole: userProfile?.jobRole || "Developer",
+                Department: userProfile?.department || "Tech",
+                YearsAtCompany: val(userProfile?.yearsExp, 2),
+                TeamSize: val(userProfile?.teamSize, 5),
+                SalaryRange: userProfile?.salaryRange || "Medium",
+
+                // 2. Work Metrics (Profile or Defaults)
+                WorkHoursPerWeek: val(userProfile?.workHours, 40),
+                RemoteWork: userProfile?.remoteMode === 'Remote' ? 1 : 0,
+                CommuteTime: val(userProfile?.commute, 30),
+                DependentsCount: val(userProfile?.dependents, 0),
+                CareHoursPerWeek: val(userProfile?.caregiving, 0),
+
+                // 3. User Inputs (The 6 manual sliders)
+                StressLevel: metrics.stress,
+                JobSatisfaction: metrics.satisfaction,
+                SleepHours: parseFloat(metrics.sleep) || 7.0,
+                HasMentalHealthSupport: metrics.mentalHealth === "Yes" ? 1 : 0,
+                ManagerSupportScore: metrics.managerSupport, // Corrected Key Name
+                WorkLifeBalanceScore: metrics.workLifeBalance,
+
+                // 4. Safe Defaults for Missing Backend Fields (To prevent KeyErrors)
+                PhysicalActivityHrs: 3.0,
+                ScheduleFlexibilityScore: 5,
+                CanAdjustWorkHours: 1,
+                HasTherapyAccess: 0,
+                MentalHealthDaysTaken: 0,
+                FeelsSafeRaisingConcerns: 1,
+                WorkplaceInclusionScore: 7,
+                ProductivityScore: 7,
+                CareerGrowthScore: 5
             };
 
+            console.log("Sending Prediction Payload:", payload); // Debug log
+
             const data = await predictBurnout(payload);
-            // setResult(data);
-            // Show alert or modal with result
-            alert(`Burnout Risk: ${data.prediction || 'Calculated'}`);
+            setResult({
+                risk: data.is_high_risk ? "High Risk" : "Low Risk",
+                probability: data.probability,
+                isHigh: data.is_high_risk
+            });
+
+            // Scroll to show results
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
+
         } catch (error) {
             console.error("Prediction failed:", error);
-            alert("Failed to calculate prediction. Please try again.");
+            alert("Failed to calculate prediction. Server might be busy.");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Generate dynamic recommendations based on metrics
+    const getRecommendations = () => {
+        const recs = [];
+        const sleepVal = parseFloat(metrics.sleep);
+
+        if (sleepVal < 6) {
+            recs.push({
+                title: "Zombie Mode 🧟‍♂️",
+                desc: "Your brain needs a reboot. Try a 'Digital Sunset' at 9 PM—no screens, just vibes."
+            });
+        }
+
+        if (metrics.stress > 7) {
+            recs.push({
+                title: "Cortisol Spike 📈",
+                desc: "You're running on fumes. Schedule a 'Do Not Disturb' block or a 15-min walk NOW."
+            });
+        }
+
+        if (metrics.workLifeBalance < 4) {
+            recs.push({
+                title: "Boundary Breach 🚧",
+                desc: "Work is invading your life. Turn on 'Tone Shield' and ghost those after-hours emails."
+            });
+        }
+
+        if (metrics.managerSupport < 4) {
+            recs.push({
+                title: "Lone Wolf Syndrome 🐺",
+                desc: "You need backup. Book a sync with your lead and simply ask: 'What is priority #1?'"
+            });
+        }
+
+        if (metrics.satisfaction < 5) {
+            recs.push({
+                title: "Joy Deficit 📉",
+                desc: "The spark is fading. Plan one 'Passion Project' hour this week or reconnect with a mentor."
+            });
+        }
+
+        if (metrics.mentalHealth === "No") {
+            recs.push({
+                title: "Support Void 🕳️",
+                desc: "Don't tough it out alone. Check your company's EAP or chat with a friend today."
+            });
+        }
+
+        if (recs.length === 0) {
+            recs.push({
+                title: "Thriving Mode ✨",
+                desc: "You're crushing it! Keep this rhythm, but don't forget to celebrate the small wins."
+            });
+        }
+
+        return recs.slice(0, 4); // Limit to top 4 to fit UI nicely
     };
 
     return (
@@ -281,6 +386,66 @@ export default function BurnoutPage() {
                     </div>
                 </motion.div>
             </motion.div>
+
+            {/* RESULTS SECTION */}
+            <AnimatePresence>
+                {result && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className={cn(
+                            "mt-8 rounded-[3.5rem] p-12 text-center border overflow-hidden relative",
+                            isDark
+                                ? "bg-[#0F0F12] border-white/10"
+                                : "bg-white/80 border-orange-100"
+                        )}
+                    >
+                        <div className={cn(
+                            "absolute inset-0 opacity-20 pointer-events-none",
+                            result.isHigh
+                                ? "bg-gradient-to-r from-rose-500/20 to-orange-500/20"
+                                : "bg-gradient-to-r from-emerald-500/20 to-teal-500/20"
+                        )} />
+
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className={cn(
+                                "inline-block px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest mb-6",
+                                result.isHigh
+                                    ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
+                                    : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                            )}>
+                                {result.risk}
+                            </div>
+
+                            <h2 className={cn("text-6xl md:text-8xl font-black tracking-tighter mb-4", isDark ? "text-white" : "text-slate-800")}>
+                                {(result.probability * 100).toFixed(0)}%
+                            </h2>
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-12">Calculated Probability Impact</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl text-left">
+                                {getRecommendations().map((rec, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className={cn(
+                                            "p-6 rounded-3xl border",
+                                            isDark
+                                                ? "bg-white/5 border-white/5"
+                                                : "bg-white border-orange-50"
+                                        )}
+                                    >
+                                        <h4 className={cn("font-black text-lg mb-2", isDark ? "text-white" : "text-slate-800")}>{rec.title}</h4>
+                                        <p className="text-sm font-bold text-slate-500 leading-relaxed">{rec.desc}</p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Subtle Footer */}
             <motion.p

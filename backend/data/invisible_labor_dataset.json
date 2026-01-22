@@ -1,0 +1,58 @@
+[
+    {
+        "task": "organizing the team holiday party",
+        "type": "invisible",
+        "category": "Office Housework",
+        "impact_score": 2,
+        "advice": "This is classic 'office housework'. It takes time but rarely leads to promotion.",
+        "script": "I'd love to help, but I'm currently fully dedicated to [Project Name] and can't give this the attention it deserves. Perhaps we can rotate this responsibility?"
+    },
+    {
+        "task": "taking meeting minutes",
+        "type": "invisible",
+        "category": "Admin",
+        "impact_score": 3,
+        "advice": "Consistently taking notes can position you as 'support' rather than 'leader'. Rotate this.",
+        "script": "I've taken notes the last few times. Shall we assign someone else or use an AI tool today so I can focus on the discussion?"
+    },
+    {
+        "task": "mentoring the new intern",
+        "type": "invisible",
+        "category": "Citizenship",
+        "impact_score": 6,
+        "advice": "Valuable, but ensure it doesn't crowd out your core KPIs. Document this as 'Leadership' in reviews.",
+        "script": "I can definitely spend 30 mins with them, but for deeper onboarding, I'll need to defer to the training manager."
+    },
+    {
+        "task": "leading the strategic review",
+        "type": "promotable",
+        "category": "Strategy",
+        "impact_score": 10,
+        "advice": "High impact! This gives visibility with senior leadership. Prioritize this.",
+        "script": "I'm excited to lead this. I'll have the draft deck ready by Tuesday."
+    },
+    {
+        "task": "fixing the legacy code bug",
+        "type": "promotable",
+        "category": "Technical",
+        "impact_score": 8,
+        "advice": "Strong technical contribution. Ensure you demo the fix to the team.",
+        "script": "I'm on it. This aligns well with our stability goals."
+    },
+    {
+        "task": "ordering lunch for the client",
+        "type": "invisible",
+        "category": "Office Housework",
+        "impact_score": 1,
+        "advice": "Zero career value. Delegate or use a service.",
+        "script": "I'm in the middle of a sprint. Can we use the office admin or a delivery app for this?"
+    },
+    {
+        "task": "training the machine learning model",
+        "type": "promotable",
+        "category": "Technical",
+        "impact_score": 9,
+        "advice": "Excellent core work. Document the performance gains.",
+        "script": "Training started. I'll share the accuracy metrics in the morning standup."
+    }
+]

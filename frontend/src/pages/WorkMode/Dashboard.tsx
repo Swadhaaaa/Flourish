@@ -1,10 +1,66 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Shield, Activity, Calendar, Zap, AlertTriangle, CheckCircle, Clock, Phone, Truck, User, Save, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Shield, Activity, Calendar, AlertTriangle, Phone, Truck, User, Save, Loader2, ArrowRight, Sparkles, Music, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { checkBoundary, getWorkloadInsight } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { cn } from '../../lib/utils';;
+import { cn } from '../../lib/utils';
+import { MusicPlayer } from '../../components/MusicPlayer';
+import InvisibleLaborLog from '../../components/InvisibleLaborLog';
+import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
+// Tilt Card Component for extra "Wow" factor
+function TiltCard({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+    const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
+
+    const rotateX = useTransform(mouseY, [-0.5, 0.5], ["17.5deg", "-17.5deg"]);
+    const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-17.5deg", "17.5deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.div
+            onClick={onClick}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            className={cn("relative transition-all duration-200 ease-out cursor-pointer", className)}
+        >
+            <div style={{ transform: "translateZ(75px)" }} className="absolute inset-4 rounded-[2rem] shadow-2xl opacity-0 group-hover:opacity-20 transition-opacity bg-black blur-xl -z-10" />
+            {children}
+        </motion.div>
+    );
+}
+
+// Mock Data for Analytics
+const ANALYTICS_DATA = [
+    { day: 'Mon', focus: 65 },
+    { day: 'Tue', focus: 85 },
+    { day: 'Wed', focus: 45 },
+    { day: 'Thu', focus: 90 },
+    { day: 'Fri', focus: 75 },
+    { day: 'Sat', focus: 30 },
+    { day: 'Sun', focus: 50 },
+];
 
 export default function WorkDashboard() {
     const { user, userProfile, updateUserProfile } = useAuth();
@@ -16,6 +72,12 @@ export default function WorkDashboard() {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [nameInput, setNameInput] = useState('');
     const [savingProfile, setSavingProfile] = useState(false);
+
+    // Music Player State
+    const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+
+    // Invisible Labor Log State
+    const [showLaborLog, setShowLaborLog] = useState(false);
 
     useEffect(() => {
         if (!loading && user && userProfile) {
@@ -40,7 +102,6 @@ export default function WorkDashboard() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // ... existing fetchData logic ...
             try {
                 const [boundary, workload] = await Promise.all([
                     checkBoundary(),
@@ -57,228 +118,244 @@ export default function WorkDashboard() {
         fetchData();
     }, []);
 
-    // ... statCards definition ...
-    const statCards = [
-        {
-            title: "Tone Shield",
-            icon: Shield,
-            desc: "Protect your peace",
-            path: "/work/tone-shield",
-            color: "text-indigo-500",
-            bg: "bg-indigo-100 dark:bg-indigo-900/20"
-        },
-        {
-            title: "Helpline",
-            icon: Phone,
-            desc: "Emergency contacts",
-            path: "/work/helpline",
-            color: "text-purple-500",
-            bg: "bg-purple-100 dark:bg-purple-900/20"
-        },
-        {
-            title: "Burnout Watch",
-            icon: Activity,
-            desc: "Monitor risk levels",
-            path: "/work/burnout",
-            color: "text-rose-500",
-            bg: "bg-rose-100 dark:bg-rose-900/20"
-        },
-        {
-            title: "Safe Cab",
-            icon: Truck,
-            desc: "Premium ride scheduling",
-            path: "/work/cab",
-            color: "text-teal-500",
-            bg: "bg-teal-100 dark:bg-teal-900/20"
-        },
-        {
-            title: "Auto Scheduler",
-            icon: Calendar,
-            desc: "Energy-based planning",
-            path: "/work/auto-schedule",
-            color: "text-amber-500",
-            bg: "bg-amber-100 dark:bg-amber-900/20"
-        },
-    ];
-
     return (
-        <div className="space-y-8 relative min-h-[calc(100vh-4rem)]">
-            {/* ... background elements ... */}
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <motion.div
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 45, 0],
-                        x: [0, 100, 0]
-                    }}
-                    transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-                    className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-purple-200/40 rounded-full blur-[120px]"
-                />
-                <motion.div
-                    animate={{
-                        scale: [1, 1.3, 1],
-                        rotate: [0, -30, 0],
-                        x: [0, -50, 0]
-                    }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                    className="absolute top-1/2 -left-40 w-[500px] h-[500px] bg-orange-100/40 rounded-full blur-[100px]"
-                />
-                <motion.div
-                    animate={{
-                        scale: [1.2, 1, 1.2],
-                        y: [0, 100, 0]
-                    }}
-                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-                    className="absolute -bottom-40 right-1/4 w-[700px] h-[700px] bg-rose-100/30 rounded-full blur-[150px]"
-                />
+        <div className="min-h-screen text-slate-900 font-sans p-6 pb-20 relative overflow-hidden">
+            {/* Ambient Noise overlay for texture */}
+            <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0 mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
+            {/* Background Gradients */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-rose-100/40 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-orange-100/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="relative z-10"
-            >
-                <h1 className="text-4xl font-display font-black text-foreground tracking-tighter flex items-center">
-                    {`Hello ${userProfile?.name?.split(' ')[0] || 'Friend'}`.split("").map((char, index) => (
-                        <motion.span
-                            key={index}
-                            initial={{ y: -120, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{
-                                type: "spring",
-                                damping: 7,
-                                stiffness: 200,
-                                delay: index * 0.08,
-                                mass: 1.5
-                            }}
-                            className={cn(char === " " ? "mr-3" : "")}
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Header Section */}
+                <header className="mb-12 flex justify-between items-end">
+                    <div>
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-6xl font-black text-slate-900 tracking-tighter mb-2"
                         >
-                            {char}
-                        </motion.span>
-                    ))}
-                </h1>
-                <p className="text-muted-foreground mt-4 text-lg font-bold">Your AI assistant is monitoring your workload.</p>
-            </motion.div>
-
-            {/* Alert Section */}
-            {loading ? (
-                <div className="h-40 bg-accent/20 rounded-3xl animate-pulse relative z-10" />
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                    {/* Boundary Alert */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 60 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: "easeOut" }}
-                        className={cn(
-                            "p-6 rounded-3xl border flex items-start gap-4 transition-all hover:shadow-2xl hover:border-black/5 backdrop-blur-md",
-                            boundaryCheck?.status === 'red' ? "bg-red-50/80 dark:bg-red-900/10 border-red-200 dark:border-red-900"
-                                : boundaryCheck?.status === 'amber' ? "bg-amber-50/80 dark:bg-amber-900/10 border-amber-200 dark:border-amber-900"
-                                    : "bg-emerald-50/80 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900"
-                        )}
-                    >
-                        <div className={cn(
-                            "p-3 rounded-xl",
-                            boundaryCheck?.status === 'red' ? "bg-red-100 text-red-600" :
-                                boundaryCheck?.status === 'amber' ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
-                        )}>
-                            {boundaryCheck?.status === 'red' ? <AlertTriangle className="w-6 h-6" /> : <CheckCircle className="w-6 h-6" />}
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg mb-1 text-slate-800">{boundaryCheck?.title}</h3>
-                            <p className="text-sm opacity-80 mb-2 leading-relaxed text-slate-600">{boundaryCheck?.message}</p>
-                            {boundaryCheck?.can_automate_reply && (
-                                <button className="text-xs font-bold uppercase tracking-wider bg-white/70 px-3 py-1 rounded-lg border border-black/5 hover:bg-white transition-colors">
-                                    Enable Auto-Response
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-
-                    {/* Workload Insight */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 60 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-                        className="bg-white/70 backdrop-blur-md border border-white/50 p-6 rounded-3xl shadow-sm hover:shadow-2xl transition-all flex items-start gap-4"
-                    >
-                        <div className="p-3 bg-primary/10 text-primary rounded-xl">
-                            <Zap className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg mb-1 text-slate-800">{workloadInsight?.title}</h3>
-                            <p className="text-sm text-slate-600 mb-3 leading-relaxed">{workloadInsight?.recommendation}</p>
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-white/50 px-3 py-1.5 rounded-lg inline-flex border border-white/30 truncate">
-                                <Clock className="w-3 h-3" /> {workloadInsight?.summary}
+                            Hello, <span className="text-[#FF8A71]">{userProfile?.name?.split(' ')[0] || 'Friend'}</span>.
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-xl text-slate-500 font-medium"
+                        >
+                            Your workspace is ready. Energy levels look good.
+                        </motion.p>
+                    </div>
+                    <div className="hidden md:block">
+                        <div className="bg-white/50 backdrop-blur-md border border-white/60 p-2 rounded-2xl flex gap-2">
+                            <div className="px-4 py-2 bg-white rounded-xl shadow-sm text-sm font-bold text-slate-600">
+                                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                             </div>
                         </div>
-                    </motion.div>
-                </div>
-            )}
+                    </div>
+                </header>
 
-            {/* Quick Actions */}
-            <motion.h2
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-2xl font-black mt-8 tracking-tight relative z-10 text-slate-800"
-            >
-                Personalized Tools
-            </motion.h2>
-            <motion.div
-                className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                    visible: {
-                        transition: {
-                            staggerChildren: 0.15
-                        }
-                    }
-                }}
-            >
-                {statCards.map((card) => (
-                    <Link to={card.path} key={card.title}>
-                        <motion.div
-                            variants={{
-                                hidden: { opacity: 0, y: 80, scale: 0.9 },
-                                visible: {
-                                    opacity: 1,
-                                    y: 0,
-                                    scale: 1,
-                                    transition: { type: 'spring', damping: 15, stiffness: 100 }
-                                }
-                            }}
-                            whileHover={{ scale: 1.05, y: -10, rotate: 1 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="bg-white/60 backdrop-blur-xl border border-white/40 p-8 rounded-[2.5rem] h-full hover:shadow-[0_30px_60px_rgba(0,0,0,0.08)] transition-all group overflow-hidden relative"
-                        >
-                            <div className={cn("w-14 h-14 rounded-[1.25rem] flex items-center justify-center mb-5 transition-all group-hover:scale-110 shadow-lg", card.bg, card.color)}>
-                                <card.icon className="w-7 h-7" />
+                {/* Dashboard Grid (Bento Box Layout) */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[180px]">
+
+                    {/* 1. Main Feature: Tone Shield (Large Card) */}
+                    <Link to="/work/tone-shield" className="md:col-span-2 md:row-span-2 group perspective-1000">
+                        <TiltCard className="h-full bg-gradient-to-br from-indigo-500 to-violet-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-200 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <Shield className="w-8 h-8 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-3xl font-black mb-2">Tone Shield</h3>
+                                    <p className="text-indigo-100 font-medium text-lg leading-relaxed max-w-xs">
+                                        Detect & diffuse conflict before it starts. AI-powered communication armor.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 group-hover:gap-4 transition-all">
+                                    <span>Activate Shield</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </div>
                             </div>
-                            <h3 className="font-black text-xl mb-1.5 text-slate-800 tracking-tight">{card.title}</h3>
-                            <p className="text-slate-500 text-xs font-bold leading-relaxed">{card.desc}</p>
-
-                            {/* Animated light flare on hover */}
-                            <motion.div
-                                initial={{ x: '-100%' }}
-                                whileHover={{ x: '100%' }}
-                                transition={{ duration: 1 }}
-                                className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 opacity-0 group-hover:opacity-100"
-                            />
-                        </motion.div>
+                        </TiltCard>
                     </Link>
-                ))}
-            </motion.div>
-            {/* Profile Completion Modal */}
+
+                    {/* 2. Sonic Sanctuary (Music) - NEW */}
+                    <div className="md:col-span-1 md:row-span-2 group perspective-1000" onClick={() => setShowMusicPlayer(true)}>
+                        <TiltCard className="h-full bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-900/50 overflow-hidden relative cursor-pointer">
+                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
+                            {/* Visualizer bars simulation */}
+                            <div className="absolute bottom-0 left-0 right-0 h-32 flex items-end justify-between px-8 pb-8 gap-1 opacity-30">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="w-full bg-pink-500 rounded-t-lg h-full animate-pulse" style={{ animationDelay: `${i * 0.1}s`, height: `${Math.random() * 100}%` }} />
+                                ))}
+                            </div>
+
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                                    <Music className="w-7 h-7 text-pink-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black mb-1">Sonic Sanctuary</h3>
+                                    <p className="text-slate-400 text-sm font-medium">Focus & Calm Audio</p>
+                                </div>
+                            </div>
+                        </TiltCard>
+                    </div>
+
+                    {/* 3. Analytics Chart - NEW */}
+                    <div className="md:col-span-1 md:row-span-2 bg-white border border-slate-100 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-800">Weekly Focus</h3>
+                            <div className="bg-emerald-50 text-emerald-600 text-xs font-black px-2 py-1 rounded-lg">+12%</div>
+                        </div>
+                        <div className="flex-1 w-full -ml-4">
+                            <ResponsiveContainer width="115%" height="100%">
+                                <BarChart data={ANALYTICS_DATA}>
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Bar dataKey="focus" radius={[4, 4, 0, 0]}>
+                                        {ANALYTICS_DATA.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.focus > 80 ? '#FF8A71' : '#cbd5e1'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* 4. Me Time (Hobbies) - NEW */}
+                    <Link to="/work/me-time" className="md:col-span-1 md:row-span-1 group perspective-1000">
+                        <TiltCard className="h-full bg-pink-50 border border-pink-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-pink-200 rounded-full blur-xl opacity-50" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Heart className="w-8 h-8 text-pink-500" />
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800">Me Time</h3>
+                                    <p className="text-xs font-bold text-pink-400 uppercase tracking-widest mt-1">Hobbies Nearby</p>
+                                </div>
+                            </div>
+                        </TiltCard>
+                    </Link>
+
+                    {/* 5. Helpline (Square) */}
+                    <Link to="/work/helpline" className="md:col-span-1 md:row-span-1 group perspective-1000">
+                        <div className="h-full bg-slate-900 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl -mr-10 -mb-10 opacity-20" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Phone className="w-8 h-8 text-purple-400" />
+                                <div>
+                                    <h3 className="text-xl font-black text-white">Helpline</h3>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">24/7 Support</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* 6. Auto Scheuler (Horizontal) */}
+                    <Link to="/work/auto-schedule" className="md:col-span-2 md:row-span-1 group perspective-1000">
+                        <div className="h-full bg-[#FF8A71] rounded-[2.5rem] p-6 flex items-center justify-between hover:shadow-lg transition-all group-hover:-translate-y-1 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10 pointer-events-none" />
+                            <div className="flex items-center gap-6 relative z-10">
+                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-sm text-white">
+                                    <Calendar className="w-8 h-8" />
+                                </div>
+                                <div className="text-white">
+                                    <h3 className="text-2xl font-black">Auto Schedule</h3>
+                                    <p className="text-white/80 font-medium">Smart AI planning</p>
+                                </div>
+                            </div>
+                            <div className="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center group-hover:bg-white group-hover:text-[#FF8A71] transition-all text-white relative z-10">
+                                <ArrowRight className="w-6 h-6" />
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* 7. Burnout Watch (Square) */}
+                    <Link to="/work/burnout" className="md:col-span-1 md:row-span-1 group perspective-1000">
+                        <div className="h-full bg-white border border-slate-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-rose-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Activity className="w-8 h-8 text-rose-500" />
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800">Burnout</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Check Levels</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* 8. Safe Cab (Square) */}
+                    <Link to="/work/cab" className="md:col-span-1 md:row-span-1 group perspective-1000">
+                        <div className="h-full bg-emerald-50 border border-emerald-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Truck className="w-8 h-8 text-emerald-500" />
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800">Safe Cab</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Ride Safe</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* 9. invisible Labor Log (Square) - NEW */}
+                    <div className="md:col-span-1 md:row-span-1 group perspective-1000" onClick={() => setShowLaborLog(true)}>
+                        <TiltCard className="h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden cursor-pointer group-hover:-translate-y-1">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl -mr-10 -mt-10 opacity-20" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Sparkles className="w-8 h-8 text-indigo-400" />
+                                <div>
+                                    <h3 className="text-xl font-black text-white">Invisible Labor</h3>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Log & Highlight</p>
+                                </div>
+                            </div>
+                        </TiltCard>
+                    </div>
+
+                    {/* 10. Sisterhood (Square) - NEW */}
+                    <Link to="/work/sisterhood" className="md:col-span-1 md:row-span-1 group perspective-1000">
+                        <TiltCard className="h-full bg-purple-50 border border-purple-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-purple-100/30" />
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <Users className="w-8 h-8 text-purple-500" />
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800">Sisterhood</h3>
+                                    <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mt-1">Find your Tribe</p>
+                                </div>
+                            </div>
+                        </TiltCard>
+                    </Link>
+
+                    {/* 11. Dynamic Insight Widget */}
+                    <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-100 rounded-[2.5rem] p-6 flex items-center gap-6 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-slate-50/50 -z-10" />
+                        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-500 shrink-0">
+                            {boundaryCheck?.status === 'red' ? <AlertTriangle className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-slate-800 mb-1">{workloadInsight?.title || "Mindfulness Moment"}</h4>
+                            <p className="text-sm text-slate-500 leading-snug max-w-md">
+                                {workloadInsight?.recommendation || "Take a deep breath. You're doing great."}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {/* Profile Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl relative overflow-hidden"
+                        className="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl relative overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
 
@@ -287,8 +364,8 @@ export default function WorkDashboard() {
                                 <User className="w-8 h-8" />
                             </div>
 
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Complete Profile</h2>
-                            <p className="text-slate-500 text-sm font-bold mb-8">We noticed your profile is missing a name. Let's fix that to personalize your experience.</p>
+                            <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Complete Profile</h2>
+                            <p className="text-slate-500 text-sm font-bold mb-8">We noticed your profile is missing a name.</p>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
@@ -298,7 +375,7 @@ export default function WorkDashboard() {
                                         value={nameInput}
                                         onChange={(e) => setNameInput(e.target.value)}
                                         placeholder="e.g. Your Name"
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF8A71] text-slate-900 dark:text-white font-bold placeholder:text-slate-300 transition-all"
+                                        className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF8A71] text-slate-900 font-bold placeholder:text-slate-300 transition-all"
                                     />
                                 </div>
 
@@ -315,6 +392,14 @@ export default function WorkDashboard() {
                     </motion.div>
                 </div>
             )}
+
+            {/* Global Music Player Triggered by Dashboard Card */}
+            <MusicPlayer isOpen={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} />
+
+            {/* Invisible Labor Log Modal */}
+            <AnimatePresence>
+                {showLaborLog && <InvisibleLaborLog onClose={() => setShowLaborLog(false)} />}
+            </AnimatePresence>
         </div>
     );
 }

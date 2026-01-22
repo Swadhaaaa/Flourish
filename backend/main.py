@@ -132,6 +132,30 @@ async def analyze_reflection(request: ReflectionRequest):
     """
     return ai_service.analyze_work_reflection(request.text)
 
+# --- Invisible Labor & Community ---
+from invisible_service import InvisibleLaborAnalyzer
+from community_service import CommunityMatcher
+
+invisible_analyzer = InvisibleLaborAnalyzer()
+community_matcher = CommunityMatcher()
+
+class LaborRequest(BaseModel):
+    task_description: str
+
+@app.post("/api/ai/invisible-labor")
+async def analyze_labor(request: LaborRequest):
+    """
+    Analyzes a task to determine if it is 'invisible labor' or 'promotable'.
+    """
+    return invisible_analyzer.analyze(request.task_description)
+
+@app.post("/api/community/match")
+async def match_community(data: dict = Body(...)):
+    """
+    Matches a user with a 'Sisterhood' mentor/peer based on profile.
+    """
+    return community_matcher.match_user(data)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

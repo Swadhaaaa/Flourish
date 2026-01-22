@@ -1,0 +1,92 @@
+[
+    {
+        "id": "u1",
+        "name": "Sarah Chen",
+        "role": "Senior Product Manager",
+        "company": "TechFlow",
+        "industry": "Technology",
+        "burnout_level": "Low",
+        "interests": [
+            "Mentorship",
+            "AI Ethics",
+            "Hiking"
+        ],
+        "bio": "10 years in PM. Happy to help navigate stakeholder management.",
+        "photo": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80"
+    },
+    {
+        "id": "u2",
+        "name": "Priya Patel",
+        "role": "Marketing Director",
+        "company": "CreativePulse",
+        "industry": "Marketing",
+        "burnout_level": "Medium",
+        "interests": [
+            "Brand Strategy",
+            "Work-Life Balance",
+            "Yoga"
+        ],
+        "bio": "Balancing a team of 20 and a toddler. Let's talk about boundaries.",
+        "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80"
+    },
+    {
+        "id": "u3",
+        "name": "Elena Rodriguez",
+        "role": "VP of Engineering",
+        "company": "BuildSafe",
+        "industry": "Construction",
+        "burnout_level": "Low",
+        "interests": [
+            "Women in STEM",
+            "Leadership",
+            "Salsa"
+        ],
+        "bio": "Breaking glass ceilings in construction. You belong here.",
+        "photo": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
+    },
+    {
+        "id": "u4",
+        "name": "Aisha Johnson",
+        "role": "Investment Banker",
+        "company": "GlobalFinance",
+        "industry": "Finance",
+        "burnout_level": "High",
+        "interests": [
+            "Financial Independence",
+            "Burnout Recovery",
+            "Reading"
+        ],
+        "bio": "The hours are long, but I'm learning to say no. Looking for support.",
+        "photo": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&q=80"
+    },
+    {
+        "id": "u5",
+        "name": "Dr. Emily Blunt",
+        "role": "Chief Surgeon",
+        "company": "City Hospital",
+        "industry": "Healthcare",
+        "burnout_level": "Critical",
+        "interests": [
+            "Medical Tech",
+            "Sleep",
+            "Piano"
+        ],
+        "bio": "Saving lives shouldn't cost mine. Seeking balance.",
+        "photo": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&q=80"
+    },
+    {
+        "id": "u6",
+        "name": "Zoe Kim",
+        "role": "UX Designer",
+        "company": "StartUp Inc",
+        "industry": "Technology",
+        "burnout_level": "Low",
+        "interests": [
+            "Design Systems",
+            "Accessibility",
+            "Gaming"
+        ],
+        "bio": "Design is my passion. Happy to critique portfolios.",
+        "photo": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80"
+    }
+]

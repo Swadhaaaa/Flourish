@@ -209,7 +209,7 @@ const ProfileDashboard = () => {
                             <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Map fields for editing */}
-                                    {['age', 'gender', 'country', 'dependents', 'jobRole', 'department', 'yearsExp', 'salaryRange', 'workHours', 'commute', 'remoteMode', 'caregiving'].map((field) => (
+                                    {['age', 'gender', 'country', 'dependents', 'jobRole', 'department', 'yearsExp', 'salaryRange', 'workHours', 'commute', 'remoteMode', 'caregiving', 'hobbies', 'teamSize'].map((field) => (
                                         <div key={field} className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
                                                 {field.replace(/([A-Z])/g, ' $1').trim()}

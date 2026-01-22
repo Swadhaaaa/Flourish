@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useMode } from '../context/ModeContext';
 import { cn } from '../lib/utils';
-import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid, RotateCcw } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -13,18 +14,30 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     const { theme, setTheme } = useTheme();
-    const { switchMode } = useMode();
-    const { userProfile } = useAuth();
-    const { mode } = useMode(); // Get mode from context
+    const { switchMode, mode } = useMode();
+    const { user, userProfile, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const isHome = location.pathname.startsWith('/home');
     const isWork = location.pathname.startsWith('/work');
     const isProfile = location.pathname.startsWith('/profile');
 
+    // Avatar shuffle state
+    const [avatarSeed, setAvatarSeed] = useState(0);
+    const [imgError, setImgError] = useState(false);
+
     // Safely access profile data
-    const displayName = userProfile?.displayName || 'User';
+    const displayName = userProfile?.displayName || user?.displayName || 'User';
     const jobRole = userProfile?.jobRole || 'Set Role';
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/');
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
+    };
 
     const homeItems = [
         { icon: Heart, label: 'Period Tracker', path: '/home/period-tracker' },
@@ -43,7 +56,12 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         { icon: User, label: 'Profile', path: '/profile' },
     ];
 
-    const items = (isHome || mode === 'home') ? homeItems : workItems; // Default to work items if ambiguous or profile
+    const items = (isHome || mode === 'home') ? homeItems : workItems;
+
+    // Logic: 1. Google/User Photo, 2. DiceBear Avatar, 3. Fallback Icon
+    const avatarUrl = !imgError && user?.photoURL
+        ? user.photoURL
+        : `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(displayName + avatarSeed)}&backgroundColor=ffdfbf`;
 
     if (!isHome && !isWork && !isProfile) return null;
 
@@ -66,27 +84,46 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
             {/* Profile Section */}
             <div className={cn("p-6 flex flex-col items-center", isOpen ? "mb-4" : "mb-2")}>
-                <motion.button
-                    layout
-                    onClick={() => navigate('/profile')}
-                    className={cn(
-                        "rounded-full border-4 border-white shadow-xl bg-[#FF8A71]/10 flex items-center justify-center overflow-hidden transition-all hover:scale-110 active:scale-95",
-                        isOpen ? "w-24 h-24 mb-4" : "w-12 h-12"
+                <div className="relative group">
+                    <motion.button
+                        layout
+                        onClick={() => navigate('/profile')}
+                        className={cn(
+                            "rounded-full border-4 border-white shadow-xl bg-[#FF8A71]/10 flex items-center justify-center overflow-hidden transition-all hover:scale-110 active:scale-95",
+                            isOpen ? "w-24 h-24 mb-4" : "w-12 h-12"
+                        )}
+                    >
+                        {imgError && !avatarUrl.includes('dicebear') ? (
+                            <User className="w-1/2 h-1/2 text-[#FF8A71]" />
+                        ) : (
+                            <img
+                                src={avatarUrl}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                                onError={() => setImgError(true)}
+                            />
+                        )}
+                    </motion.button>
+
+                    {/* Shuffle Button - Visible on hover when open */}
+                    {isOpen && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setAvatarSeed(prev => prev + 1); }}
+                            className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border border-orange-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-orange-50 text-orange-400"
+                            title="Shuffle Avatar"
+                        >
+                            <RotateCcw className="w-3 h-3" />
+                        </button>
                     )}
-                >
-                    <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.email || displayName || 'User'}&backgroundColor=ffdfbf&mouth=smile,twinkle&eyebrows=default,raisedExcited&top=longHair,longHairBob,longHairBun,longHairCurly,longHairCurvy,longHairDreads,longHairFrida,longHairFro,longHairFroBand,longHairMiaWallace,longHairNotTooLong,longHairShavedSides,longHairStraight,longHairStraight2,longHairStraightStrand`}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                    />
-                </motion.button>
+                </div>
+
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="text-center"
+                            className="text-center mt-4"
                         >
                             <p className="text-[10px] font-black text-[#FF8A71] uppercase tracking-[0.2em] mb-1 font-mono">{jobRole}</p>
                             <h3 className="text-xl font-black text-slate-800 tracking-tight">{displayName}</h3>
@@ -154,18 +191,15 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                         {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                     </button>
                     <button
-                        onClick={() => navigate('/mode-select')}
+                        onClick={handleLogout}
                         className="flex-1 w-full bg-slate-900 text-white p-3 rounded-2xl flex items-center justify-center hover:bg-slate-800 transition-colors"
+                        title="Logout"
                     >
                         <LogOut className="w-5 h-5" />
                     </button>
                 </div>
             </div>
 
-            <style>{`
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
         </motion.div>
     );
 };

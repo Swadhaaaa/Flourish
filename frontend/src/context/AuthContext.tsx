@@ -15,8 +15,8 @@ interface AuthContextType {
     userProfile: any;
     loading: boolean;
     signIn: (email: string, pass: string) => Promise<void>;
-    signUp: (email: string, pass: string, name: string) => Promise<void>;
-    googleSignIn: () => Promise<void>;
+    signUp: (email: string, pass: string, name: string, additionalData?: any) => Promise<void>;
+    googleSignIn: (additionalData?: any) => Promise<void>;
     logout: () => Promise<void>;
     updateUserProfile: (data: any) => Promise<void>;
 }
@@ -47,14 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => unsubscribe();
     }, []);
 
-    const signUp = async (email: string, pass: string, name: string) => {
+    const signUp = async (email: string, pass: string, name: string, additionalData: any = {}) => {
         const result = await createUserWithEmailAndPassword(auth, email, pass);
         // Create user document in Firestore
         const profileData = {
             uid: result.user.uid,
             name,
             email,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            ...additionalData
         };
         await setDoc(doc(db, "users", result.user.uid), profileData);
         setUserProfile(profileData);
@@ -64,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await signInWithEmailAndPassword(auth, email, pass);
     };
 
-    const googleSignIn = async () => {
+    const googleSignIn = async (additionalData: any = {}) => {
         const result = await signInWithPopup(auth, googleProvider);
         const userDocRef = doc(db, "users", result.user.uid);
         const userDoc = await getDoc(userDocRef);
@@ -74,11 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 uid: result.user.uid,
                 name: result.user.displayName || '',
                 email: result.user.email,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                ...additionalData
             };
             await setDoc(userDocRef, newProfile);
             setUserProfile(newProfile);
         } else {
+            // Optional: Update terms if not previously recorded?
+            // For now, let's just create if not exists. 
+            // If user exists, we assume they are good or we could force update.
+            if (additionalData && Object.keys(additionalData).length > 0) {
+                await setDoc(userDocRef, additionalData, { merge: true });
+            }
             setUserProfile(userDoc.data());
         }
     };

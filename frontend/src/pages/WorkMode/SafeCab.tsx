@@ -53,6 +53,53 @@ export default function SafeCab() {
     const [pendingCabId, setPendingCabId] = useState<string | null>(null);
     const [showRideTypePopup, setShowRideTypePopup] = useState(false);
 
+    // Agentic AI States
+    const [isScanning, setIsScanning] = useState(false);
+    const [scanResults, setScanResults] = useState<any[] | null>(null);
+
+    const MOCK_PROVIDERS = [
+        {
+            id: 'safe-cab',
+            provider: 'Safe Cab',
+            price: 450,
+            eta: '4 min',
+            safety_score: 98,
+            type: 'Premium Electric',
+            icon: ShieldCheck,
+            color: 'rose'
+        },
+        {
+            id: 'uber',
+            provider: 'Uber',
+            price: 410,
+            eta: '8 min',
+            safety_score: 85,
+            type: 'Uber Go',
+            // using generic car icon for providers
+            icon: Car,
+            color: 'slate'
+        },
+        {
+            id: 'ola',
+            provider: 'Ola',
+            price: 430,
+            eta: '6 min',
+            safety_score: 88,
+            type: 'Prime Sedan',
+            icon: Car,
+            color: 'slate'
+        }
+    ];
+
+    const handleAgentScan = () => {
+        setIsScanning(true);
+        // Simulate AI Agent scanning multiple APIs
+        setTimeout(() => {
+            setIsScanning(false);
+            setScanResults(MOCK_PROVIDERS);
+        }, 3000);
+    };
+
     const selectedCab = CAB_MODELS.find(cab => cab.id === showDetails);
 
     return (
@@ -299,60 +346,144 @@ export default function SafeCab() {
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-300" />
                                     <input
                                         type="text"
-                                        placeholder="Search Your Secure Ride"
+                                        placeholder="Where do you want to go safely?"
                                         className="w-full bg-white border border-rose-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-rose-300 shadow-sm"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAgentScan()}
                                     />
                                 </div>
-                                <button className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200 group">
-                                    <Filter className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                                <button
+                                    onClick={handleAgentScan}
+                                    className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200 group relative overflow-hidden"
+                                >
+                                    <motion.div
+                                        animate={isScanning ? { rotate: 360 } : {}}
+                                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    >
+                                        <Filter className="w-6 h-6 text-white" />
+                                    </motion.div>
                                 </button>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="font-bold text-lg text-slate-900">Preferred Now</h3>
-                                <button className="text-rose-500 text-sm font-bold">See All</button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {CAB_MODELS.map(cab => (
-                                    <motion.div
-                                        key={cab.id}
-                                        whileHover={{ y: -5 }}
-                                        className="bg-white/80 backdrop-blur-md border border-rose-50 rounded-[2.5rem] p-6 relative overflow-hidden group cursor-pointer shadow-xl shadow-rose-100/50"
-                                        onClick={() => {
-                                            setPendingCabId(cab.id);
-                                            setShowRideTypePopup(true);
-                                        }}
-                                    >
-                                        <div className="relative z-10 flex justify-between items-start">
-                                            <div>
-                                                <h4 className="text-xl font-bold mb-1 text-slate-900">{cab.name}</h4>
-                                                <p className="text-rose-900/40 text-xs font-medium uppercase tracking-wider">{cab.type}</p>
-                                            </div>
-                                            <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center border border-rose-100 group-hover:bg-rose-500 group-hover:border-rose-400 transition-colors">
-                                                <ArrowRight className="w-5 h-5 text-rose-500 group-hover:text-white" />
-                                            </div>
+                        {/* AGENTIC SCANNING OVERLAY */}
+                        <AnimatePresence>
+                            {isScanning && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="bg-slate-900 rounded-[2.5rem] p-8 text-center relative overflow-hidden text-white"
+                                >
+                                    <div className="absolute inset-0 bg-rose-500/10 animate-pulse" />
+                                    <div className="relative z-10 flex flex-col items-center gap-4">
+                                        <div className="w-16 h-16 rounded-full border-4 border-rose-500 border-t-transparent animate-spin" />
+                                        <h3 className="text-xl font-bold font-display">Agent is Scouting...</h3>
+                                        <p className="text-slate-400 text-sm">Comparing Uber, Ola, and SafeCab for best safety & price.</p>
+                                        <div className="flex gap-4 mt-2 opacity-50">
+                                            <span className="text-xs border border-white/20 px-2 py-1 rounded">Uber API</span>
+                                            <span className="text-xs border border-white/20 px-2 py-1 rounded">Ola API</span>
+                                            <span className="text-xs border border-rose-500 px-2 py-1 rounded text-rose-300">Safety Check</span>
                                         </div>
-                                        <img src={cab.image} alt={cab.name} className="w-full h-40 object-contain my-4 drop-shadow-[0_20px_30px_rgba(255,133,111,0.2)] transform -rotate-3 group-hover:rotate-0 transition-transform duration-500" />
-                                        <div className="flex justify-between items-center relative z-10">
-                                            <div className="flex items-center gap-4 text-rose-900/60 text-xs font-bold">
-                                                <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100/50">
-                                                    <Users className="w-3 h-3" /> {cab.seats}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* SCAN RESULTS */}
+                        {scanResults ? (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-bold text-lg text-slate-900">Agent Recommendations</h3>
+                                    <button onClick={() => setScanResults(null)} className="text-slate-400 text-sm font-bold">Clear</button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {scanResults.map(provider => (
+                                        <motion.div
+                                            key={provider.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className={`p-6 rounded-[2rem] border-2 relative cursor-pointer group transition-all ${provider.id === 'safe-cab' ? 'bg-white border-rose-500 shadow-xl shadow-rose-200/50' : 'bg-white/60 border-transparent hover:bg-white'}`}
+                                            onClick={() => {
+                                                setPendingCabId(provider.id);
+                                                setShowRideTypePopup(true);
+                                            }}
+                                        >
+                                            {provider.id === 'safe-cab' && (
+                                                <div className="absolute -top-3 left-6 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                                                    Best Safety Choice
                                                 </div>
-                                                <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100/50">
-                                                    <Star className="w-3 h-3 text-rose-500 fill-rose-500" /> {cab.rating}
+                                            )}
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${provider.color === 'rose' ? 'bg-rose-50 text-rose-500' : 'bg-slate-100 text-slate-900'}`}>
+                                                        <provider.icon className="w-7 h-7" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-xl font-bold text-slate-900">{provider.provider}</h4>
+                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                                            <span>{provider.type}</span>
+                                                            <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                                                            <span>{provider.eta}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black text-slate-900">₹{provider.price}</div>
+                                                    <div className={`flex items-center justify-end gap-1 text-[10px] font-black uppercase tracking-wider ${provider.safety_score > 90 ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                        <ShieldCheck className="w-3 h-3" /> Score: {provider.safety_score}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span className="text-2xl font-bold text-slate-900">${cab.price}</span>
-                                                <span className="text-rose-900/40 text-[10px] uppercase font-bold tracking-widest ml-1">/ trip</span>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-bold text-lg text-slate-900">Preferred Now</h3>
+                                    <button className="text-rose-500 text-sm font-bold">See All</button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {CAB_MODELS.map(cab => (
+                                        <motion.div
+                                            key={cab.id}
+                                            whileHover={{ y: -5 }}
+                                            className="bg-white/80 backdrop-blur-md border border-rose-50 rounded-[2.5rem] p-6 relative overflow-hidden group cursor-pointer shadow-xl shadow-rose-100/50"
+                                            onClick={() => {
+                                                setPendingCabId(cab.id);
+                                                setShowRideTypePopup(true);
+                                            }}
+                                        >
+                                            <div className="relative z-10 flex justify-between items-start">
+                                                <div>
+                                                    <h4 className="text-xl font-bold mb-1 text-slate-900">{cab.name}</h4>
+                                                    <p className="text-rose-900/40 text-xs font-medium uppercase tracking-wider">{cab.type}</p>
+                                                </div>
+                                                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center border border-rose-100 group-hover:bg-rose-500 group-hover:border-rose-400 transition-colors">
+                                                    <ArrowRight className="w-5 h-5 text-rose-500 group-hover:text-white" />
+                                                </div>
+                                            </div>
+                                            <img src={cab.image} alt={cab.name} className="w-full h-40 object-contain my-4 drop-shadow-[0_20px_30px_rgba(255,133,111,0.2)] transform -rotate-3 group-hover:rotate-0 transition-transform duration-500" />
+                                            <div className="flex justify-between items-center relative z-10">
+                                                <div className="flex items-center gap-4 text-rose-900/60 text-xs font-bold">
+                                                    <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100/50">
+                                                        <Users className="w-3 h-3" /> {cab.seats}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100/50">
+                                                        <Star className="w-3 h-3 text-rose-500 fill-rose-500" /> {cab.rating}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-2xl font-bold text-slate-900">${cab.price}</span>
+                                                    <span className="text-rose-900/40 text-[10px] uppercase font-bold tracking-widest ml-1">/ trip</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
 

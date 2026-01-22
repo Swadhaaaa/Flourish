@@ -18,8 +18,12 @@ import BurnoutWatch from './pages/WorkMode/Burnout';
 import WorkDashboard from './pages/WorkMode/Dashboard';
 import Helpline from './pages/WorkMode/Helpline';
 import SafeCab from './pages/WorkMode/SafeCab';
+import Sisterhood from './pages/WorkMode/Sisterhood';
 import ProfileSetup from './pages/Profile/ProfileSetup';
 import ProfileDashboard from './pages/Profile/ProfileDashboard';
+import MeTime from './pages/WorkMode/MeTime';
+
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -29,26 +33,33 @@ function App() {
           <AuthProvider>
             <Routes>
               <Route path="/" element={<MainLayout />}>
+                {/* Public Route */}
                 <Route index element={<LandingPage />} />
-                <Route path="mode-select" element={<ModeSelection />} />
-                <Route path="profile/setup" element={<ProfileSetup />} />
-                <Route path="profile" element={<ProfileDashboard />} />
 
-                {/* Home Mode Routes */}
-                <Route path="home" element={<Navigate to="/home/period-tracker" replace />} />
-                <Route path="home/dashboard" element={<PeriodTracker />} />
-                <Route path="home/period-tracker" element={<PeriodTracker />} />
-                <Route path="home/diet-planner" element={<DietPlanner />} />
-                <Route path="home/appointments" element={<AppointmentScheduler />} />
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="mode-select" element={<ModeSelection />} />
+                  <Route path="profile/setup" element={<ProfileSetup />} />
+                  <Route path="profile" element={<ProfileDashboard />} />
 
-                {/* Work Mode Routes */}
-                <Route path="work" element={<Navigate to="/work/dashboard" replace />} />
-                <Route path="work/dashboard" element={<WorkDashboard />} />
-                <Route path="work/tone-shield" element={<ToneShield />} />
-                <Route path="work/burnout" element={<BurnoutWatch />} />
-                <Route path="work/auto-schedule" element={<AutoSchedule />} />
-                <Route path="work/helpline" element={<Helpline />} />
-                <Route path="work/cab" element={<SafeCab />} />
+                  {/* Home Mode Routes */}
+                  <Route path="home" element={<Navigate to="/home/period-tracker" replace />} />
+                  <Route path="home/dashboard" element={<PeriodTracker />} />
+                  <Route path="home/period-tracker" element={<PeriodTracker />} />
+                  <Route path="home/diet-planner" element={<DietPlanner />} />
+                  <Route path="home/appointments" element={<AppointmentScheduler />} />
+
+                  {/* Work Mode Routes */}
+                  <Route path="work" element={<Navigate to="/work/dashboard" replace />} />
+                  <Route path="work/dashboard" element={<WorkDashboard />} />
+                  <Route path="work/tone-shield" element={<ToneShield />} />
+                  <Route path="work/burnout" element={<BurnoutWatch />} />
+                  <Route path="work/auto-schedule" element={<AutoSchedule />} />
+                  <Route path="work/helpline" element={<Helpline />} />
+                  <Route path="work/cab" element={<SafeCab />} />
+                  <Route path="work/sisterhood" element={<Sisterhood />} />
+                  <Route path="work/me-time" element={<MeTime />} />
+                </Route>
               </Route>
             </Routes>
           </AuthProvider>
