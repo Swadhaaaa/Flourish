@@ -1,36 +1,57 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Landing } from "./pages/Landing";
-import { Login } from "./pages/Login";
-import { Onboarding } from "./pages/Onboarding";
-import { DashboardLayout } from "./layouts/DashboardLayout";
-import { DashboardOverview } from "./pages/dashboard/DashboardOverview";
-import { SchedulePage } from "./pages/dashboard/SchedulePage";
-import { ToneShieldPage } from "./pages/dashboard/ToneShieldPage";
-import { WorkloadPage } from "./pages/dashboard/WorkloadPage";
-import { WellnessPage } from "./pages/dashboard/WellnessPage";
-import { BurnoutAssessment } from "./pages/BurnoutAssessment";
-import { ProfilePage } from "./pages/dashboard/ProfilePage";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { ModeProvider } from './context/ModeContext';
+import MainLayout from './layouts/MainLayout';
+import LandingPage from './pages/Landing/LandingPage';
+import ModeSelection from './pages/ModeSelection';
+
+// Home Mode Pages
+import PeriodTracker from './pages/HomeMode/PeriodTracker';
+import DietPlanner from './pages/HomeMode/DietPlanner';
+import AppointmentScheduler from './pages/HomeMode/Appointments';
+
+// Work Mode Pages
+import ToneShield from './pages/WorkMode/ToneShield';
+import AutoSchedule from './pages/WorkMode/AutoSchedule';
+import BurnoutWatch from './pages/WorkMode/BurnoutWatch';
+import WorkDashboard from './pages/WorkMode/Dashboard';
+import Helpline from './pages/WorkMode/Helpline';
+import SafeCab from './pages/WorkMode/SafeCab';
+import ProfileSetup from './pages/Profile/ProfileSetup';
+import ProfileDashboard from './pages/Profile/ProfileDashboard';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <BrowserRouter>
+        <ModeProvider>
+          <Routes>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<LandingPage />} />
+              <Route path="mode-select" element={<ModeSelection />} />
+              <Route path="profile/setup" element={<ProfileSetup />} />
+              <Route path="profile" element={<ProfileDashboard />} />
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardOverview />} />
-          <Route path="workload" element={<WorkloadPage />} />
-          <Route path="schedule" element={<SchedulePage />} />
-          <Route path="shield" element={<ToneShieldPage />} />
-          <Route path="wellness" element={<WellnessPage />} />
-          <Route path="assessment" element={<BurnoutAssessment />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<div className="text-white p-8">Settings Page Coming Soon</div>} />
-        </Route>
-      </Routes>
-    </Router>
+              {/* Home Mode Routes */}
+              <Route path="home" element={<Navigate to="/home/period-tracker" replace />} />
+              <Route path="home/dashboard" element={<PeriodTracker />} />
+              <Route path="home/period-tracker" element={<PeriodTracker />} />
+              <Route path="home/diet-planner" element={<DietPlanner />} />
+              <Route path="home/appointments" element={<AppointmentScheduler />} />
+
+              {/* Work Mode Routes */}
+              <Route path="work" element={<Navigate to="/work/dashboard" replace />} />
+              <Route path="work/dashboard" element={<WorkDashboard />} />
+              <Route path="work/tone-shield" element={<ToneShield />} />
+              <Route path="work/burnout" element={<BurnoutWatch />} />
+              <Route path="work/auto-schedule" element={<AutoSchedule />} />
+              <Route path="work/helpline" element={<Helpline />} />
+              <Route path="work/cab" element={<SafeCab />} />
+            </Route>
+          </Routes>
+        </ModeProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
