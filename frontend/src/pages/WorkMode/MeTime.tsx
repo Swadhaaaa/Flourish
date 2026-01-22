@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Clock, Heart, Users, ArrowRight, Search, Zap, Coffee, Music, Palette } from 'lucide-react';
+import { MapPin, Calendar, Users, ArrowRight, Search, Zap, Coffee, Music, Palette } from 'lucide-react';
 
 const EVENTS = [
     {
@@ -91,8 +91,8 @@ export default function MeTime() {
                                 key={cat}
                                 onClick={() => setFilter(cat)}
                                 className={`px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-wider transition-all whitespace-nowrap ${filter === cat
-                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                                        : 'bg-white/50 text-slate-500 hover:bg-white'
+                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
+                                    : 'bg-white/50 text-slate-500 hover:bg-white'
                                     }`}
                             >
                                 {cat}

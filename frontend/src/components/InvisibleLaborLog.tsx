@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sparkles, X, AlertCircle, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 

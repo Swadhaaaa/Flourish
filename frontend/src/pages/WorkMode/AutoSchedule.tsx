@@ -1,4 +1,4 @@
-import { Plus, Search, Clock, CheckCircle2, Clock4, ChevronRight, Bell, Target, Layers, X, Sparkles, Send, Flag, GripVertical, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
+import { Plus, Search, Clock, CheckCircle2, Clock4, Bell, Target, Layers, X, Sparkles, Send, Flag, GripVertical, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { generateSchedule } from '../../services/api';
