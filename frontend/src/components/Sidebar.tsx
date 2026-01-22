@@ -75,7 +75,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                     )}
                 >
                     <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName || 'User'}&backgroundColor=ffdfbf`}
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.email || displayName || 'User'}&backgroundColor=ffdfbf&mouth=smile,twinkle&eyebrows=default,raisedExcited&top=longHair,longHairBob,longHairBun,longHairCurly,longHairCurvy,longHairDreads,longHairFrida,longHairFro,longHairFroBand,longHairMiaWallace,longHairNotTooLong,longHairShavedSides,longHairStraight,longHairStraight2,longHairStraightStrand`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                     />
