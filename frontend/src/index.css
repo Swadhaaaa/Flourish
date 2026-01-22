@@ -3,6 +3,105 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Meditation App Theme - Light Mode */
+    --background: 40 33% 98%;
+    /* Soft Cream #FAF9F6 */
+    --foreground: 144 10% 20%;
+    /* Soft Dark Green/Grey */
+
+    --card: 0 0% 100%;
+    --card-foreground: 144 10% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 144 10% 20%;
+
+    --primary: 146 30% 50%;
+    /* Sage Green #6B9C7D approx */
+    --primary-foreground: 355 100% 98%;
+
+    --secondary: 40 20% 92%;
+    /* Warm Beige */
+    --secondary-foreground: 144 10% 20%;
+
+    --muted: 40 10% 90%;
+    --muted-foreground: 144 5% 45%;
+
+    --accent: 146 30% 94%;
+    /* Very light sage */
+    --accent-foreground: 146 30% 30%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 40 10% 90%;
+    --input: 40 10% 90%;
+    --ring: 146 30% 50%;
+
+    --radius: 1rem;
+
+    /* Home Mode Gradient */
+    --gradient-home: linear-gradient(135deg, #FAF9F6 0%, #E8F3EB 100%);
+
+    /* Work Mode Gradient */
+    --gradient-work: linear-gradient(135deg, #E6F0FF 0%, #FFFFFF 100%);
+  }
+
+  .dark {
+    /* Keep existing dark mode or slightly adjust for consistency if needed, 
+       but user specifically asked for light mode theme update */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --gradient-home: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --gradient-work: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.home-mode-gradient {
+  background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+}
+
+.work-mode-gradient {
+  background: linear-gradient(135deg, #1e1e2f 0%, #2b2b40 100%);
+}
+
+@layer base {
   body {
     @apply bg-background text-white antialiased;
   }
