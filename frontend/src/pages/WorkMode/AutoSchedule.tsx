@@ -85,6 +85,7 @@ export default function AutoSchedule() {
                     progress: 0
                 }));
                 setTasks(newTasks);
+                setActiveView('Calendar'); // Redirect user to see the schedule
                 setShowAIPopup(false);
             }
         } catch (error) {

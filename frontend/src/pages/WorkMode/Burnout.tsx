@@ -119,12 +119,20 @@ export default function BurnoutPage() {
     const handlePrediction = async () => {
         setIsLoading(true);
         try {
-            const data = await predictBurnout(metrics);
+            // Validate and sanitize payload
+            const payload = {
+                ...metrics,
+                sleep: parseInt(metrics.sleep, 10) || 7, // Convert "7" or "9+" to number
+                mentalHealth: metrics.mentalHealth // Backend likely handles categorical string
+            };
+
+            const data = await predictBurnout(payload);
             // setResult(data);
             // Show alert or modal with result
             alert(`Burnout Risk: ${data.prediction || 'Calculated'}`);
         } catch (error) {
-            console.error(error);
+            console.error("Prediction failed:", error);
+            alert("Failed to calculate prediction. Please try again.");
         } finally {
             setIsLoading(false);
         }
