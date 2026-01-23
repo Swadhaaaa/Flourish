@@ -8,10 +8,7 @@ import {
     createSession,
     clearSession,
     getSessionHistory,
-    getTasks,
-    addTask,
-    getEmployees,
-    addEmployee,
+
     generateSchedulerSchedule,
     getSchedulerSchedule
 } from '../../services/api';
@@ -89,19 +86,7 @@ const Scheduler = () => {
         } catch (e) { console.error(e); }
     };
 
-    const loadTasks = async () => {
-        try {
-            const data = await getTasks();
-            setTasks(data);
-        } catch (e) { console.error(e); }
-    };
 
-    const loadEmployees = async () => {
-        try {
-            const data = await getEmployees();
-            setEmployees(data);
-        } catch (e) { console.error(e); }
-    }
 
     const loadSchedule = async () => {
         try {
@@ -125,7 +110,7 @@ const Scheduler = () => {
 
             // Handle Side Effects
             if (res.action_performed === 'add_task') {
-                loadTasks();
+                // loadTasks(); // Disabled until tasks UI is ready
             } else if (res.action_performed === 'manage_schedule') {
                 loadSchedule();
             }
