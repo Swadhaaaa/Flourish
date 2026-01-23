@@ -12,6 +12,7 @@ class EventsService:
     def __init__(self):
         self.eventbrite_key = os.getenv("EVENTBRITE_API_KEY")
         self.ticketmaster_key = os.getenv("TICKETMASTER_API_KEY")
+        print(f"DEBUG: EventsService constants loaded. Eventbrite Key: {self.eventbrite_key[:4] if self.eventbrite_key else 'None'}...")
 
     def get_nearby_events(self, lat: float = 40.7128, long: float = -74.0060, category: str = None) -> List[Dict[str, Any]]:
         """
@@ -19,15 +20,20 @@ class EventsService:
         Falls back to mock data if no APIs are configured or if they fail.
         """
         events = []
+        print(f"DEBUG: fetching nearby events... Category: {category}")
         
         # 1. Try Eventbrite
         if self.eventbrite_key and self.eventbrite_key != "PLACEHOLDER_KEY":
+            print("DEBUG: Attempting Eventbrite fetch...")
             try:
                 eb_events = self._fetch_eventbrite_events(lat, long, category)
+                print(f"DEBUG: Eventbrite returned {len(eb_events)} events")
                 if eb_events:
                     events.extend(eb_events)
             except Exception as e:
                 print(f"Eventbrite API Error: {e}")
+        else:
+            print("DEBUG: Eventbrite Key missing or placeholder.")
 
         # 2. Try Ticketmaster
         if self.ticketmaster_key and self.ticketmaster_key != "PLACEHOLDER_KEY":
