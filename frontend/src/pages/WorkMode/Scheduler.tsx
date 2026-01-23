@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, ChevronRight, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import {
     sendChatMessage,
@@ -28,15 +28,11 @@ const Scheduler = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Data State
-    const [tasks, setTasks] = useState<any[]>([]);
     const [schedule, setSchedule] = useState<any[]>([]);
-    const [employees, setEmployees] = useState<any[]>([]);
 
     // Fetch Initial Data
     useEffect(() => {
         loadSessions();
-        loadTasks();
-        loadEmployees();
         loadSchedule();
     }, []);
 
