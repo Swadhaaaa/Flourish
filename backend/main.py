@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import os
+from dotenv import load_dotenv
 from ai_service import AIService
+from events_service import EventsService
+
+load_dotenv()
 from model_engine import generate_synthetic_data # We will use this to generate demo data if needed
 # from model_engine import predict_burnout # Uncomment when model_engine exposes this
 
@@ -20,6 +24,7 @@ app.add_middleware(
 
 # Initialize Services
 ai_service = AIService()
+events_service = EventsService()
 
 # --- Models ---
 class EmailRequest(BaseModel):
@@ -155,6 +160,13 @@ async def match_community(data: dict = Body(...)):
     Matches a user with a 'Sisterhood' mentor/peer based on profile.
     """
     return community_matcher.match_user(data)
+
+@app.get("/api/events/nearby")
+async def get_nearby_events(lat: float = 40.7128, long: float = -74.0060, category: str = None):
+    """
+    Fetches nearby events from Eventbrite/Ticketmaster or Mock data.
+    """
+    return events_service.get_nearby_events(lat, long, category)
 
 if __name__ == "__main__":
     import uvicorn

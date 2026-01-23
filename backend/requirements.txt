@@ -13,3 +13,5 @@ langchain-community
 openai
 pytest
 httpx
+requests
+python-dotenv
