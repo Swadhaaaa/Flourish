@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Chrome, X, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -338,6 +338,16 @@ const LandingPage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <footer className="absolute bottom-0 w-full py-4 text-center z-10 text-xs text-slate-400 font-bold bg-white/30 backdrop-blur-sm border-t border-white/50">
+                <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+                    <p>&copy; {new Date().getFullYear()} Tea Hack. All rights reserved.</p>
+                    <div className="flex gap-4">
+                        <Link to="/privacy" className="hover:text-[#FF8A71] transition-colors">Privacy Policy</Link>
+                        <Link to="/terms" className="hover:text-[#FF8A71] transition-colors">Terms & Conditions</Link>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
