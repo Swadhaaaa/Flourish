@@ -70,4 +70,66 @@ export const analyzeEmail = async (content: string, sender: string) => {
     }
 };
 
+// --- Scheduler & Chatbot ---
+
+export const sendChatMessage = async (message: string, sessionId: number) => {
+    try {
+        const response = await api.post('/api/scheduler/chat', { message, session_id: sessionId });
+        return response.data;
+    } catch (error) {
+        console.error('Chat Error:', error);
+        throw error;
+    }
+};
+
+export const getSessions = async () => {
+    const response = await api.get('/api/scheduler/sessions');
+    return response.data;
+};
+
+export const createSession = async (title: string = "New Chat") => {
+    const response = await api.post('/api/scheduler/sessions', { title });
+    return response.data;
+};
+
+export const clearSession = async (sessionId: number) => {
+    const response = await api.post('/api/scheduler/sessions/clear', { session_id: sessionId });
+    return response.data;
+};
+
+export const getSessionHistory = async (sessionId: number) => {
+    const response = await api.get(`/api/scheduler/sessions/${sessionId}/history`);
+    return response.data;
+};
+
+export const getTasks = async (activeOnly: boolean = true) => {
+    const response = await api.get(`/api/scheduler/tasks?active_only=${activeOnly}`);
+    return response.data;
+};
+
+export const addTask = async (task: any) => {
+    const response = await api.post('/api/scheduler/tasks', task);
+    return response.data;
+};
+
+export const getEmployees = async () => {
+    const response = await api.get('/api/scheduler/employees');
+    return response.data;
+};
+
+export const addEmployee = async (employee: any) => {
+    const response = await api.post('/api/scheduler/employees', employee);
+    return response.data;
+};
+
+export const generateSchedulerSchedule = async (constraints: string = "") => {
+    const response = await api.post('/api/scheduler/schedule/generate', { constraints });
+    return response.data;
+};
+
+export const getSchedulerSchedule = async () => {
+    const response = await api.get('/api/scheduler/schedule');
+    return response.data;
+};
+
 export default api;

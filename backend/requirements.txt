@@ -15,3 +15,5 @@ pytest
 httpx
 requests
 python-dotenv
+groq
+rich

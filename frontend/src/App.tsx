@@ -21,7 +21,9 @@ import SafeCab from './pages/WorkMode/SafeCab';
 import Sisterhood from './pages/WorkMode/Sisterhood';
 import ProfileSetup from './pages/Profile/ProfileSetup';
 import ProfileDashboard from './pages/Profile/ProfileDashboard';
+
 import MeTime from './pages/WorkMode/MeTime';
+import Scheduler from './pages/WorkMode/Scheduler';
 import TermsAndConditions from './pages/Legal/TermsAndConditions';
 import PrivacyPolicy from './pages/Legal/PrivacyPolicy';
 
@@ -62,6 +64,7 @@ function App() {
                   <Route path="work/helpline" element={<Helpline />} />
                   <Route path="work/cab" element={<SafeCab />} />
                   <Route path="work/sisterhood" element={<Sisterhood />} />
+                  <Route path="work/scheduler" element={<Scheduler />} />
                   <Route path="work/me-time" element={<MeTime />} />
                 </Route>
               </Route>

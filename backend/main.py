@@ -13,6 +13,9 @@ from model_engine import generate_synthetic_data # We will use this to generate 
 
 app = FastAPI(title="Flourish AI Backend", version="1.0.0")
 
+from routers.scheduler import router as scheduler_router
+app.include_router(scheduler_router)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,

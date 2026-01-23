@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useMode } from '../context/ModeContext';
 import { cn } from '../lib/utils';
-import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid, RotateCcw } from 'lucide-react';
+import { Sun, Moon, Home, Briefcase, User, LogOut, Heart, Calendar, Utensils, Shield, Activity, Truck, Phone, ChevronLeft, ChevronRight, LayoutGrid, RotateCcw, MessageSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -49,6 +49,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     const workItems = [
         { icon: LayoutGrid, label: 'Dashboard', path: '/work/dashboard' },
         { icon: Shield, label: 'Tone Shield', path: '/work/tone-shield' },
+        { icon: MessageSquare, label: 'Assistant', path: '/work/scheduler' },
         { icon: Activity, label: 'Burnout Watch', path: '/work/burnout' },
         { icon: Calendar, label: 'Auto Scheduler', path: '/work/auto-schedule' },
         { icon: Phone, label: 'Helpline', path: '/work/helpline' },
