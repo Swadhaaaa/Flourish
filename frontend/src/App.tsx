@@ -22,6 +22,8 @@ import Sisterhood from './pages/WorkMode/Sisterhood';
 import ProfileSetup from './pages/Profile/ProfileSetup';
 import ProfileDashboard from './pages/Profile/ProfileDashboard';
 import MeTime from './pages/WorkMode/MeTime';
+import TermsAndConditions from './pages/Legal/TermsAndConditions';
+import PrivacyPolicy from './pages/Legal/PrivacyPolicy';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -35,6 +37,8 @@ function App() {
               <Route path="/" element={<MainLayout />}>
                 {/* Public Route */}
                 <Route index element={<LandingPage />} />
+                <Route path="terms" element={<TermsAndConditions />} />
+                <Route path="privacy" element={<PrivacyPolicy />} />
 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
