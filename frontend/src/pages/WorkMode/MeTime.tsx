@@ -81,6 +81,14 @@ export default function MeTime() {
                             className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-slate-700"
                         />
                     </div>
+                    <div className="relative w-full md:w-64">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="New York, NY"
+                            className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-slate-700"
+                        />
+                    </div>
                     <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
                         {['All', 'Wellness', 'Creative', 'Music', 'Social'].map(cat => (
                             <button
@@ -159,9 +167,15 @@ export default function MeTime() {
                                                     {event.attendees} going
                                                 </div>
                                             </div>
-                                            <button className="bg-slate-900 text-white p-3 rounded-full hover:bg-pink-500 transition-colors shadow-lg">
+                                            <a
+                                                href={event.url || '#'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => !event.url && e.preventDefault()}
+                                                className="bg-slate-900 text-white p-3 rounded-full hover:bg-pink-500 transition-colors shadow-lg flex items-center justify-center cursor-pointer"
+                                            >
                                                 <ArrowRight className="w-5 h-5" />
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </motion.div>

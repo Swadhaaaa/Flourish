@@ -82,15 +82,24 @@ class EventsService:
                 for order in orders:
                     ev = order.get('event', {})
                     if ev:
+                         # Debug Image
+                         logo = ev.get('logo')
+                         image_url = logo.get('url') if logo else None
+                         if logo and logo.get('original'):
+                             image_url = logo.get('original', {}).get('url')
+                         
+                         print(f"DEBUG: Event {ev.get('id')} Image: {image_url}")
+
                          events_found.append({
                             "id": ev.get('id'),
                             "title": ev.get('name', {}).get('text', 'Untitled Event'),
-                            "category": "Attending", # Or parse from ev.category_id
-                            "location": "Eventbrite", # Could expand venue
+                            "category": "Social", # Defaulting to 'Social' so it appears in filters. 
+                            "location": "Eventbrite", 
                             "time": self._format_date(ev.get('start', {}).get('local')),
                             "attendees": random.randint(10, 50),
-                            "image": ev.get('logo', {}).get('url') if ev.get('logo') else None,
-                            "source": "eventbrite"
+                            "image": image_url,
+                            "source": "eventbrite",
+                            "url": ev.get('url') # Critical for linking
                         })
             
             # --- B. Check Organizations (Events Hosting) ---
