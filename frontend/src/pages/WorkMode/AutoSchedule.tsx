@@ -69,11 +69,13 @@ export default function AutoSchedule() {
     // Fetch tasks from Firestore
     useEffect(() => {
         if (user) {
+            setLoading(true); // Show loading state while fetching
+            setTasks([]); // Clear potentially stale tasks immediately
             getUserTasks(user.uid).then(fetchedTasks => {
-                if (fetchedTasks.length > 0) {
-                    setTasks(fetchedTasks);
-                }
-            });
+                setTasks(fetchedTasks); // Always set, even if empty, to override previous state
+            }).finally(() => setLoading(false));
+        } else {
+            setTasks([]); // Clear tasks if logged out
         }
     }, [user]);
 

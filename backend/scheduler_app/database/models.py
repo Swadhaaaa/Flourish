@@ -108,7 +108,8 @@ def create_tables(conn: sqlite3.Connection):
     CREATE TABLE IF NOT EXISTS conversation_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT DEFAULT 'New Chat',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        user_id TEXT
     )
     """)
 
@@ -138,6 +139,12 @@ def create_tables(conn: sqlite3.Connection):
         cursor.execute("ALTER TABLE conversation_logs ADD COLUMN session_id INTEGER DEFAULT 1")
     except sqlite3.OperationalError:
         pass # Column likely exists or table just created
+        
+    # Migration for user_id in conversation_sessions
+    try:
+        cursor.execute("ALTER TABLE conversation_sessions ADD COLUMN user_id TEXT")
+    except sqlite3.OperationalError:
+        pass # Column likely exists
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_preferences (

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 import {
     sendChatMessage,
     getSessions,
@@ -14,6 +15,7 @@ import {
 } from '../../services/api';
 
 const Scheduler = () => {
+    // Auth context used below
     const [activeTab, setActiveTab] = useState<'chat' | 'tasks' | 'schedule' | 'team'>('chat');
 
     // Chat State
@@ -27,18 +29,24 @@ const Scheduler = () => {
     // Data State
     const [schedule, setSchedule] = useState<any[]>([]);
 
+    const { user } = useAuth(); // Get User
+
     // Fetch Initial Data
     useEffect(() => {
-        loadSessions();
+        if (user) {
+            loadSessions(user.uid);
+        }
         loadSchedule();
-    }, []);
+    }, [user]);
 
+    // React to Session Change
     useEffect(() => {
         if (currentSessionId) {
             loadHistory(currentSessionId);
         }
     }, [currentSessionId]);
 
+    // Auto-scroll to bottom
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -47,21 +55,21 @@ const Scheduler = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const loadSessions = async () => {
+    const loadSessions = async (uid: string) => {
         try {
-            const data = await getSessions();
+            const data = await getSessions(uid);
             setSessions(data);
             if (data.length > 0 && !currentSessionId) {
                 setCurrentSessionId(data[0].id);
             } else if (data.length === 0) {
-                handleNewChat();
+                handleNewChat(uid);
             }
         } catch (e) { console.error(e); }
     };
 
-    const handleNewChat = async () => {
+    const handleNewChat = async (uid: string = user?.uid || "") => {
         try {
-            const newSession = await createSession();
+            const newSession = await createSession("New Chat", uid);
             setSessions([newSession, ...sessions]); // Prepend
             setCurrentSessionId(newSession.id);
             setMessages([]);
@@ -159,7 +167,7 @@ const Scheduler = () => {
                     <div className="mt-8 border-t border-slate-100 pt-6 flex-1 overflow-hidden flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">History</span>
-                            <button onClick={handleNewChat} className="p-2 hover:bg-orange-50 text-orange-400 rounded-full transition-colors active:scale-95">
+                            <button onClick={() => handleNewChat(user?.uid)} className="p-2 hover:bg-orange-50 text-orange-400 rounded-full transition-colors active:scale-95">
                                 <Plus className="w-4 h-4" />
                             </button>
                         </div>

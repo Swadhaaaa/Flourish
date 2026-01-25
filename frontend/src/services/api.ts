@@ -82,13 +82,14 @@ export const sendChatMessage = async (message: string, sessionId: number) => {
     }
 };
 
-export const getSessions = async () => {
-    const response = await api.get('/api/scheduler/sessions');
+export const getSessions = async (userId: string = "") => {
+    // Pass user_id as query param
+    const response = await api.get(`/api/scheduler/sessions?user_id=${userId}`);
     return response.data;
 };
 
-export const createSession = async (title: string = "New Chat") => {
-    const response = await api.post('/api/scheduler/sessions', { title });
+export const createSession = async (title: string = "New Chat", userId: string = "") => {
+    const response = await api.post('/api/scheduler/sessions', { title, user_id: userId });
     return response.data;
 };
 
