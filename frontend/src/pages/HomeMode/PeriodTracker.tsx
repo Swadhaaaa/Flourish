@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateUserDailyData, type DailyData } from '../../utils/syntheticData';
 import { useAuth } from '../../context/AuthContext';
 import { addPeriodLog } from '../../services/firestore';
-import { Utensils, Plus, Sparkles, TrendingUp, ChevronDown } from 'lucide-react';
+import { Utensils, Plus, Sparkles, TrendingUp } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { PeriodTrackerMiniPopup } from '../../components/PeriodTrackerMiniPopup';
 import PeriodCalendar from '../../components/PeriodCalendar';
 
 const PeriodTracker = () => {
@@ -115,7 +116,8 @@ const PeriodTracker = () => {
     if (loading || !data) return <div className="p-10 text-center">Loading Cycles...</div>;
 
     return (
-        <div className="min-h-screen bg-[#FFF8F5] p-6 md:p-10 font-sans">
+        <div className="min-h-screen bg-[#FFF8F5] p-6 md:p-10 font-sans relative overflow-hidden">
+            <PeriodTrackerMiniPopup />
 
             {/* Top Toggle */}
             <div className="flex justify-start mb-8">
@@ -175,7 +177,7 @@ const PeriodTracker = () => {
                                             <span className="text-5xl font-black leading-none mb-1 shadow-black/10 drop-shadow-sm">{data.dayInCycle}</span>
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Cycle Day</span>
                                             <span className="text-[9px] font-medium text-white/60">of 28 Days</span>
-                                            
+
                                             {/* Progress Indicator Dot */}
                                             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[50%] w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-purple-500" />
                                         </div>

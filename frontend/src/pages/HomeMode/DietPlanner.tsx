@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MoreHorizontal, Flame, Droplets, Wheat, Atom, ScanLine, Camera, Plus } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { DietPlannerMiniPopup } from '../../components/DietPlannerMiniPopup';
 
 export default function DietPlanner() {
     const [step, setStep] = useState<'intro' | 'camera' | 'scanning' | 'result'>('intro');
@@ -595,6 +596,7 @@ export default function DietPlanner() {
 
     return (
         <div className="h-screen bg-black overflow-hidden relative font-sans">
+            <DietPlannerMiniPopup />
             <AnimatePresence>
                 {showDailyLog && <DailyLogModal />}
             </AnimatePresence>
