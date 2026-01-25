@@ -6,10 +6,13 @@ import random
 # from langchain.chat_models import ChatOpenAI
 # from langchain.prompts import PromptTemplate
 
+from scheduler_app.ai_engine.groq_client import GroqSchedulerAI
+
 class AIService:
     def __init__(self):
         self.api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("Gemini_API_KEY")
         # self.llm = ChatOpenAI(temperature=0.7) if self.api_key else None
+        self.groq_ai = GroqSchedulerAI()
 
     def analyze_email(self, content: str, sender: str):
         """
@@ -386,3 +389,31 @@ class AIService:
             }
             
         return insight
+
+    def generate_period_insight(self, day: int, phase: str, symptoms: list, mood: str):
+        """
+        Generates a personalized daily insight using Llama-3 via Groq.
+        """
+        prompt = f"""
+        Generate a empathetic, 2-3 sentence daily insight for a woman tracking her cycle.
+        
+        CONTEXT:
+        - Day of Cycle: {day}
+        - Phase: {phase}
+        - Symptoms: {', '.join(symptoms) if symptoms else 'None'}
+        - Mood: {mood}
+        
+        GOAL:
+        - Explain why she feels this way biologically (briefly).
+        - Suggest one actionable work/productivity tip.
+        - Suggest one nutrition/self-care tip.
+        - Tone: Warm, validating, empowering.
+        - NO medical diagnosis.
+        
+        Output JSON: {{ "insight": "Start with a validation...", "short_tip": "One liner work tip" }}
+        """
+        
+        # We process it as a generic conversation for now to utilize the existing client
+        return self.groq_ai.process_conversation(prompt, [])['response_text']
+
+

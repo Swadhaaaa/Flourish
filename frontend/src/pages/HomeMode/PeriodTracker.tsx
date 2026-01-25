@@ -8,22 +8,67 @@ import { Timestamp } from 'firebase/firestore';
 
 const PeriodTracker = () => {
     const { user } = useAuth();
-    // Simulate user being on Day 8 in the Follicular phase for the demo
-    const [currentDay] = useState(8);
+    // Calendar State
+    const [startDate, setStartDate] = useState<string>(() => {
+        // Default to 8 days ago
+        const d = new Date();
+        d.setDate(d.getDate() - 8);
+        return d.toISOString().split('T')[0];
+    });
+
+    // Derived State
+    const [currentDay, setCurrentDay] = useState(8);
     const [data, setData] = useState<DailyData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [aiInsight, setAiInsight] = useState<string | null>(null);
 
     // Logging State
     const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
     const [selectedMood, setSelectedMood] = useState<string>('Happy');
     const [logStatus, setLogStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+    // Effect: Calculate Day & Fetch Data
     useEffect(() => {
-        // Load synthetic data for the current day
-        const dailyData = generateUserDailyData(currentDay);
+        if (!startDate) return;
+
+        const start = new Date(startDate);
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const cycleDay = (diffDays % 28) || 1; // Simplistic cycle math
+
+        setCurrentDay(cycleDay);
+
+        // Load synthetic data for structure
+        const dailyData = generateUserDailyData(cycleDay);
         setData(dailyData);
-        setLoading(false);
-    }, [currentDay]);
+
+        // Fetch Real AI Insight
+        const fetchAI = async () => {
+            try {
+                const res = await fetch('http://localhost:8000/api/ai/period-insight', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        day: cycleDay,
+                        phase: dailyData.phase,
+                        symptoms: selectedSymptoms,
+                        mood: selectedMood
+                    })
+                });
+                const json = await res.json();
+                if (json.insight) {
+                    setAiInsight(json.insight);
+                }
+            } catch (e) {
+                console.error("AI Fetch failed", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAI();
+
+    }, [startDate, selectedSymptoms, selectedMood]);
 
     const handleSaveLog = async () => {
         if (!user) return;

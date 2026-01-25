@@ -171,6 +171,26 @@ async def get_nearby_events(lat: float = 40.7128, long: float = -74.0060, catego
     """
     return events_service.get_nearby_events(lat, long, category)
 
+class PeriodInsightRequest(BaseModel):
+    day: int
+    phase: str
+    symptoms: List[str]
+    mood: str
+
+@app.post("/api/ai/period-insight")
+async def period_insight(request: PeriodInsightRequest):
+    """
+    Generates a personalized daily insight based on cycle data.
+    """
+    try:
+        # We reuse the chat interface for now, or use a specific method if implemented
+        insight_text = ai_service.generate_period_insight(request.day, request.phase, request.symptoms, request.mood)
+        return {"insight": insight_text}
+    except Exception as e:
+        # Fallback if AI fails
+        print(f"AI Generation Failed: {e}")
+        return {"insight": f"Day {request.day} ({request.phase}): Listen to your body and prioritize rest if needed."}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
