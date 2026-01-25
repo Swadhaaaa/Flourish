@@ -1,371 +1,276 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
-    Droplets,
-    Sparkles,
-    Activity,
-    Info,
-    Check
-} from 'lucide-react';
-import {
-    format,
-    addDays,
-    startOfMonth,
-    endOfMonth,
-    getDay,
-    isSameDay,
-    isToday,
-    eachDayOfInterval,
-    subMonths,
-    addMonths,
-    differenceInDays
-} from 'date-fns';
-import { cn } from '../../lib/utils';
+import { motion } from 'framer-motion';
+import { generateUserDailyData, type DailyData } from '../../utils/syntheticData';
+import { useAuth } from '../../context/AuthContext';
+import { addPeriodLog } from '../../services/firestore';
+import { Calendar, Utensils, Plus, Sparkles, TrendingUp } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
-export default function PeriodTracker() {
-    // --- State ---
-    const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [periodDates, setPeriodDates] = useState<Date[]>([]); // Confirmed period days
-    const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(null); // Temporary selection for "Log" button
-    const [view, setView] = useState<'tracker' | 'calendar'>('tracker');
+const PeriodTracker = () => {
+    const { user } = useAuth();
+    // Simulate user being on Day 8 in the Follicular phase for the demo
+    const [currentDay] = useState(8);
+    const [data, setData] = useState<DailyData | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // --- Local Storage (Mock Persistence) ---
-    useEffect(() => {
-        const saved = localStorage.getItem('myPeriodDates');
-        if (saved) {
-            setPeriodDates(JSON.parse(saved).map((d: string) => new Date(d)));
-        }
-    }, []);
+    // Logging State
+    const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+    const [selectedMood, setSelectedMood] = useState<string>('Happy');
+    const [logStatus, setLogStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     useEffect(() => {
-        localStorage.setItem('myPeriodDates', JSON.stringify(periodDates));
-    }, [periodDates]);
+        // Load synthetic data for the current day
+        const dailyData = generateUserDailyData(currentDay);
+        setData(dailyData);
+        setLoading(false);
+    }, [currentDay]);
 
-    // --- Logic ---
-    const isPeriodDay = (date: Date) => periodDates.some(d => isSameDay(d, date));
-
-    const handleDateClick = (date: Date) => {
-        // If already logged, allow deselecting immediately (fine-tuning)
-        if (isPeriodDay(date)) {
-            setPeriodDates(prev => prev.filter(d => !isSameDay(d, date)));
-            setTempSelectedDate(null);
-            return;
+    const handleSaveLog = async () => {
+        if (!user) return;
+        setLogStatus('saving');
+        try {
+            await addPeriodLog(user.uid, {
+                date: Timestamp.now(),
+                symptoms: selectedSymptoms,
+                mood: selectedMood,
+                flow: 'none', // Default for now
+                energy: data?.energyLevel || 3,
+                notes: 'Logged via Home Mode'
+            });
+            setLogStatus('saved');
+            setTimeout(() => setLogStatus('idle'), 2000);
+            setSelectedSymptoms([]); // Reset
+        } catch (err) {
+            console.error(err);
+            setLogStatus('idle');
         }
+    };
 
-        // If clicking a new date, select it temporarily to show "Log" button
-        if (tempSelectedDate && isSameDay(tempSelectedDate, date)) {
-            setTempSelectedDate(null); // Deselect if clicked again
+    const toggleSymptom = (symptom: string) => {
+        if (selectedSymptoms.includes(symptom)) {
+            setSelectedSymptoms(prev => prev.filter(s => s !== symptom));
         } else {
-            setTempSelectedDate(date);
+            setSelectedSymptoms(prev => [...prev, symptom]);
         }
     };
 
-    const confirmLog = () => {
-        if (!tempSelectedDate) return;
-
-        // Auto-select 5 days (Current + Next 4)
-        const newBlock: Date[] = [];
-        for (let i = 0; i < 5; i++) {
-            newBlock.push(addDays(tempSelectedDate, i));
-        }
-
-        setPeriodDates(prev => {
-            // Filter out duplicates
-            const uniqueNew = newBlock.filter(
-                newDate => !prev.some(existing => isSameDay(existing, newDate))
-            );
-            return [...prev, ...uniqueNew];
-        });
-
-        setTempSelectedDate(null); // Clear temp selection
-    };
-
-    // Calculate Cycle Status
-    const sortedDates = [...periodDates].sort((a, b) => a.getTime() - b.getTime());
-
-    let currentCycleStart: Date | null = null;
-    let daysSinceStart = 0;
-    let isCurrentlyOnPeriod = false;
-
-    if (sortedDates.length > 0) {
-        const lastLogged = sortedDates[sortedDates.length - 1];
-        if (differenceInDays(new Date(), lastLogged) < 10) {
-            let temp = lastLogged;
-            let blockStart = lastLogged;
-            /* eslint-disable-next-line no-constant-condition */
-            while (true) {
-                const prevDay = addDays(temp, -1);
-                if (isPeriodDay(prevDay)) {
-                    temp = prevDay;
-                    blockStart = prevDay;
-                } else {
-                    break;
-                }
-            }
-            currentCycleStart = blockStart;
-
-            if (isPeriodDay(new Date()) || differenceInDays(new Date(), lastLogged) <= 1) {
-                isCurrentlyOnPeriod = true;
-                daysSinceStart = differenceInDays(new Date(), currentCycleStart) + 1;
-            }
-        }
-    }
-
-    let daysUntilNextPeriod = 12; // Default mock
-    if (!isCurrentlyOnPeriod && sortedDates.length > 0) {
-        const lastDate = sortedDates[sortedDates.length - 1];
-        const nextStart = addDays(lastDate, 28);
-        daysUntilNextPeriod = differenceInDays(nextStart, new Date());
-    }
-
-
-    // --- Components ---
-
-    const DateCell = ({ date }: { date: Date }) => {
-        const isConfirmed = isPeriodDay(date);
-        const isTempSelected = tempSelectedDate && isSameDay(date, tempSelectedDate);
-        const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
-        const isTodayDate = isToday(date);
-
-        return (
-            <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleDateClick(date)}
-                className={cn(
-                    "h-14 w-full flex flex-col items-center justify-center rounded-2xl relative transition-all",
-                    !isCurrentMonth && "opacity-30",
-                    isTempSelected && "bg-rose-100 ring-2 ring-rose-400"
-                )}
-            >
-                {/* Selection Circle (Confirmed) */}
-                {isConfirmed && (
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute inset-2 bg-rose-400 rounded-full shadow-lg shadow-rose-200"
-                    />
-                )}
-
-                {/* Today Indicator */}
-                {isTodayDate && !isConfirmed && !isTempSelected && (
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full" />
-                )}
-
-                <span className={cn(
-                    "text-lg font-medium relative z-10",
-                    isConfirmed ? "text-white" : "text-slate-700"
-                )}>
-                    {format(date, 'd')}
-                </span>
-
-                {/* Dotted Line */}
-                {isConfirmed && (
-                    <div className="absolute top-1/2 -right-4 w-4 border-t-2 border-rose-300 border-dotted hidden md:block" />
-                )}
-            </motion.button>
-        );
-    };
-
-    const Calendar = () => {
-        const start = startOfMonth(currentMonth);
-        const end = endOfMonth(currentMonth);
-        const days = eachDayOfInterval({ start: addDays(start, -getDay(start)), end: addDays(end, 6 - getDay(end)) });
-
-        return (
-            <div className="bg-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-100 border border-slate-100 relative">
-                <div className="flex justify-between items-center mb-6">
-                    <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-full">
-                        <ChevronLeft className="w-6 h-6 text-slate-400" />
-                    </button>
-                    <h2 className="text-xl font-bold text-slate-800">{format(currentMonth, 'MMMM yyyy')}</h2>
-                    <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-full">
-                        <ChevronRight className="w-6 h-6 text-slate-400" />
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-7 mb-2">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                        <div key={d} className="text-center text-xs text-slate-400 font-bold py-2">{d}</div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-y-2">
-                    {days.slice(0, 42).map((d, i) => (
-                        <DateCell key={i} date={d} />
-                    ))}
-                </div>
-
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-400">
-                    <Info className="w-4 h-4" />
-                    <span>Select a date, then click "Log"</span>
-                </div>
-
-                {/* POP UP LOG BUTTON */}
-                <AnimatePresence>
-                    {tempSelectedDate && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                            className="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none" // pointer-events-none for wrapper
-                        >
-                            <button
-                                onClick={confirmLog}
-                                className="pointer-events-auto bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-full font-bold shadow-xl shadow-rose-200 flex items-center gap-2 transition-transform active:scale-95"
-                            >
-                                <Check className="w-5 h-5 border-2 border-white rounded-full p-0.5" />
-                                Log Period
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    };
-
-    const TrackerView = () => (
-        <div className="flex flex-col items-center">
-            {/* The "Cycle Circle" */}
-            <div className="relative w-80 h-80 flex items-center justify-center mb-8">
-                {/* Ambient Glow */}
-                <div className={cn(
-                    "absolute inset-0 blur-3xl rounded-full opacity-40 animate-pulse",
-                    isCurrentlyOnPeriod ? "bg-rose-500" : "bg-teal-400"
-                )} />
-
-                {/* Main Circle */}
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring" }}
-                    className={cn(
-                        "w-full h-full rounded-full flex flex-col items-center justify-center text-white relative z-10 shadow-2xl",
-                        isCurrentlyOnPeriod
-                            ? "bg-gradient-to-br from-rose-400 to-rose-600 shadow-rose-200"
-                            : "bg-gradient-to-br from-teal-400 to-teal-500 shadow-teal-200"
-                    )}
-                >
-                    {isCurrentlyOnPeriod ? (
-                        <>
-                            <span className="text-xl font-medium opacity-90">Period</span>
-                            <div className="flex items-baseline gap-1 mt-1 mb-2">
-                                <span className="text-7xl font-display font-bold">Day {daysSinceStart}</span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-                                <Droplets className="w-4 h-4 fill-white" />
-                                <span className="text-sm font-medium">Flow: Medium</span>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <span className="text-xl font-medium opacity-90">Next Period In</span>
-                            <div className="flex items-baseline gap-1 mt-1 mb-2">
-                                <span className="text-7xl font-display font-bold">{Math.abs(daysUntilNextPeriod)}</span>
-                                <span className="text-2xl font-medium opacity-80">Days</span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-                                <Sparkles className="w-4 h-4" />
-                                <span className="text-sm font-medium">Follicular Phase</span>
-                            </div>
-                        </>
-                    )}
-                </motion.div>
-
-                {/* Floating "Edit" button near the circle */}
-                <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    onClick={() => setView('calendar')}
-                    className="absolute -bottom-4 bg-white text-slate-800 px-6 py-3 rounded-full font-bold shadow-xl border border-slate-100 flex items-center gap-2 z-20"
-                >
-                    <CalendarIcon className="w-5 h-5 text-rose-500" />
-                    Edit Dates
-                </motion.button>
-            </div>
-
-            {/* Daily Insight Card */}
-            <motion.div
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-                className="w-full max-w-md bg-white rounded-3xl p-6 shadow-xl shadow-slate-100/50 border border-slate-50 flex items-start gap-4"
-            >
-                <div className={cn(
-                    "p-3 rounded-2xl",
-                    isCurrentlyOnPeriod ? "bg-rose-100 text-rose-500" : "bg-teal-100 text-teal-600"
-                )}>
-                    <Activity className="w-6 h-6" />
-                </div>
-                <div>
-                    <h3 className="font-bold text-slate-900 text-lg">Daily Insight</h3>
-                    <p className="text-slate-500 leading-relaxed mt-1">
-                        {isCurrentlyOnPeriod
-                            ? "Stay hydrated and consider light stretching today. Your body might feel a bit heavier than usual."
-                            : "Energy levels are rising! It's a great time for high-intensity workouts or tackling complex tasks."
-                        }
-                    </p>
-                </div>
-            </motion.div>
-        </div >
-    );
+    if (loading || !data) return <div className="p-10 text-center">Loading Cycles...</div>;
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] p-6 lg:p-12 font-sans overflow-y-auto">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-display font-bold text-rose-950">My Cycle</h1>
-                        <p className="text-rose-800/60">Manage your health & wellness</p>
+        <div className="min-h-screen bg-[#FFF8F5] p-6 md:p-10 font-sans">
+            <header className="mb-10 flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900 mb-2 font-display">Cycle Sync</h1>
+                    <p className="text-slate-500 font-medium">Harmonize your work & life with your rhythm.</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                    <Calendar className="w-4 h-4 text-purple-500" />
+                    <span className="text-sm font-bold text-slate-700">Today: Oct 25</span>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                {/* LEFT COL: Cycle Visuals */}
+                <div className="lg:col-span-2 space-y-8">
+
+                    {/* Main Insight Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-purple-200"
+                    >
+                        <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                            {/* Circular Progress */}
+                            <div className="w-40 h-40 rounded-full border-8 border-white/20 flex items-center justify-center shrink-0 relative">
+                                <span className="text-4xl font-black">{data.dayInCycle}</span>
+                                <span className="absolute bottom-8 text-xs font-medium opacity-80">Day of 28</span>
+                                {/* Active Dot */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[50%] w-3 h-3 bg-white rounded-full shadow-lg" />
+                            </div>
+
+                            <div className="text-center md:text-left">
+                                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3 border border-white/20">
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>{data.phase} Phase</span>
+                                </div>
+                                <h2 className="text-2xl font-bold mb-3 leading-tight">
+                                    "{data.dailyInsight}"
+                                </h2>
+                                <p className="text-white/80 text-sm font-medium leading-relaxed max-w-lg">
+                                    Your energy is {data.energyLevel > 3 ? 'High' : 'Low'}. Focus on
+                                    <strong className="text-white"> {data.workLife.focusAdvice}</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Nutrition Card */}
+                        <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                                    <Utensils className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800">Cravings & Fuel</h3>
+                                    <div className="text-xs text-slate-400">Tailored to your metabolism</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Eat More</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {data.nutrition.recommendedFoods.map(food => (
+                                            <span key={food} className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">
+                                                {food}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 pt-4 border-t border-slate-50">
+                                    <div className="flex-1">
+                                        <div className="text-xs font-bold text-slate-500 mb-1">Key Nutrients</div>
+                                        <div className="text-sm font-bold text-slate-800">{data.nutrition.keyNutrients.slice(0, 2).join(', ')}</div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="text-xs font-bold text-slate-500 mb-1">Hydration Goal</div>
+                                        <div className="text-sm font-bold text-blue-600">{data.nutrition.hydrationGoal} Liters</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Work-Life Card */}
+                        <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <BriefcaseIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800">Work Mode</h3>
+                                    <div className="text-xs text-slate-400">Optimize your schedule</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <TrendingUp className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold text-slate-500">Best For</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-800">{data.workLife.focusAdvice}</p>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <div className="w-1 h-8 bg-blue-500 rounded-full" />
+                                    <p className="text-xs font-medium text-slate-600 italic">
+                                        "{data.workLife.mentalHealthTip}"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Toggle View */}
-                <div className="bg-white/50 p-1.5 rounded-2xl inline-flex gap-2 mb-8 backdrop-blur-sm">
-                    <button
-                        onClick={() => setView('tracker')}
-                        className={cn(
-                            "px-6 py-3 rounded-xl font-bold transition-all",
-                            view === 'tracker' ? "bg-white text-rose-500 shadow-sm" : "text-slate-500 hover:bg-white/30"
-                        )}
-                    >
-                        Tracker
-                    </button>
-                    <button
-                        onClick={() => setView('calendar')}
-                        className={cn(
-                            "px-6 py-3 rounded-xl font-bold transition-all",
-                            view === 'calendar' ? "bg-white text-rose-500 shadow-sm" : "text-slate-500 hover:bg-white/30"
-                        )}
-                    >
-                        Log Dates
-                    </button>
-                </div>
+                {/* RIGHT COL: Logger */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-50 h-full">
+                        <h3 className="text-xl font-bold text-slate-900 mb-6 font-display">Daily Log</h3>
 
-                <AnimatePresence mode="wait">
-                    {view === 'tracker' ? (
-                        <motion.div
-                            key="tracker"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            <TrackerView />
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="calendar"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            <Calendar />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        <div className="space-y-8">
+                            {/* Mood Selector */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 block">Mood</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['Happy', 'Calm', 'Tired', 'Anxious', 'Irritable'].map(m => (
+                                        <button
+                                            key={m}
+                                            onClick={() => setSelectedMood(m)}
+                                            className={`py-2 rounded-xl text-xs font-bold transition-all ${selectedMood === m ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                                        >
+                                            {m}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Symptom Chips */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 block">Symptoms</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Cramps', 'Headache', 'Bloating', 'Acne', 'Back Pain', 'Insomnia'].map(sym => (
+                                        <button
+                                            key={sym}
+                                            onClick={() => toggleSymptom(sym)}
+                                            className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${selectedSymptoms.includes(sym) ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300'}`}
+                                        >
+                                            {selectedSymptoms.includes(sym) ? <CheckCircle2 className="w-3 h-3 inline mr-1" /> : <Plus className="w-3 h-3 inline mr-1" />}
+                                            {sym}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Save Button */}
+                            <button
+                                onClick={handleSaveLog}
+                                disabled={logStatus === 'saving'}
+                                className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-200 hover:shadow-xl transition-all disabled:opacity-70"
+                            >
+                                {logStatus === 'saving' ? 'Saving...' : (logStatus === 'saved' ? 'Saved!' : 'Save Log')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
+};
+
+// Helper Icon
+function BriefcaseIcon(props: any) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+        </svg>
+    )
 }
+
+function CheckCircle2(props: any) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
+    )
+}
+
+export default PeriodTracker;
