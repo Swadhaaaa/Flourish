@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
+import { AssistantMiniPopup } from '../../components/AssistantMiniPopup';
 import {
     sendChatMessage,
     getSessions,
@@ -131,7 +132,8 @@ const Scheduler = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex gap-6">
+        <div className="h-[calc(100vh-4rem)] flex gap-6 relative">
+            <AssistantMiniPopup />
             {/* Sidebar Navigation for Scheduler */}
             <div className="w-64 bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white flex flex-col shadow-xl shadow-orange-100/20">
                 <div className="mb-8">

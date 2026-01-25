@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 import { analyzeReflection, predictBurnout } from '../../services/api';
+import { BurnoutMiniPopup } from '../../components/BurnoutMiniPopup';
 
 const InputRange = ({ label, value, onChange, min = 1, max = 10, isDark }: any) => (
     <div className="space-y-3">
@@ -244,7 +245,8 @@ export default function BurnoutPage() {
     };
 
     return (
-        <div className="min-h-full py-10 px-4 max-w-5xl mx-auto">
+        <div className="min-h-full py-10 px-4 max-w-5xl mx-auto relative">
+            <BurnoutMiniPopup />
             {/* Header Area */}
             <motion.div
                 initial={{ opacity: 0, x: -20 }}

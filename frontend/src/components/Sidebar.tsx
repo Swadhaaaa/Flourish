@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     const homeItems = [
         { icon: Heart, label: 'Period Tracker', path: '/home/period-tracker' },
         { icon: Utensils, label: 'Diet Planner', path: '/home/diet-planner' },
-        { icon: Calendar, label: 'Appointments', path: '/home/appointments' },
+        { icon: Calendar, label: 'Reminders', path: '/home/appointments' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];
 
@@ -126,7 +126,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                             exit={{ opacity: 0, y: -10 }}
                             className="text-center mt-4"
                         >
-                            <p className="text-[10px] font-black text-[#FF8A71] uppercase tracking-[0.2em] mb-1 font-mono">{jobRole}</p>
                             <h3 className="text-xl font-black text-slate-800 tracking-tight">{displayName}</h3>
                         </motion.div>
                     )}

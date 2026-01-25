@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 import { cn } from '../../lib/utils';
 import { format, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { RemindersMiniPopup } from '../../components/RemindersMiniPopup';
 
 export default function Appointments() {
     // --- State ---
@@ -162,11 +163,12 @@ export default function Appointments() {
 
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] text-slate-800 p-4 lg:p-8 font-sans overflow-y-auto">
+        <div className="min-h-screen bg-[#FFF0E5] text-slate-800 p-4 lg:p-8 font-sans overflow-y-auto relative">
+            <RemindersMiniPopup />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-display font-bold text-rose-950">Appointments</h1>
+                    <h1 className="text-3xl font-display font-bold text-rose-950">Reminders</h1>
                     <p className="text-rose-800/60">Schedule & Health Tracking</p>
                 </div>
 
@@ -195,7 +197,7 @@ export default function Appointments() {
                     >
                         {/* Title */}
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-rose-950">Book Appointment</h2>
+                            <h2 className="text-xl font-bold text-rose-950">Book Reminder</h2>
                             <p className="text-slate-400 text-sm">Select date for consultation</p>
                         </div>
 
