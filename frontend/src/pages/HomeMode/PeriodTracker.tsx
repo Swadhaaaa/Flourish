@@ -22,7 +22,6 @@ const PeriodTracker = () => {
     });
 
     // Derived State
-    const [currentDay, setCurrentDay] = useState(1);
     const [data, setData] = useState<DailyData | null>(null);
     const [loading, setLoading] = useState(true);
     const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -48,8 +47,6 @@ const PeriodTracker = () => {
 
         const currentCycleDay = diffDays + 1;
         const cycleDay = ((currentCycleDay - 1) % 28) + 1;
-
-        setCurrentDay(cycleDay);
 
         const dailyData = generateUserDailyData(cycleDay);
         setData(dailyData);

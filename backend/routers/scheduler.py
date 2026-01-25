@@ -24,6 +24,22 @@ class SessionCreate(BaseModel):
     title: str = "New Chat"
     user_id: Optional[str] = None # Added user_id
 
+class TaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    priority: str = "Medium"
+    estimated_hours: float = 1.0
+    deadline: Optional[str] = ""
+
+class EmployeeCreate(BaseModel):
+    name: str
+    role: str
+    email: str
+    weekly_hours_limit: int = 40
+
+class ScheduleGenerateRequest(BaseModel):
+    constraints: str = ""
+
 # ...
 
 @router.get("/sessions")

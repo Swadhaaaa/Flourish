@@ -32,8 +32,6 @@ const CalendarPopover = ({ selectedDate, onSelect, onClose }: CalendarPopoverPro
     const endDate = endOfWeek(monthEnd);
 
     const dateFormat = "d";
-    const rows = [];
-    const days = [];
     const dayList = eachDayOfInterval({ start: startDate, end: endDate });
 
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

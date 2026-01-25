@@ -8,9 +8,7 @@ import {
     startOfWeek,
     endOfWeek,
     eachDayOfInterval,
-    isSameMonth,
-    isSameDay,
-    isToday
+    isSameMonth
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
