@@ -163,4 +163,28 @@ class GroqSchedulerAI:
         )
         
         title = completion.choices[0].message.content.strip().replace('"', '')
+        title = completion.choices[0].message.content.strip().replace('"', '')
         return title
+
+    def generate_json_response(self, system_prompt: str, user_prompt: str, temperature: float = 0.5) -> Dict[str, Any]:
+        """
+        Generates a JSON response based on custom system and user prompts.
+        Useful for specific tasks like period insights or analysis.
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        completion = self.client.chat.completions.create(
+            messages=messages,
+            model=self.model,
+            temperature=temperature,
+            response_format={"type": "json_object"}
+        )
+        
+        try:
+            return json.loads(completion.choices[0].message.content)
+        except json.JSONDecodeError:
+             return {}
+

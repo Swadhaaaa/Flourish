@@ -394,7 +394,9 @@ class AIService:
         """
         Generates a personalized daily insight using Llama-3 via Groq.
         """
-        prompt = f"""
+        system_prompt = "You are an empathetic women's health wellness assistant. Output valid JSON only."
+        
+        user_prompt = f"""
         Generate a empathetic, 2-3 sentence daily insight for a woman tracking her cycle.
         
         CONTEXT:
@@ -410,10 +412,11 @@ class AIService:
         - Tone: Warm, validating, empowering.
         - NO medical diagnosis.
         
-        Output JSON: {{ "insight": "Start with a validation...", "short_tip": "One liner work tip" }}
+        Output JSON format: {{ "insight": "Start with a validation...", "short_tip": "One liner work tip" }}
         """
         
-        # We process it as a generic conversation for now to utilize the existing client
-        return self.groq_ai.process_conversation(prompt, [])['response_text']
+        response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
+        return response.get("insight", f"Day {day}: Listen to your body.")
+
 
 
