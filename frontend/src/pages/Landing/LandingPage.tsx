@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Chrome, X, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Heart, Activity, Calendar as CalendarIcon, Car, CheckCircle2, ShieldCheck, MapPin } from 'lucide-react';
+import { Chrome, X, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Heart, Activity, Calendar as CalendarIcon, Car, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const LandingPage = () => {
