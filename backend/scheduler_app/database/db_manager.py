@@ -117,11 +117,11 @@ class DBManager:
 
     # --- New Chatbot Methods ---
 
-    def create_session(self, title: str = "New Chat") -> int:
-        query = "INSERT INTO conversation_sessions (title) VALUES (?)"
+    def create_session(self, title: str = "New Chat", user_id: str = None) -> int:
+        query = "INSERT INTO conversation_sessions (title, user_id) VALUES (?, ?)"
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (title,))
+            cursor.execute(query, (title, user_id))
             conn.commit()
             return cursor.lastrowid
             
@@ -133,11 +133,18 @@ class DBManager:
             row = cursor.fetchone()
             return dict(row) if row else None
 
-    def get_all_sessions(self) -> List[Dict[str, Any]]:
-        query = "SELECT * FROM conversation_sessions ORDER BY id DESC"
+    def get_all_sessions(self, user_id: str = None) -> List[Dict[str, Any]]:
+        if user_id:
+             query = "SELECT * FROM conversation_sessions WHERE user_id = ? ORDER BY id DESC"
+             params = (user_id,)
+        else:
+             # Fallback for backward compatibility or admin view
+             query = "SELECT * FROM conversation_sessions ORDER BY id DESC"
+             params = ()
+             
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, params)
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
             

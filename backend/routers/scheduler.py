@@ -22,6 +22,7 @@ class ChatRequest(BaseModel):
 
 class SessionCreate(BaseModel):
     title: str = "New Chat"
+    user_id: Optional[str] = None # Added user_id
 
 class TaskCreate(BaseModel):
     title: str
@@ -39,30 +40,17 @@ class EmployeeCreate(BaseModel):
 class ScheduleGenerateRequest(BaseModel):
     constraints: str = ""
 
-# --- Endpoints ---
-
-# Chatbot
-@router.post("/chat")
-async def chat(request: ChatRequest):
-    """
-    Send a message to the AI Scheduler.
-    Returns response text and any action performed (e.g. 'add_task').
-    """
-    try:
-        response = engine.handle_user_message(request.message, request.session_id)
-        return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# ...
 
 @router.get("/sessions")
-async def get_sessions():
-    """Get all chat sessions."""
-    return db.get_all_sessions()
+async def get_sessions(user_id: Optional[str] = None):
+    """Get all chat sessions via user_id."""
+    return db.get_all_sessions(user_id)
 
 @router.post("/sessions")
 async def create_session(session: SessionCreate):
     """Create a new chat session."""
-    id = db.create_session(session.title)
+    id = db.create_session(session.title, session.user_id)
     return {"id": id, "title": session.title}
 
 @router.get("/sessions/{session_id}/history")

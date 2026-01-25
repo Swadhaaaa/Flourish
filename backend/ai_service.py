@@ -16,30 +16,83 @@ class AIService:
 
     def analyze_email(self, content: str, sender: str):
         """
-        Detects tone and invisible labor.
+        Detects tone and invisible labor using Groq (Llama-3) if available, else rich heuristics.
         """
-        # Mock Logic for Demo (so it "works" instantly)
-        aggression_score = 0
+        # 1. Try Groq AI first for high-quality analysis
+        try:
+            system_prompt = "You are an expert corporate communications coach. Analyze the email for tone (aggression, passive-aggressiveness) and invisible labor. Output JSON."
+            user_prompt = f"""
+            Analyze this email from '{sender}':
+            "{content}"
+            
+            Return JSON:
+            {{
+                "tone_category": "Direct" | "Passive-Aggressive" | "Urgent" | "Supportive" | "Dismissive",
+                "emotional_impact": (0-100 score, high is bad),
+                "analysis": "1 sent summary of why it's stressful",
+                "rewritten": "A professional, softened version (keep specific dates/requests but remove emotion)",
+                "invisible_labor_flag": boolean (is it assigning planning/nurturing tasks?),
+                "labor_type": "None" | "Planning" | "Emotional" | "Admin"
+            }}
+            """
+            ai_response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
+            if ai_response:
+                return {
+                    "original": content,
+                    "rewritten": ai_response.get("rewritten", content),
+                    "aggression_score": ai_response.get("emotional_impact", 0),
+                    "tone_category": ai_response.get("tone_category", "Neutral"),
+                    "is_toxic": ai_response.get("emotional_impact", 0) > 60,
+                    "is_invisible_labor": ai_response.get("invisible_labor_flag", False),
+                    "analysis": ai_response.get("analysis", "Analysis complete."),
+                    "sender": sender
+                }
+        except Exception as e:
+            print(f"AI Analysis Failed: {e}, falling back to heuristics.")
+
+        # 2. Rich Heuristics (Fallback)
+        aggression_score = 10
+        tone_category = "Neutral"
         rewritten = content
         invisible_labor_flag = False
+        analysis_text = "Standard professional communication."
         
         lower_content = content.lower()
         
-        # Heuristic detection
-        if any(word in lower_content for word in ["asap", "urgent", "why isn't this done", "disappointed"]):
+        # Tone Detection
+        if any(w in lower_content for w in ["per my last email", "obviously", "make sure", "ensure", "fine"]):
+            aggression_score = 65
+            tone_category = "Passive-Aggressive"
+            analysis_text = "Detected subtle condescension using passive phrasing."
+            rewritten = f"Hi,\n\nJust wanted to follow up on this to ensure we're aligned. Thanks,\n{sender}"
+            
+        if any(w in lower_content for w in ["asap", "urgent", "emergency", "now", "immediately"]):
             aggression_score = 85
-            rewritten = f"Hi,\n\nI'm following up on the status of this item. Please let me know when you have an update.\n\nBest,\n{sender}"
+            tone_category = "Urgent/Demanding"
+            analysis_text = "High urgency detected, creating pressure."
+            rewritten = f"Hi,\n\nWhen you have a moment, could you please prioritize this item? Thanks,\n{sender}"
+            
+        if any(w in lower_content for w in ["stupid", "ridiculous", "incompetent", "what is this", "fail"]):
+            aggression_score = 95
+            tone_category = "Hostile"
+            analysis_text = "Overt hostility and unprofessional language detected."
+            rewritten = f"[Tone Shield Blocked Hostility]\n\n{sender} is expressing dissatisfaction with the current status and requests a review."
         
-        if any(word in lower_content for word in ["snack", "party", "birthday", "organize", "notes"]):
+        # Invisible Labor Detection
+        labor_words = ["party", "birthday", "cake", "card", "organize team", "notes", "schedule", "snack", "gift"]
+        if any(w in lower_content for w in labor_words):
             invisible_labor_flag = True
-        
+            analysis_text = "Request involves 'Invisible Labor' (non-promotable office housekeeping)."
+            
         return {
             "original": content,
             "rewritten": rewritten,
             "aggression_score": aggression_score,
-            "is_toxic": aggression_score > 70,
+            "tone_category": tone_category,
+            "is_toxic": aggression_score > 60,
             "is_invisible_labor": invisible_labor_flag,
-            "analysis": "High hostility detected." if aggression_score > 70 else "Neutral tone."
+            "analysis": analysis_text,
+            "sender": sender
         }
 
     def generate_boundary(self, context: str, tone: str):

@@ -6,7 +6,9 @@ import {
     doc,
     getDocs,
     query,
-    serverTimestamp
+    serverTimestamp,
+    getDoc,
+    setDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -109,5 +111,37 @@ export const getPeriodLogs = async (userId: string): Promise<PeriodLog[]> => {
     } catch (error) {
         console.error("Error fetching period logs:", error);
         return [];
+    }
+};
+
+// --- User Profile (Period Settings) ---
+export interface PeriodProfile {
+    startDate: any; // Timestamp
+    cycleLength: number;
+    periodLength: number;
+}
+
+export const getPeriodProfile = async (userId: string): Promise<PeriodProfile | null> => {
+    try {
+        const docRef = doc(db, 'users', userId, 'settings', 'period_profile');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as PeriodProfile;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching period profile:", error);
+        return null; // Return null to trigger onboarding/default
+    }
+};
+
+export const updatePeriodProfile = async (userId: string, data: Partial<PeriodProfile>) => {
+    try {
+        // We use setDoc with merge: true so it creates if not exists
+        const docRef = doc(db, 'users', userId, 'settings', 'period_profile');
+        await setDoc(docRef, data, { merge: true });
+    } catch (error) {
+        console.error("Error updating period profile:", error);
+        throw error;
     }
 };

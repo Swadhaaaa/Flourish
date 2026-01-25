@@ -16,14 +16,13 @@ const PeriodTracker = () => {
     const [viewMode, setViewMode] = useState<'tracker' | 'calendar'>('tracker');
 
     // Calendar State
-    const [startDate, setStartDate] = useState<Date>(() => {
+    const [startDate, setStartDate] = useState<Date | null>(() => {
         const d = new Date();
         d.setDate(d.getDate() - 8);
         return d;
     });
 
     // Derived State
-    const [currentDay, setCurrentDay] = useState(8);
     const [data, setData] = useState<DailyData | null>(null);
     const [loading, setLoading] = useState(true);
     const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -35,6 +34,8 @@ const PeriodTracker = () => {
 
     // Effect: Calculate Day & Fetch Data
     useEffect(() => {
+        if (!startDate) return;
+
         // Normalize dates to midnight to avoid time-of-day offsets
         const todayAtMidnight = new Date();
         todayAtMidnight.setHours(0, 0, 0, 0);
@@ -43,19 +44,14 @@ const PeriodTracker = () => {
         startAtMidnight.setHours(0, 0, 0, 0);
 
         const diffTime = Math.abs(todayAtMidnight.getTime() - startAtMidnight.getTime());
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Rounding is safe with midnight normalization
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-        // Cycle Day 1 is the start date. So we add 1 to the difference.
-        // e.g. Start=Today -> diff=0 -> Day 1.
-        // e.g. Start=Yesterday -> diff=1 -> Day 2.
         const currentCycleDay = diffDays + 1;
-
         const cycleDay = ((currentCycleDay - 1) % 28) + 1;
-
-        setCurrentDay(cycleDay);
 
         const dailyData = generateUserDailyData(cycleDay);
         setData(dailyData);
+        setLoading(false); // Show UI immediately
 
         const fetchAI = async () => {
             try {
@@ -76,8 +72,6 @@ const PeriodTracker = () => {
                 }
             } catch (e) {
                 console.error("AI Fetch failed. Ensure backend is running.");
-            } finally {
-                setLoading(false);
             }
         };
         fetchAI();
@@ -188,7 +182,11 @@ const PeriodTracker = () => {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-white/90">Next Period Likely</span>
                                             </div>
                                             <div className="text-xl font-black text-white tracking-tight drop-shadow-md">
-                                                {format(new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000), 'MMM d')} - {format(new Date(startDate.getTime() + 32 * 24 * 60 * 60 * 1000), 'MMM d')}
+                                                {startDate && (
+                                                    <>
+                                                        {format(new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000), 'MMM d')} - {format(new Date(startDate.getTime() + 32 * 24 * 60 * 60 * 1000), 'MMM d')}
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
