@@ -28,7 +28,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
     // Safely access profile data
     const displayName = userProfile?.displayName || user?.displayName || 'User';
-    const jobRole = userProfile?.jobRole || 'Set Role';
+
 
     const handleLogout = async () => {
         try {
