@@ -12,15 +12,21 @@ class SchedulerEngine:
     def generate_and_save_schedule(self, current_constraints: str = "") -> List[Dict[str, Any]]:
         # 1. Fetch Data
         employees = self.db.get_all_employees()
-        # 1. Fetch Data
-        employees = self.db.get_all_employees()
         # Fetch ALL active tasks (Pending and Scheduled) so we can re-optimize
         tasks = self.db.get_all_active_tasks()
         
+        # AUTO-CREATE default employee for individual users
         if not employees:
-            return {"error": "No employees found. Please add yourself as a Team Member first."}
+            default_emp_id = self.db.add_employee(
+                name="Me",
+                role="Individual User",
+                email="user@flourish.app",
+                weekly_hours_limit=40
+            )
+            employees = self.db.get_all_employees()
+            
         if not tasks:
-            return {"error": "No tasks found (Pending or Scheduled). Add a task first."}
+            return {"error": "No tasks found. Add a task first by saying something like 'Add task: Review presentation'."}
 
         # FORCE SINGLE PLAYER MODE (User Request: "assign to me only")
         # We only pass the first employee to the AI, forcing it to assign everything to them.
@@ -53,17 +59,20 @@ class SchedulerEngine:
 
         schedule_list = result.get("schedule", [])
         
+        # Get the default employee ID (for individual users)
+        default_emp_id = employees[0].id if employees else 1
+        
         # 4. Save to DB (and simulate "booking")
         saved_schedules = []
         for item in schedule_list:
-            # Validate basic fields
-            if "employee_id" in item and "task_id" in item:
+            # Validate basic fields - task_id is required
+            if "task_id" in item:
                 # Clear existing schedule first to avoid duplication
                 self.db.clear_schedule_for_task(item["task_id"])
                 
-                # In a real app, we'd check conflicts here too before saving
+                # Always use the default employee (for individual user mode)
                 self.db.create_schedule(
-                    item["employee_id"], 
+                    default_emp_id,  # Force use of default employee
                     item["task_id"], 
                     item.get("day", "Monday"), 
                     item.get("start_time", "09:00"), 
