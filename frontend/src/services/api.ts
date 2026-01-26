@@ -133,4 +133,14 @@ export const getSchedulerSchedule = async () => {
     return response.data;
 };
 
+export const updateTask = async (taskId: number, updates: any) => {
+    const response = await api.put(`/api/scheduler/tasks/${taskId}`, updates);
+    return response.data;
+};
+
+export const updateScheduleItem = async (scheduleId: number, updates: any) => {
+    const response = await api.put(`/api/scheduler/schedule/${scheduleId}`, updates);
+    return response.data;
+};
+
 export default api;

@@ -130,3 +130,42 @@ async def get_schedule():
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 
+
+# Updates
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    priority: Optional[str] = None
+    estimated_hours: Optional[float] = None
+    deadline: Optional[str] = None
+
+@router.put("/tasks/{task_id}")
+async def update_task(task_id: int, task: TaskUpdate):
+    # This needs a method in DBManager, but for now we can do raw SQL or add it.
+    # We'll use raw SQL context for speed as DBManager might not have it exposed.
+    # Actually, let's just implement a simple update query here.
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        if task.title: cursor.execute("UPDATE tasks SET title = ? WHERE id = ?", (task.title, task_id))
+        if task.priority: cursor.execute("UPDATE tasks SET priority = ? WHERE id = ?", (task.priority, task_id))
+        if task.estimated_hours: cursor.execute("UPDATE tasks SET estimated_hours = ? WHERE id = ?", (task.estimated_hours, task_id))
+        if task.deadline: cursor.execute("UPDATE tasks SET deadline = ? WHERE id = ?", (task.deadline, task_id))
+        conn.commit()
+    return {"message": "Task updated"}
+
+class ScheduleUpdate(BaseModel):
+    start_time: str
+    end_time: str
+    scheduled_day: Optional[str] = None
+
+@router.put("/schedule/{schedule_id}")
+async def update_schedule(schedule_id: int, sched: ScheduleUpdate):
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        if sched.scheduled_day:
+            cursor.execute("UPDATE schedules SET start_time = ?, end_time = ?, scheduled_day = ? WHERE id = ?", 
+                           (sched.start_time, sched.end_time, sched.scheduled_day, schedule_id))
+        else:
+             cursor.execute("UPDATE schedules SET start_time = ?, end_time = ? WHERE id = ?", 
+                           (sched.start_time, sched.end_time, schedule_id))
+        conn.commit()
+    return {"message": "Schedule updated"}

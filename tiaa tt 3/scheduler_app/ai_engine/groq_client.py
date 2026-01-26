@@ -28,18 +28,17 @@ class GroqSchedulerAI:
         1. **task_creation**: User wants to add work OR a meeting. 
            - RETURN: "internal_action": "add_task"
            - IF specific time mentioned (e.g. "Meeting Tuesday 2pm"): Include "fixed_schedule": {{"day": "Tuesday", "start_time": "14:00", "end_time": "15:00"}}
-        2. **optimize_schedule**: User asks to "plan my day", "generate schedule", "optimize tasks", "make a schedule", "auto schedule", "schedule". RETURN: "internal_action": "optimize_schedule"
+        2. **scheduling_query**: "Clear schedule", "Move meetings". RETURN: "internal_action": "manage_schedule"
         3. **wellness_check**: User mentions stress, burnout, tiredness. RETURN: "internal_action": "log_wellness", "sentiment": "negative/stressed"
-        5. **chat**: General conversation, advice, venting. RETURN: "internal_action": "chat"
-        6. **command**: Explicit commands like "/private on". RETURN: "internal_action": "command"
+        4. **chat**: General conversation, advice, venting. RETURN: "internal_action": "chat"
+        5. **command**: Explicit commands like "/private on". RETURN: "internal_action": "command"
         
         OUTPUT SCHEMA:
         {{
             "intent": "string",
             "sentiment": "positive/neutral/stressed/tired",
             "stress_score": 1-10 (estimate based on tone),
-            "response_text": "The reply to the user.",
-            "internal_action": "add_task" | "optimize_schedule" | "manage_schedule" | "log_wellness" | "chat" | "command",
+            "response_text": "The natural language reply you want to show the user. Be empathetic. Use emojis if appropriate.",
             "action_details": {{ 
                 "title": "Task title", 
                 "priority": "High/Medium", 
@@ -74,22 +73,11 @@ class GroqSchedulerAI:
             "sentiment": "neutral",
             "stress_score": 2,
             "response_text": "I've scheduled your meeting for Tuesday at 2 PM. 📅",
-            "internal_action": "add_task",
             "action_details": {{ 
                 "title": "Meeting", 
                 "estimated_hours": 1, 
                 "fixed_schedule": {{ "day": "Tuesday", "start_time": "14:00", "end_time": "15:00" }}
             }}
-        }}
-
-        User: "Generate schedule"
-        JSON: {{
-            "intent": "optimize_schedule",
-            "sentiment": "neutral",
-            "stress_score": 1,
-            "response_text": "Optimizing your schedule now...",
-            "internal_action": "optimize_schedule",
-            "action_details": {{}}
         }}
         """
 

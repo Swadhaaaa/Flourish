@@ -18,13 +18,9 @@ class SchedulerEngine:
         tasks = self.db.get_all_active_tasks()
         
         if not employees:
-            return {"error": "No employees found. Please add yourself as a Team Member first."}
+            return {"error": "No employees found. Please add employees first."}
         if not tasks:
             return {"error": "No tasks found (Pending or Scheduled). Add a task first."}
-
-        # FORCE SINGLE PLAYER MODE (User Request: "assign to me only")
-        # We only pass the first employee to the AI, forcing it to assign everything to them.
-        employees = employees[:1]
 
         # 2. Serialize for AI
         employees_data = [
@@ -76,18 +72,23 @@ class SchedulerEngine:
                 
         return saved_schedules
 
-    def handle_user_message(self, user_text: str, session_id: int, user_id: int = 1) -> Dict[str, Any]:
+    def handle_user_message(self, user_text: str, session_id: int, user_id: int = 1) -> str:
         """
         Handles a message from the chatbot UI.
-        Returns: { "text": response_text, "action": action_type, "details": optional_details }
+        1. Checks for Private/Command mode.
+        2. Retrieves history for SPECIFIC session.
+        3. Calls AI.
+        4. Logs interaction (unless private).
+        5. Executes actions.
+        6. Returns response text.
         """
         # 1. Command Handling
         if user_text.strip().lower() == "/private on":
             self.db.set_user_preference("private_mode", "true")
-            return {"text": "🔒 Private mode ENABLED. Your chats will not be saved.", "action": "command"}
+            return "🔒 Private mode ENABLED. Your chats will not be saved."
         if user_text.strip().lower() == "/private off":
             self.db.set_user_preference("private_mode", "false")
-            return {"text": "🔓 Private mode DISABLED. Memory active.", "action": "command"}
+            return "🔓 Private mode DISABLED. Memory active."
         
         # Check Privacy
         is_private = self.db.get_user_preference("private_mode") == "true"
@@ -99,6 +100,12 @@ class SchedulerEngine:
         if not is_private:
              session = self.db.get_session(session_id)
              if session and session['title'] == 'New Chat':
+                 # Use AI to generate a title from the current text
+                 # We prefer to use the *first* message if history exists, 
+                 # but calculating that is expensive/complex here. 
+                 # Generating from the *current* user input is a good proxy 
+                 # if it's the start, OR we can just try to summarize.
+                 # Let's generate based on THIS message which is triggering the change.
                  new_title = self.ai.generate_title(user_text)
                  self.db.update_session_title(session_id, new_title)
 
@@ -110,8 +117,8 @@ class SchedulerEngine:
         
         result = self.ai.process_conversation(user_text, history, prefs)
         
-        response_text = result.get("response_text") or result.get("response") or "I'm listening."
-        action_type = result.get("internal_action") or result.get("action_performed")
+        response_text = result.get("response_text", "I'm listening.")
+        action_type = result.get("internal_action")
         sentiment = result.get("sentiment")
         intent = result.get("intent")
         
@@ -153,15 +160,7 @@ class SchedulerEngine:
                 self.db.create_schedule(user_id, task_id, day, start, end)
                 self.db.update_task_status(task_id, "Scheduled")
             
-        elif action_type == "optimize_schedule":
-            # Constraint could be extracted from user text if needed, but for now we run default
-            res = self.generate_and_save_schedule(current_constraints=user_text)
-            if isinstance(res, dict) and "error" in res:
-                 response_text = f"I couldn't plan the schedule yet. {res['error']}"
-            else:
-                 response_text = "I've optimized your schedule! You can view it in the Calendar tab. 📅"
-
         elif action_type == "manage_schedule":
             pass
             
-        return {"text": response_text, "action": action_type}
+        return response_text
