@@ -62,11 +62,11 @@ export default function MeTime() {
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl font-black text-slate-900 tracking-tighter mb-4"
+                        className="text-5xl font-black text-foreground tracking-tighter mb-4"
                     >
                         Find Your <span className="text-pink-500">Spark</span>.
                     </motion.h1>
-                    <p className="text-xl text-slate-500 font-medium max-w-2xl">
+                    <p className="text-xl text-foreground/70 font-medium max-w-2xl">
                         Discover Hobbies & Activities happening nearby. Reconnect with yourself.
                     </p>
                 </div>
@@ -74,19 +74,19 @@ export default function MeTime() {
                 {/* Search & Filters */}
                 <div className="flex flex-col md:flex-row gap-6 mb-12">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/50" />
                         <input
                             type="text"
                             placeholder="Search yoga, art, music..."
-                            className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-slate-700"
+                            className="w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-white/50 dark:border-slate-700 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-foreground placeholder:text-foreground/40"
                         />
                     </div>
                     <div className="relative w-full md:w-64">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/50" />
                         <input
                             type="text"
                             placeholder="New York, NY"
-                            className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-slate-700"
+                            className="w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-white/50 dark:border-slate-700 rounded-2xl py-4 pl-12 pr-6 shadow-sm focus:ring-2 focus:ring-pink-200 outline-none font-bold text-foreground placeholder:text-foreground/40"
                         />
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -95,8 +95,8 @@ export default function MeTime() {
                                 key={cat}
                                 onClick={() => setFilter(cat)}
                                 className={`px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-wider transition-all whitespace-nowrap ${filter === cat
-                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                                    : 'bg-white/50 text-slate-500 hover:bg-white'
+                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200 dark:bg-white dark:text-slate-900'
+                                    : 'bg-white/50 dark:bg-slate-800/50 text-foreground/70 hover:bg-white dark:hover:bg-slate-700'
                                     }`}
                             >
                                 {cat}
@@ -107,7 +107,7 @@ export default function MeTime() {
 
                 {/* Events Grid */}
                 {loading ? (
-                    <div className="text-center py-20 text-slate-400">Loading nearby events...</div>
+                    <div className="text-center py-20 text-foreground/60">Loading nearby events...</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {events.map((event, i) => {
@@ -119,15 +119,16 @@ export default function MeTime() {
                                     initial={{ opacity: 0, y: 40 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="group relative bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer"
+                                    className="group relative bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer"
                                 >
                                     {/* Image Header */}
                                     <div className="h-48 overflow-hidden relative">
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
                                         <img
-                                            src={event.image}
+                                            src={event.image || `https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&h=400&fit=crop`}
                                             alt={event.title}
                                             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                            onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&h=400&fit=crop'; }}
                                         />
                                         <div className="absolute top-4 right-4 z-20 flex gap-2">
                                             {event.source && (
@@ -145,8 +146,8 @@ export default function MeTime() {
                                     <div className="p-8">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
-                                                <h3 className="text-2xl font-black text-slate-900 mb-1 leading-tight">{event.title}</h3>
-                                                <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+                                                <h3 className="text-2xl font-black text-foreground mb-1 leading-tight">{event.title}</h3>
+                                                <div className="flex items-center gap-2 text-foreground/60 font-medium text-sm">
                                                     <MapPin className="w-4 h-4 text-pink-500" />
                                                     {event.location}
                                                 </div>
@@ -156,14 +157,14 @@ export default function MeTime() {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                                            <div className="flex items-center gap-4 text-sm font-bold text-slate-600">
+                                        <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-700">
+                                            <div className="flex items-center gap-4 text-sm font-bold text-foreground/70">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Calendar className="w-4 h-4 text-slate-400" />
+                                                    <Calendar className="w-4 h-4 text-foreground/50" />
                                                     {event.time}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Users className="w-4 h-4 text-slate-400" />
+                                                    <Users className="w-4 h-4 text-foreground/50" />
                                                     {event.attendees} going
                                                 </div>
                                             </div>
