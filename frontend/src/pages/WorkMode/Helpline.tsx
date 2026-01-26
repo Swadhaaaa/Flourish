@@ -2,6 +2,8 @@ import { Phone, Shield, MapPin, Settings, Trash2, Map as MapIcon, PhoneCall, Use
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelplineMiniPopup } from '../../components/HelplineMiniPopup';
+import { useTheme } from '../../context/ThemeContext';
+import { cn } from '../../lib/utils';
 
 const HELPLINE_NUMBERS = [
     { id: 1, name: 'Police', number: '100', icon: Shield, color: 'bg-[#E8F5E9]', iconColor: 'text-emerald-600' },
@@ -13,6 +15,8 @@ const HELPLINE_NUMBERS = [
 ];
 
 export default function Helpline() {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [activeTab, setActiveTab] = useState('numbers');
     const [showAddModal, setShowAddModal] = useState(false);
     const [contacts, setContacts] = useState<Array<{ id: number, name: string, phone: string }>>([]);
@@ -41,20 +45,29 @@ export default function Helpline() {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="min-h-screen bg-[#F3E5F5] text-slate-900 font-sans -m-8 relative overflow-hidden flex flex-col"
+            className={cn(
+                "min-h-screen font-sans -m-8 relative overflow-hidden flex flex-col",
+                isDark ? "bg-slate-900 text-white" : "bg-[#F3E5F5] text-slate-900"
+            )}
         >
             <HelplineMiniPopup />
             {/* Header Area */}
             <div className="p-8 pb-4 flex justify-between items-center relative z-10">
-                <button className="w-10 h-10 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center border border-purple-100 shadow-sm">
-                    <ChevronLeft className="w-5 h-5 text-purple-600" />
+                <button className={cn(
+                    "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center border shadow-sm",
+                    isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-purple-100"
+                )}>
+                    <ChevronLeft className={cn("w-5 h-5", isDark ? "text-purple-400" : "text-purple-600")} />
                 </button>
-                <h1 className="text-xl font-bold text-slate-800 tracking-tight">
+                <h1 className={cn("text-xl font-bold tracking-tight", isDark ? "text-white" : "text-slate-800")}>
                     {activeTab === 'numbers' ? 'Helpline Numbers' :
                         activeTab === 'tracker' ? 'Location Tracker' : 'Saved Guardians'}
                 </h1>
-                <button className="w-10 h-10 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center border border-purple-100 shadow-sm">
-                    <Settings className="w-5 h-5 text-purple-600" />
+                <button className={cn(
+                    "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center border shadow-sm",
+                    isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-purple-100"
+                )}>
+                    <Settings className={cn("w-5 h-5", isDark ? "text-purple-400" : "text-purple-600")} />
                 </button>
             </div>
 
@@ -243,16 +256,28 @@ export default function Helpline() {
 
             {/* Simplified Bottom Nav */}
             <div className="fixed bottom-0 left-0 right-0 p-6 flex justify-center z-[100]">
-                <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] px-12 py-4 border border-purple-100 shadow-2xl flex items-center justify-between w-full max-w-sm">
-                    <button onClick={() => setActiveTab('tracker')} className={`${activeTab === 'tracker' ? 'text-purple-600 scale-110' : 'text-slate-400'} transition-all`}>
+                <div className={cn(
+                    "backdrop-blur-2xl rounded-[2.5rem] px-12 py-4 border shadow-2xl flex items-center justify-between w-full max-w-sm",
+                    isDark ? "bg-slate-800/80 border-slate-700" : "bg-white/80 border-purple-100"
+                )}>
+                    <button onClick={() => setActiveTab('tracker')} className={cn(
+                        "transition-all",
+                        activeTab === 'tracker' ? (isDark ? 'text-purple-400 scale-110' : 'text-purple-600 scale-110') : (isDark ? 'text-slate-500' : 'text-slate-400')
+                    )}>
                         <MapPin className="w-7 h-7" />
                     </button>
 
-                    <button onClick={() => setActiveTab('numbers')} className={`${activeTab === 'numbers' ? 'text-purple-600 scale-110' : 'text-slate-400'} transition-all`}>
+                    <button onClick={() => setActiveTab('numbers')} className={cn(
+                        "transition-all",
+                        activeTab === 'numbers' ? (isDark ? 'text-purple-400 scale-110' : 'text-purple-600 scale-110') : (isDark ? 'text-slate-500' : 'text-slate-400')
+                    )}>
                         <PhoneCall className="w-7 h-7" />
                     </button>
 
-                    <button onClick={() => setActiveTab('guardians')} className={`${activeTab === 'guardians' ? 'text-purple-600 scale-110' : 'text-slate-400'} transition-all`}>
+                    <button onClick={() => setActiveTab('guardians')} className={cn(
+                        "transition-all",
+                        activeTab === 'guardians' ? (isDark ? 'text-purple-400 scale-110' : 'text-purple-600 scale-110') : (isDark ? 'text-slate-500' : 'text-slate-400')
+                    )}>
                         <User className="w-7 h-7" />
                     </button>
                 </div>
