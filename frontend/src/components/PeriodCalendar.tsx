@@ -8,17 +8,20 @@ import {
     startOfWeek,
     endOfWeek,
     eachDayOfInterval,
-    isSameMonth
+    isSameMonth,
+    isSameDay
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import type { PeriodLog } from '../services/firestore';
 
 interface PeriodCalendarProps {
     selectedDate: Date | null;
+    logs?: PeriodLog[];
     onSelect: (date: Date) => void;
     onLogPeriod: () => void;
 }
 
-const PeriodCalendar = ({ selectedDate, onSelect, onLogPeriod }: PeriodCalendarProps) => {
+const PeriodCalendar = ({ selectedDate, logs = [], onSelect, onLogPeriod }: PeriodCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -31,6 +34,15 @@ const PeriodCalendar = ({ selectedDate, onSelect, onLogPeriod }: PeriodCalendarP
 
     const dayList = eachDayOfInterval({ start: startDate, end: endDate });
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    // Helper to check for logs
+    const getLogForDay = (day: Date) => {
+        return logs.find(log => {
+            // Handle Log Date (Firestore Timestamp or Serialized)
+            const logDate = log.date?.toDate ? log.date.toDate() : new Date(log.date);
+            return isSameDay(day, logDate);
+        });
+    };
 
     return (
         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 max-w-2xl mx-auto">
@@ -77,9 +89,10 @@ const PeriodCalendar = ({ selectedDate, onSelect, onLogPeriod }: PeriodCalendarP
                     }
 
                     const isCurrentMonth = isSameMonth(day, monthStart);
+                    const log = getLogForDay(day);
 
                     return (
-                        <div key={i} className="flex justify-center mb-2">
+                        <div key={i} className="flex justify-center mb-2 relative group">
                             <button
                                 onClick={() => onSelect(day)}
                                 className={`
@@ -90,13 +103,28 @@ const PeriodCalendar = ({ selectedDate, onSelect, onLogPeriod }: PeriodCalendarP
                                         : isPeriodDay
                                             ? 'bg-rose-100 text-rose-600 font-bold border border-rose-100'
                                             : 'hover:bg-slate-50'}
+                                    ${log ? 'ring-2 ring-indigo-200' : ''}
                                 `}
                             >
                                 {format(day, 'd')}
                                 {isStartDate && (
                                     <span className="absolute -bottom-1 w-1 h-1 bg-white rounded-full opacity-50"></span>
                                 )}
+                                {log && !isStartDate && (
+                                    <span className="absolute -bottom-1 w-1.5 h-1.5 bg-indigo-500 rounded-full opacity-80"></span>
+                                )}
                             </button>
+
+                            {/* Tooltip for Log */}
+                            {log && (
+                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none shadow-xl">
+                                    <div className="font-black text-rose-300 mb-1">{log.mood}</div>
+                                    <div className="text-slate-300 font-medium">
+                                        {log.symptoms.length > 0 ? log.symptoms.slice(0, 2).join(', ') : 'No symptoms'}
+                                        {log.symptoms.length > 2 ? '...' : ''}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -111,7 +139,7 @@ const PeriodCalendar = ({ selectedDate, onSelect, onLogPeriod }: PeriodCalendarP
                     Log Period
                 </button>
             </div>
-            <p className="text-center text-xs text-slate-400 mt-4 font-medium">Click a date to select start of period</p>
+            <p className="text-center text-xs text-slate-400 mt-4 font-medium">Click a date to select start of period. Purple dots are your logs.</p>
         </div>
     );
 };

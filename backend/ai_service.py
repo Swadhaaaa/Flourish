@@ -461,15 +461,99 @@ class AIService:
         GOAL:
         - Explain why she feels this way biologically (briefly).
         - Suggest one actionable work/productivity tip.
-        - Suggest one nutrition/self-care tip.
+        - Suggest one specific nutrition tip (dietary recommendation).
+        - Suggest 3 concrete food items to eat.
         - Tone: Warm, validating, empowering.
         - NO medical diagnosis.
         
-        Output JSON format: {{ "insight": "Start with a validation...", "short_tip": "One liner work tip" }}
+        Output JSON format: {{ 
+            "insight": "Start with a validation...", 
+            "short_tip": "One liner work tip",
+            "diet_tip": "Specific nutrition advice...",
+            "recommended_foods": ["Food 1", "Food 2", "Food 3"]
+        }}
         """
         
-        response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
-        return response.get("insight", f"Day {day}: Listen to your body.")
+        try:
+            response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
+            if response and "insight" in response:
+                return response # Return full dict
+        except Exception:
+            pass
+
+        # === DYNAMIC FALLBACK (Heuristic) ===
+        # Ensure message changes based on Phase/Mood even without AI
+        
+        fallback_map = {
+            "Menstrual": {
+                "default": f"Day {day}: Your energy is naturally low. Prioritize rest and hydration.",
+                "Cramps": f"Day {day}: Gentle heat and magnesium-rich foods can help soothe cramps today.",
+                "Tired": f"Day {day}: It's okay to slow down. Your body is doing hard work right now.",
+                "Happy": f"Day {day}: Glad you're feeling good! Keep it light and steady."
+            },
+            "Follicular": {
+                "default": f"Day {day}: Energy is rising! Great time to plan new projects.",
+                "Happy": f"Day {day}: Your creativity is peaking. Use this spark!",
+                "Anxious": f"Day {day}: Channel that rising energy into a workout or brainstorming."
+            },
+            "Ovulatory": {
+                "default": f"Day {day}: Peak energy and confidence. Tackle your biggest challenge!",
+                "Bloating": f"Day {day}: Stay hydrated. You're at your peak despite the bloating."
+            },
+            "Luteal": {
+                "default": f"Day {day}: Winding down. Focus on administrative tasks over creative ones.",
+                "Irritable": f"Day {day}: Be gentle with yourself. Hormones are fluctuating.",
+                "Anxious": f"Day {day}: Grounding exercises are your best friend today."
+            }
+        }
+        
+        # Global Symptom Overrides (Apply regardless of phase)
+        symptom_map = {
+            "Cramps": f"Day {day}: Heat pads and gentle stretching can provide relief for cramps.",
+            "Headache": f"Day {day}: Stay hydrated and try to reduce screen time if possible.",
+            "Bloating": f"Day {day}: Peppermint tea or ginger can act as a natural digestive aid.",
+            "Acne": f"Day {day}: Be kind to your skin. Focus on hydration and clean eating.",
+            "Back Pain": f"Day {day}: Gentle yoga stretches for the lower back might help relieve tension.",
+            "Insomnia": f"Day {day}: Try a magnesium supplement or a warm bath before bed tonight."
+        }
+        
+        phase_map = fallback_map.get(phase, fallback_map["Menstrual"])
+        
+        # Priority: Symptom > Mood (Phase Specific) > Phase Default
+        insight = phase_map.get("default")
+        
+        if mood in phase_map:
+            insight = phase_map[mood]
+            
+        if symptoms:
+            for s in symptoms:
+                if s in symptom_map:
+                    insight = symptom_map[s]
+                    break
+        
+        # Fallback Diet Logic
+        diet_tip = "Focus on balanced nutrition and hydration."
+        foods = ["Fresh Fruit", "Whole Grains", "Water"]
+        
+        if phase == "Menstrual":
+             diet_tip = "Replenish iron and relax muscles."
+             foods = ["Dark Chocolate", "Leafy Greens", "Warm Tea"]
+        elif phase == "Follicular":
+             diet_tip = "Fuel your rising energy with fresh produce."
+             foods = ["Berries", "Avocado", "Lean Protein"]
+        elif phase == "Ovulatory":
+             diet_tip = "Support hormone balance with fiber."
+             foods = ["Cruciferous Veggies", "Quinoa", "Salmon"]
+        elif phase == "Luteal":
+             diet_tip = "Stabilize blood sugar to manage mood."
+             foods = ["Sweet Potato", "Dark Chocolate", "Nuts"]
+
+        return {
+            "insight": insight,
+            "diet_tip": diet_tip,
+            "recommended_foods": foods,
+            "short_tip": "Listen to your body."
+        }
 
 
 

@@ -47,7 +47,7 @@ const ProfileSetup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFF8F5] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-[#FFF8F5] dark:bg-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none">
                 <motion.div

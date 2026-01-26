@@ -45,12 +45,13 @@ from scheduler_app.services.gmail_service import gmail_service
 from scheduler_app.services.reporting_service import create_report, get_all_reports, Report
 
 @router.post("/sync-gmail", response_model=list[ToneAnalysisResult])
-async def sync_gmail():
+async def sync_gmail(user_id: str = "1"):
     """
     Fetch recent emails from Gmail and analyze them.
+    Authenticates specifically for the given user_id.
     """
     # Increased limit to ensure we capture more emails as requested
-    emails = gmail_service.fetch_recent_emails(max_results=10)
+    emails = gmail_service.fetch_recent_emails(max_results=10, user_id=user_id)
     results = []
     
     # Process (Oldest -> Newest)

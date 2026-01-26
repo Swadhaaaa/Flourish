@@ -72,9 +72,9 @@ export const analyzeEmail = async (content: string, sender: string) => {
 
 // --- Scheduler & Chatbot ---
 
-export const sendChatMessage = async (message: string, sessionId: number) => {
+export const sendChatMessage = async (message: string, sessionId: number | string, userId: string = "1") => {
     try {
-        const response = await api.post('/api/scheduler/chat', { message, session_id: sessionId });
+        const response = await api.post('/api/scheduler/chat', { message, session_id: sessionId, user_id: userId });
         return response.data;
     } catch (error) {
         console.error('Chat Error:', error);
@@ -82,13 +82,12 @@ export const sendChatMessage = async (message: string, sessionId: number) => {
     }
 };
 
-export const getSessions = async (userId: string = "") => {
-    // Pass user_id as query param
+export const getSessions = async (userId: string = "1") => {
     const response = await api.get(`/api/scheduler/sessions?user_id=${userId}`);
     return response.data;
 };
 
-export const createSession = async (title: string = "New Chat", userId: string = "") => {
+export const createSession = async (title: string = "New Chat", userId: string = "1") => {
     const response = await api.post('/api/scheduler/sessions', { title, user_id: userId });
     return response.data;
 };
@@ -103,33 +102,33 @@ export const getSessionHistory = async (sessionId: number) => {
     return response.data;
 };
 
-export const getTasks = async (activeOnly: boolean = true) => {
-    const response = await api.get(`/api/scheduler/tasks?active_only=${activeOnly}`);
+export const getTasks = async (activeOnly: boolean = true, userId: string = "1") => {
+    const response = await api.get(`/api/scheduler/tasks?active_only=${activeOnly}&user_id=${userId}`);
     return response.data;
 };
 
-export const addTask = async (task: any) => {
-    const response = await api.post('/api/scheduler/tasks', task);
+export const addTask = async (task: any, userId: string = "1") => {
+    const response = await api.post('/api/scheduler/tasks', { ...task, user_id: userId });
     return response.data;
 };
 
-export const getEmployees = async () => {
-    const response = await api.get('/api/scheduler/employees');
+export const getEmployees = async (userId: string = "1") => {
+    const response = await api.get(`/api/scheduler/employees?user_id=${userId}`);
     return response.data;
 };
 
-export const addEmployee = async (employee: any) => {
-    const response = await api.post('/api/scheduler/employees', employee);
+export const addEmployee = async (employee: any, userId: string = "1") => {
+    const response = await api.post('/api/scheduler/employees', { ...employee, user_id: userId });
     return response.data;
 };
 
-export const generateSchedulerSchedule = async (constraints: string = "") => {
-    const response = await api.post('/api/scheduler/schedule/generate', { constraints });
+export const generateSchedulerSchedule = async (constraints: string = "", userId: string = "1") => {
+    const response = await api.post('/api/scheduler/schedule/generate', { constraints, user_id: userId });
     return response.data;
 };
 
-export const getSchedulerSchedule = async () => {
-    const response = await api.get('/api/scheduler/schedule');
+export const getSchedulerSchedule = async (userId: string = "1") => {
+    const response = await api.get(`/api/scheduler/schedule?user_id=${userId}`);
     return response.data;
 };
 

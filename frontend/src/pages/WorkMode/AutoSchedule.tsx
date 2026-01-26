@@ -78,10 +78,11 @@ export default function AutoSchedule() {
     const fetchData = async () => {
         setLoading(true);
         try {
+            const uid = _user?.uid;
             const [tData, eData, sData] = await Promise.all([
-                getTasks(true), // active only
-                getEmployees(),
-                getSchedulerSchedule()
+                getTasks(true, uid), // active only
+                getEmployees(uid),
+                getSchedulerSchedule(uid)
             ]);
             setTasks(tData || []);
             setEmployees(eData || []);
@@ -106,7 +107,7 @@ export default function AutoSchedule() {
                 estimated_hours: newTaskHours,
                 deadline: "" // Optional
             };
-            await addTask(taskData);
+            await addTask(taskData, _user?.uid);
 
             // Refetch
             await fetchData();
@@ -119,7 +120,7 @@ export default function AutoSchedule() {
         if (!newEmp.name) return;
         setLoading(true);
         try {
-            await addEmployee(newEmp);
+            await addEmployee(newEmp, _user?.uid);
             await fetchData();
             setShowEmployeePopup(false);
             setNewEmp({ name: '', role: '', email: '', weekly_hours_limit: 40 });
@@ -134,7 +135,7 @@ export default function AutoSchedule() {
         setChatHistory(prev => [...prev, { role: 'user', content: msg }]);
 
         try {
-            const res = await sendChatMessage(msg, 1);
+            const res = await sendChatMessage(msg, 1, _user?.uid);
             // res is now { text: string, action: string, ... }
             const replyText = typeof res === 'object' && res.text ? res.text : (typeof res === 'string' ? res : JSON.stringify(res));
 
@@ -250,7 +251,7 @@ export default function AutoSchedule() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFF8F5] text-slate-900 font-sans -m-8 relative overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-[#FFF8F5] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans -m-8 relative overflow-hidden flex flex-col">
             <AutoSchedulerMiniPopup />
             {/* Header Area */}
             <div className="p-8 pt-10 flex justify-between items-center">

@@ -20,63 +20,86 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 class GmailService:
     def __init__(self):
-        self.creds = None
-        self.service = None
-        self.last_scanned_email = None # Track the last scanned email
+        # Cache services per user
+        self.services = {} 
+        self.creds_map = {}
+        self.last_scanned_email = None # Just tracks mostly recent global, or make it dict if needed. 
+        # For simplicity, last_scanned_email can remain single or be unused in multi-user logic effectively.
 
-    def get_profile_email(self):
+    def get_profile_email(self, user_id: str = "1"):
         """Returns the email address of the authenticated user."""
-        if not self.service:
+        service = self.services.get(user_id)
+        if not service:
+            # Try to load without prompt if possible
+            try:
+                self.authenticate(user_id, prompt_login=False)
+                service = self.services.get(user_id)
+            except:
+                pass
+        
+        if not service:
             return None
+            
         try:
-            profile = self.service.users().getProfile(userId='me').execute()
+            profile = service.users().getProfile(userId='me').execute()
             return profile.get('emailAddress')
         except Exception as e:
             print(f"Error fetching profile: {e}")
             return None
         
-    def authenticate(self):
+    def authenticate(self, user_id: str = "1", prompt_login: bool = True):
         """Authenticates the user, forcing account selection if no token exists."""
+        token_file = f'token_{user_id}.json'
+        creds = None
+        
         # Check for existing token
-        if os.path.exists('token.json'):
-            self.creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        if os.path.exists(token_file):
+            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
             
         # If there are no (valid) credentials available, let the user log in.
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
                 try:
-                    self.creds.refresh(Request())
+                    creds.refresh(Request())
                 except Exception:
-                   self.creds = None
+                   creds = None
 
-            if not self.creds:
+            if not creds:
+                if not prompt_login:
+                    raise Exception("Login required")
+                    
                 if not os.path.exists('credentials.json'):
                     raise FileNotFoundError("credentials.json not found. Please place it in the project root.")
                     
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', SCOPES)
+                
                 # prompt='select_account' forces the account chooser
-                self.creds = flow.run_local_server(port=0, prompt='select_account')
+                # Note: This opens a window on the SERVER. For local hackathon app this is fine.
+                creds = flow.run_local_server(port=0, prompt='select_account')
             
                 # Save the credentials for the next run
-                with open('token.json', 'w') as token:
-                    token.write(self.creds.to_json())
+                with open(token_file, 'w') as token:
+                    token.write(creds.to_json())
 
-        self.service = build('gmail', 'v1', credentials=self.creds)
-        print("Gmail service authenticated.")
+        self.creds_map[user_id] = creds
+        self.services[user_id] = build('gmail', 'v1', credentials=creds)
+        print(f"Gmail service authenticated for user {user_id}.")
 
-    def fetch_recent_emails(self, max_results=10) -> List[EmailData]:
-        if not self.service:
-            print("Service not initialized. Authenticating...")
+    def fetch_recent_emails(self, max_results=10, user_id: str = "1") -> List[EmailData]:
+        if user_id not in self.services:
+            print(f"Service not initialized for {user_id}. Authenticating...")
             try:
-                self.authenticate()
+                self.authenticate(user_id)
             except Exception as e:
                 print(f"Authentication failed: {e}")
                 return []
 
+        service = self.services[user_id]
+        
         try:
             # Filter for Primary Inbox only (ignores Promotions, Social, Updates)
-            results = self.service.users().messages().list(
+            results = service.users().messages().list(
                 userId='me', 
                 maxResults=max_results, 
                 q='category:primary is:inbox'
@@ -86,7 +109,7 @@ class GmailService:
             email_data_list = []
             
             for msg in messages:
-                txt = self.service.users().messages().get(userId='me', id=msg['id']).execute()
+                txt = service.users().messages().get(userId='me', id=msg['id']).execute()
                 payload = txt.get('payload', {})
                 headers = payload.get('headers', [])
                 

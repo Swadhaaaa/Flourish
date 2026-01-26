@@ -11,17 +11,19 @@ class Employee:
     email: str
     weekly_hours_limit: int = 40
     current_workload: float = 0.0
+    user_id: Optional[str] = None
 
 @dataclass
 class Task:
     id: int
     title: str
     description: str
-    priority: str  # High, Medium, Low
+    priority: str
     estimated_hours: float
     deadline: str
     assigned_to: Optional[int] = None
-    status: str = "Pending"  # Pending, In Progress, Completed
+    status: str = "Pending"
+    user_id: Optional[str] = None
 
 @dataclass
 class Schedule:
@@ -31,40 +33,13 @@ class Schedule:
     scheduled_day: str
     start_time: str
     end_time: str
+    user_id: Optional[str] = None
 
-@dataclass
-class ConversationSession:
-    id: int
-    title: str
-    created_at: str
-
-@dataclass
-class ConversationLog:
-    id: int
-    role: str
-    content: str
-    timestamp: str
-    session_id: Optional[int] = None # Added FK
-    sentiment: Optional[str] = None 
-    intent: Optional[str] = None
-
-@dataclass
-class UserPreference:
-    key: str
-    value: str
-
-@dataclass
-class WellnessLog:
-    id: int
-    date: str
-    stress_level: int # 1-10
-    mood: str
-    notes: str
+# ... (Sessions and Logs already handled or will be handled in DBManager) ...
 
 def create_tables(conn: sqlite3.Connection):
     cursor = conn.cursor()
     
-    # ... (Previous tables unchanged) ...
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS employees (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +47,8 @@ def create_tables(conn: sqlite3.Connection):
         role TEXT NOT NULL,
         email TEXT NOT NULL,
         weekly_hours_limit INTEGER DEFAULT 40,
-        current_workload REAL DEFAULT 0.0
+        current_workload REAL DEFAULT 0.0,
+        user_id TEXT
     )
     """)
     
@@ -86,6 +62,7 @@ def create_tables(conn: sqlite3.Connection):
         deadline TEXT,
         assigned_to INTEGER,
         status TEXT DEFAULT 'Pending',
+        user_id TEXT,
         FOREIGN KEY (assigned_to) REFERENCES employees (id)
     )
     """)
@@ -98,28 +75,21 @@ def create_tables(conn: sqlite3.Connection):
         scheduled_day TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
+        user_id TEXT,
         FOREIGN KEY (employee_id) REFERENCES employees (id),
         FOREIGN KEY (task_id) REFERENCES tasks (id)
     )
     """)
-
-    # New Session Table
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS conversation_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT DEFAULT 'New Chat',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        user_id TEXT
     )
     """)
 
-    # Modified Logs Table (We'll check if column exists or just create generic IF NOT EXISTS for new setups.
-    # ideally we should migrate, but for this prototype just adding the column definition for new tables
-    # or relying on SQLite's flexibility. Let's just create the table with the new schema. 
-    # If table exists, we may need to alter it - but standard tool usage implies 'replace'.
-    # I'll use CREATE TABLE IF NOT EXISTS with the NEW schema. 
-    # If the user has an existing DB, this WON'T add the column. 
-    # I should add an ALTER TABLE command safely.)
-    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS conversation_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -133,16 +103,12 @@ def create_tables(conn: sqlite3.Connection):
     )
     """)
     
-    # Simple migration for existing tables without session_id
-    try:
-        cursor.execute("ALTER TABLE conversation_logs ADD COLUMN session_id INTEGER DEFAULT 1")
-    except sqlite3.OperationalError:
-        pass # Column likely exists or table just created
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_preferences (
-        key TEXT PRIMARY KEY,
-        value TEXT
+        key TEXT,
+        value TEXT,
+        user_id TEXT,
+        PRIMARY KEY (key, user_id)
     )
     """)
 
@@ -152,7 +118,8 @@ def create_tables(conn: sqlite3.Connection):
         date TEXT DEFAULT CURRENT_DATE,
         stress_level INTEGER,
         mood TEXT,
-        notes TEXT
+        notes TEXT,
+        user_id TEXT
     )
     """)
     

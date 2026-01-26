@@ -46,7 +46,7 @@ export default function Sisterhood() {
     }, [userProfile]);
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] text-slate-900 font-sans p-6 pb-20 -m-8 relative overflow-hidden">
+        <div className="min-h-screen bg-[#FFF0E5] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans p-6 pb-20 -m-8 relative overflow-hidden">
             {/* Background Gradients */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-200/40 rounded-full blur-[120px] -mr-40 -mt-20 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-200/40 rounded-full blur-[120px] -ml-40 -mb-20 pointer-events-none" />

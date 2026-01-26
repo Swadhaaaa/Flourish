@@ -103,7 +103,7 @@ export default function SafeCab() {
     const selectedCab = CAB_MODELS.find(cab => cab.id === showDetails);
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] text-slate-900 font-sans selection:bg-rose-500/30 -m-8 overflow-hidden relative">
+        <div className="min-h-screen bg-[#FFF0E5] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans selection:bg-rose-500/30 -m-8 overflow-hidden relative">
             {/* Background Accent */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-[120px] -mr-40 -mt-20 pointer-events-none" />
 

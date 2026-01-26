@@ -99,7 +99,7 @@ const Scheduler = () => {
 
     const loadSchedule = async () => {
         try {
-            const data = await getSchedulerSchedule();
+            const data = await getSchedulerSchedule(user?.uid);
             setSchedule(data);
         } catch (e) { console.error(e); }
     }
@@ -113,7 +113,7 @@ const Scheduler = () => {
         setIsTyping(true);
 
         try {
-            const res = await sendChatMessage(userMsg.content, currentSessionId);
+            const res = await sendChatMessage(userMsg.content, currentSessionId, user?.uid);
             const botMsg = { role: 'assistant', content: res.response };
             setMessages(prev => [...prev, botMsg]);
 

@@ -163,7 +163,7 @@ export default function Appointments() {
 
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] text-slate-800 p-4 lg:p-8 font-sans overflow-y-auto relative">
+        <div className="min-h-screen bg-[#FFF0E5] dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4 lg:p-8 font-sans overflow-y-auto relative">
             <RemindersMiniPopup />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

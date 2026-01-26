@@ -231,14 +231,17 @@ Output valid JSON only."""
         })
         
         prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
+            ("system", "{system_message}"),
             ("human", "{input}")
         ])
         
         chain = prompt | self.json_llm | self.schedule_parser
         
         try:
-            result = chain.invoke({"input": user_content})
+            result = chain.invoke({
+                "system_message": system_prompt,
+                "input": user_content
+            })
             return result
         except Exception as e:
             print(f"Schedule generation error: {e}")
@@ -271,3 +274,30 @@ Output valid JSON only."""
         except Exception as e:
             print(f"Title generation error: {e}")
             return "New Conversation"
+
+    def generate_json_response(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        """
+        Generic method to generate structured JSON response from Groq.
+        """
+        # Create a dynamic prompt template
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "{system_message}"),
+            ("human", "{input}")
+        ])
+        
+        # Use the JSON-mode LLM
+        # We use a generic parser since we don't have a Pydantic model for every dynamic case (like tone shield)
+        # or we accept the dict output from JsonOutputParser(pydantic_object=None) which tries to parse any JSON.
+        
+        parser = JsonOutputParser() # Generic JSON parser
+        
+        chain = prompt | self.json_llm | parser
+        
+        try:
+            return chain.invoke({
+                "system_message": system_prompt,
+                "input": user_prompt
+            })
+        except Exception as e:
+            print(f"Groq JSON Gen Error: {e}")
+            return {}

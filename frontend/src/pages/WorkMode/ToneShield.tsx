@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ChevronLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ToneShieldMiniPopup } from '../../components/ToneShieldMiniPopup';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ToneShield() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const [isActive, setIsActive] = useState(true);
     // --- Analysis State ---
@@ -88,7 +90,7 @@ export default function ToneShield() {
     const handleSync = async () => {
         setSyncLoading(true);
         try {
-            await fetch(`${API_URL}/api/ai/tone-shield/sync-gmail`, { method: 'POST' });
+            await fetch(`${API_URL}/api/ai/tone-shield/sync-gmail?user_id=${user?.uid || "1"}`, { method: 'POST' });
             await fetchReports();
         } catch (e) {
             console.error(e);
@@ -106,7 +108,7 @@ export default function ToneShield() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFBFB] text-slate-900 font-sans -m-8 relative overflow-hidden pb-32">
+        <div className="min-h-screen bg-[#FFFBFB] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans -m-8 relative overflow-hidden pb-32">
             <ToneShieldMiniPopup />
 
             {/* DISCLAIMER MODAL */}

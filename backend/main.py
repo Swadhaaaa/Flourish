@@ -175,8 +175,10 @@ async def period_insight(request: PeriodInsightRequest):
     """
     try:
         # We reuse the chat interface for now, or use a specific method if implemented
-        insight_text = ai_service.generate_period_insight(request.day, request.phase, request.symptoms, request.mood)
-        return {"insight": insight_text}
+        insight_data = ai_service.generate_period_insight(request.day, request.phase, request.symptoms, request.mood)
+        if isinstance(insight_data, dict):
+            return insight_data
+        return {"insight": insight_data}
     except Exception as e:
         # Fallback if AI fails
         print(f"AI Generation Failed: {e}")
