@@ -1,0 +1,501 @@
+text,label
+I will make your life miserable here.,Unsafe
+You are a failure.,Unsafe
+Die in a fire.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Let's not waste time on this approach. Let's try something else.,Safe
+I am going to get you fired if you don't fix this.,Unsafe
+You are pathetic.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+You are a disgrace to this company.,Unsafe
+Can you share the access logs for the server?,Safe
+This is incorrect. Please correct it immediately.,Safe
+I noticed the deliverable is missing the final section. Please complete it by EOD.,Safe
+Are you retarded? Using legacy code in 2026?,Unsafe
+I am going to get you fired if you don't fix this.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+You are a disgrace to this company.,Unsafe
+This is unacceptable. We cannot ship this bug to production.,Safe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+You are so lazy. Do you ever do any work?,Unsafe
+Please explain why this task was delayed.,Safe
+Let's grab lunch today.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+I am going to get you fired if you don't fix this.,Unsafe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+We need to rework this strategy. It is not effective.,Safe
+We need to rework this strategy. It is not effective.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+You are a failure.,Unsafe
+Thanks for the update.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+I hate working with you. You are incompetent.,Unsafe
+The client is not happy with the current progress. We need to step up.,Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Can you please speed up the process? We are running late.,Safe
+I will make your life miserable here.,Unsafe
+This is unacceptable. We cannot ship this bug to production.,Safe
+This is incorrect. Please correct it immediately.,Safe
+You are pathetic.,Unsafe
+You are pathetic.,Unsafe
+Get out of my sight.,Unsafe
+Let's not waste time on this approach. Let's try something else.,Safe
+I am going to get you fired if you don't fix this.,Unsafe
+Great job on the presentation today!,Safe
+The performance of this module is slow. It needs optimization.,Safe
+I will make your life miserable here.,Unsafe
+Your attendance has been irregular lately. Is everything okay?,Safe
+Thanks for the update.,Safe
+Go to hell.,Unsafe
+Stop wasting my time with your garbage questions.,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+Nobody likes you here.,Unsafe
+Get out of my sight.,Unsafe
+Please ensure you follow the protocol strictly next time.,Safe
+I will be on leave next week.,Safe
+The project timeline has been updated.,Safe
+You are so lazy. Do you ever do any work?,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+You are pathetic.,Unsafe
+Can you please speed up the process? We are running late.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+I am going to get you fired if you don't fix this.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+The project timeline has been updated.,Safe
+This is unacceptable. We cannot ship this bug to production.,Safe
+You are a failure.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Die in a fire.,Unsafe
+Let's grab lunch today.,Safe
+I am going to get you fired if you don't fix this.,Unsafe
+Can you share the access logs for the server?,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+The project timeline has been updated.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+Thanks for the update.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+Let's grab lunch today.,Safe
+Nobody likes you here.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+The project timeline has been updated.,Safe
+I will make your life miserable here.,Unsafe
+Get out of my sight.,Unsafe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+Can you share the access logs for the server?,Safe
+The client is not happy with the current progress. We need to step up.,Safe
+You need to improve your communication skills with the client.,Safe
+Get out of my sight.,Unsafe
+Please explain why this task was delayed.,Safe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+You are a failure.,Unsafe
+Can you please speed up the process? We are running late.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+Please find the attached invoice for last month.,Safe
+I will be on leave next week.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+You need to improve your communication skills with the client.,Safe
+Please double-check your work next time. There were several typos.,Safe
+Let's grab lunch today.,Safe
+Please double-check your work next time. There were several typos.,Safe
+Get out of my sight.,Unsafe
+This is the most stupid idea I have ever heard.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+The quality of code is below our standards. Please refactor.,Safe
+You are a failure.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Can you please speed up the process? We are running late.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+Go to hell.,Unsafe
+Get out of my sight.,Unsafe
+I will be on leave next week.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+The quality of code is below our standards. Please refactor.,Safe
+The project timeline has been updated.,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+The client is not happy with the current progress. We need to step up.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+You need to improve your communication skills with the client.,Safe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+We need to rework this strategy. It is not effective.,Safe
+Great job on the presentation today!,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+You are a disgrace to this company.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Are you retarded? Using legacy code in 2026?,Unsafe
+You look ugly today.,Unsafe
+Please ensure you follow the protocol strictly next time.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+You are a failure.,Unsafe
+Go to hell.,Unsafe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+The client is not happy with the current progress. We need to step up.,Safe
+This is unacceptable. We cannot ship this bug to production.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+Shut up and just do what I say.,Unsafe
+The project timeline has been updated.,Safe
+You are pathetic.,Unsafe
+You look ugly today.,Unsafe
+You look ugly today.,Unsafe
+Can you share the access logs for the server?,Safe
+Great job on the presentation today!,Safe
+You look ugly today.,Unsafe
+Nobody likes you here.,Unsafe
+I will be on leave next week.,Safe
+Let's grab lunch today.,Safe
+Die in a fire.,Unsafe
+The quality of code is below our standards. Please refactor.,Safe
+The client is not happy with the current progress. We need to step up.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+Please double-check your work next time. There were several typos.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+The project timeline has been updated.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+The project timeline has been updated.,Safe
+You are pathetic.,Unsafe
+Please explain why this task was delayed.,Safe
+Please find the attached invoice for last month.,Safe
+I noticed the deliverable is missing the final section. Please complete it by EOD.,Safe
+Great job on the presentation today!,Safe
+You are pathetic.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Die in a fire.,Unsafe
+Die in a fire.,Unsafe
+Can you share the access logs for the server?,Safe
+Nobody likes you here.,Unsafe
+You look ugly today.,Unsafe
+This is unacceptable. We cannot ship this bug to production.,Safe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+Please ensure you follow the protocol strictly next time.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Can you please speed up the process? We are running late.,Safe
+You look ugly today.,Unsafe
+Please explain why this task was delayed.,Safe
+You are a disgrace to this company.,Unsafe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+I will make your life miserable here.,Unsafe
+Great job on the presentation today!,Safe
+The quality of code is below our standards. Please refactor.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Get out of my sight.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Go to hell.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+Nobody likes you here.,Unsafe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+I will be on leave next week.,Safe
+I hate working with you. You are incompetent.,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Get out of my sight.,Unsafe
+You are a failure.,Unsafe
+Please find the attached invoice for last month.,Safe
+The project timeline has been updated.,Safe
+Go to hell.,Unsafe
+Stop wasting my time with your garbage questions.,Unsafe
+I expected better results from this campaign.,Safe
+The project timeline has been updated.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+We need to rework this strategy. It is not effective.,Safe
+I will be on leave next week.,Safe
+I will make your life miserable here.,Unsafe
+Stop wasting my time with your garbage questions.,Unsafe
+I will be on leave next week.,Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+Please ensure you follow the protocol strictly next time.,Safe
+I hate working with you. You are incompetent.,Unsafe
+I will make your life miserable here.,Unsafe
+I am going to get you fired if you don't fix this.,Unsafe
+Get out of my sight.,Unsafe
+Are you retarded? Using legacy code in 2026?,Unsafe
+You are a failure.,Unsafe
+Please explain why this task was delayed.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+Thanks for the update.,Safe
+The project timeline has been updated.,Safe
+Please find the attached invoice for last month.,Safe
+Please find the attached invoice for last month.,Safe
+This is incorrect. Please correct it immediately.,Safe
+Nobody likes you here.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+You need to improve your communication skills with the client.,Safe
+Please explain why this task was delayed.,Safe
+Great job on the presentation today!,Safe
+I will make your life miserable here.,Unsafe
+I will be on leave next week.,Safe
+Please explain why this task was delayed.,Safe
+This is unacceptable. We cannot ship this bug to production.,Safe
+Great job on the presentation today!,Safe
+You are a failure.,Unsafe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+I hate working with you. You are incompetent.,Unsafe
+This is the most stupid idea I have ever heard.,Unsafe
+Get out of my sight.,Unsafe
+Let's grab lunch today.,Safe
+You are a failure.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Let's grab lunch today.,Safe
+You are a disgrace to this company.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+Please ensure you follow the protocol strictly next time.,Safe
+Die in a fire.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+You look ugly today.,Unsafe
+We need to rework this strategy. It is not effective.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+I will make your life miserable here.,Unsafe
+Stop wasting my time with your garbage questions.,Unsafe
+This is the most stupid idea I have ever heard.,Unsafe
+You need to improve your communication skills with the client.,Safe
+Please find the attached invoice for last month.,Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+You need to improve your communication skills with the client.,Safe
+You look ugly today.,Unsafe
+Go to hell.,Unsafe
+I need you to focus more during meetings. You seemed distracted.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+Shut up and just do what I say.,Unsafe
+Great job on the presentation today!,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Let's grab lunch today.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Please explain why this task was delayed.,Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+Please find the attached invoice for last month.,Safe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+The project timeline has been updated.,Safe
+Nobody likes you here.,Unsafe
+Are you retarded? Using legacy code in 2026?,Unsafe
+I will be on leave next week.,Safe
+Can you share the access logs for the server?,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+You are a disgrace to this company.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+I am going to get you fired if you don't fix this.,Unsafe
+Please explain why this task was delayed.,Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Let's not waste time on this approach. Let's try something else.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+The quality of code is below our standards. Please refactor.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+I need you to focus more during meetings. You seemed distracted.,Safe
+Nobody likes you here.,Unsafe
+Let's not waste time on this approach. Let's try something else.,Safe
+Let's grab lunch today.,Safe
+The client is not happy with the current progress. We need to step up.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Your attendance has been irregular lately. Is everything okay?,Safe
+The quality of code is below our standards. Please refactor.,Safe
+Great job on the presentation today!,Safe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+You look ugly today.,Unsafe
+You are a failure.,Unsafe
+Great job on the presentation today!,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+Get out of my sight.,Unsafe
+You need to improve your communication skills with the client.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+The quality of code is below our standards. Please refactor.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+Great job on the presentation today!,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Are you retarded? Using legacy code in 2026?,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+I expected better results from this campaign.,Safe
+I am going to get you fired if you don't fix this.,Unsafe
+I expected better results from this campaign.,Safe
+This is unacceptable. We cannot ship this bug to production.,Safe
+I will be on leave next week.,Safe
+Are you retarded? Using legacy code in 2026?,Unsafe
+Can you share the access logs for the server?,Safe
+The performance of this module is slow. It needs optimization.,Safe
+Great job on the presentation today!,Safe
+I hate working with you. You are incompetent.,Unsafe
+You are so lazy. Do you ever do any work?,Unsafe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Die in a fire.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+Go to hell.,Unsafe
+Great job on the presentation today!,Safe
+Can you please speed up the process? We are running late.,Safe
+You look ugly today.,Unsafe
+You need to improve your communication skills with the client.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+Great job on the presentation today!,Safe
+I hate working with you. You are incompetent.,Unsafe
+Get out of my sight.,Unsafe
+I will be on leave next week.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+This is the most stupid idea I have ever heard.,Unsafe
+We need to rework this strategy. It is not effective.,Safe
+This is incorrect. Please correct it immediately.,Safe
+Go to hell.,Unsafe
+Don't be a moron. Use your brain for once.,Unsafe
+I'm sick of your excuses. You are worthless.,Unsafe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+Are you retarded? Using legacy code in 2026?,Unsafe
+I will make your life miserable here.,Unsafe
+I will be on leave next week.,Safe
+I will make your life miserable here.,Unsafe
+Can you please speed up the process? We are running late.,Safe
+We need to rework this strategy. It is not effective.,Safe
+You are so lazy. Do you ever do any work?,Unsafe
+Get out of my sight.,Unsafe
+The project timeline has been updated.,Safe
+Can you please speed up the process? We are running late.,Safe
+Shut up and just do what I say.,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+You need to improve your communication skills with the client.,Safe
+Die in a fire.,Unsafe
+I noticed the deliverable is missing the final section. Please complete it by EOD.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+This is the most stupid idea I have ever heard.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Stop wasting my time with your garbage questions.,Unsafe
+I will make your life miserable here.,Unsafe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Great job on the presentation today!,Safe
+You are so lazy. Do you ever do any work?,Unsafe
+You are so lazy. Do you ever do any work?,Unsafe
+Let's grab lunch today.,Safe
+Get out of my sight.,Unsafe
+Get out of my sight.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+This is incorrect. Please correct it immediately.,Safe
+I hate working with you. You are incompetent.,Unsafe
+I'm sick of your excuses. You are worthless.,Unsafe
+Can you share the access logs for the server?,Safe
+You are a failure.,Unsafe
+The project timeline has been updated.,Safe
+We need to rework this strategy. It is not effective.,Safe
+This is unacceptable. We cannot ship this bug to production.,Safe
+Shut up and just do what I say.,Unsafe
+Please explain why this task was delayed.,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+The project timeline has been updated.,Safe
+I will be on leave next week.,Safe
+Great job on the presentation today!,Safe
+Happy Birthday! Hope you have a great day.,Safe
+I'm sick of your excuses. You are worthless.,Unsafe
+Go to hell.,Unsafe
+Happy Birthday! Hope you have a great day.,Safe
+I need you to focus more during meetings. You seemed distracted.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+You are a disgrace to this company.,Unsafe
+You are so lazy. Do you ever do any work?,Unsafe
+I expected better results from this campaign.,Safe
+Please find the attached invoice for last month.,Safe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+You are a failure.,Unsafe
+You are a disgrace to this company.,Unsafe
+Please explain why this task was delayed.,Safe
+I will make your life miserable here.,Unsafe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+Can you please speed up the process? We are running late.,Safe
+This work is not up to the mark. Please review the guidelines and resubmit.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Please double-check your work next time. There were several typos.,Safe
+Thanks for the update.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+I will be on leave next week.,Safe
+I expected better results from this campaign.,Safe
+The project timeline has been updated.,Safe
+Don't be a moron. Use your brain for once.,Unsafe
+I am going to get you fired if you don't fix this.,Unsafe
+You need to improve your communication skills with the client.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+Can you share the access logs for the server?,Safe
+I will make your life miserable here.,Unsafe
+Please double-check your work next time. There were several typos.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+Can you please speed up the process? We are running late.,Safe
+Go to hell.,Unsafe
+Go to hell.,Unsafe
+The project timeline has been updated.,Safe
+Let's grab lunch today.,Safe
+The quality of code is below our standards. Please refactor.,Safe
+You look ugly today.,Unsafe
+Stop wasting my time with your garbage questions.,Unsafe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+I'm disappointed with the quality of the recent report. It lacks depth.,Safe
+I will make your life miserable here.,Unsafe
+Die in a fire.,Unsafe
+Your attendance has been irregular lately. Is everything okay?,Safe
+You are pathetic.,Unsafe
+Let's grab lunch today.,Safe
+Nobody likes you here.,Unsafe
+Can you share the access logs for the server?,Safe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Happy Birthday! Hope you have a great day.,Safe
+Great job on the presentation today!,Safe
+Please find the attached invoice for last month.,Safe
+This is incorrect. Please correct it immediately.,Safe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+This is incorrect. Please correct it immediately.,Safe
+Get out of my sight.,Unsafe
+This is incorrect. Please correct it immediately.,Safe
+The performance of this module is slow. It needs optimization.,Safe
+I expected better results from this campaign.,Safe
+"Hi, can we reschedule our meeting to 3 PM?",Safe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+You are absolutely useless. I don't know why we hired you.,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+You are a failure.,Unsafe
+You look ugly today.,Unsafe
+Reminder: The quarterly town hall is tomorrow.,Safe
+Please explain why this task was delayed.,Safe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+You are a disgrace to this company.,Unsafe
+I will be on leave next week.,Safe
+You are an idiot. How could you make such a dumb mistake?,Unsafe
+You are a failure.,Unsafe
+Your recent commit broke the build. Can you please check and fix it?,Safe
+This is incorrect. Please correct it immediately.,Safe
+You missed the deadline for the project. Let's discuss how to avoid this.,Safe
+Please find the attached invoice for last month.,Safe

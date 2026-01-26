@@ -80,9 +80,46 @@ export default function ToneShield() {
         setAnalysisResult(null);
     };
 
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+    const handleToggle = () => {
+        if (isActive) {
+            setIsActive(false); // Can turn off anytime
+        } else {
+            setShowDisclaimer(true); // Must see disclaimer to turn ON
+        }
+    };
+
+    const confirmActivation = () => {
+        setShowDisclaimer(false);
+        setIsActive(true);
+    };
+
     return (
         <div className="min-h-screen bg-[#FFFBFB] text-slate-900 font-sans -m-8 relative overflow-hidden pb-32">
             <ToneShieldMiniPopup />
+
+            {/* DISCLAIMER MODAL */}
+            <AnimatePresence>
+                {showDisclaimer && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6">
+                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-orange-400" />
+                            <h2 className="text-2xl font-black text-slate-900 mb-4">Wait a moment.</h2>
+                            <p className="text-slate-600 font-medium mb-6 leading-relaxed">
+                                Tone Shield uses AI to filter and rewrite incoming communication. While designed to reduce stress, it may alter the original tone or intent of messages.
+                                <br /><br />
+                                By activating this, you acknowledge that you are using an AI-assisted filter.
+                            </p>
+                            <div className="flex gap-4">
+                                <button onClick={() => setShowDisclaimer(false)} className="flex-1 py-4 text-slate-500 font-black uppercase tracking-widest text-xs hover:bg-slate-50 rounded-xl">Cancel</button>
+                                <button onClick={confirmActivation} className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg">I Understand, Enable</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Animated Background Blobs */}
             <motion.div
                 animate={{
@@ -114,8 +151,8 @@ export default function ToneShield() {
                 <div>
                     <h1 className="text-3xl font-black text-slate-800 tracking-tighter">Tone Shield</h1>
                     <p className="text-sm font-bold text-slate-400 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        Stress-aware notification protection
+                        <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                        {isActive ? 'Stress-aware notification protection' : 'Protection Paused'}
                     </p>
                 </div>
             </motion.div>
@@ -139,19 +176,19 @@ export default function ToneShield() {
                             <motion.div
                                 animate={{ rotate: isActive ? [0, 5, -5, 0] : 0 }}
                                 transition={{ duration: 4, repeat: Infinity }}
-                                className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-xl shadow-indigo-200"
+                                className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-xl transition-colors ${isActive ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-200 shadow-slate-200'}`}
                             >
                                 <Shield className="w-10 h-10 text-white" />
                             </motion.div>
                             <div>
-                                <h2 className="text-2xl font-black text-slate-800">Tone Shield Active</h2>
+                                <h2 className="text-2xl font-black text-slate-800">{isActive ? 'Tone Shield Active' : 'Shield Disabled'}</h2>
                                 <p className="text-xs font-bold text-slate-400 leading-relaxed mt-2 max-w-[220px]">
                                     AI-powered linguistic softening synchronized with your real-time stress levels.
                                 </p>
                             </div>
                         </div>
                         <button
-                            onClick={() => setIsActive(!isActive)}
+                            onClick={handleToggle}
                             className={`w-16 h-9 rounded-full p-1.5 transition-colors duration-500 ${isActive ? 'bg-slate-900 shadow-xl shadow-slate-200' : 'bg-slate-100'}`}
                         >
                             <motion.div

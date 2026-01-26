@@ -50,17 +50,8 @@ class WorkloadData(BaseModel):
 def health_check():
     return {"status": "ok", "message": "Flourish AI Brain is active"}
 
-@app.post("/api/ai/tone-shield")
-async def tone_shield(request: EmailRequest):
-    """
-    Analyzes email for aggression/toxicity and rewrites it to be neutral.
-    Also flags invisible labor.
-    """
-    try:
-        result = ai_service.analyze_email(request.content, request.sender)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+from routers.tone_shield import router as tone_shield_router
+app.include_router(tone_shield_router)
 
 @app.post("/api/ai/boundary-defense")
 async def boundary_defense(request: BoundaryRequest):
