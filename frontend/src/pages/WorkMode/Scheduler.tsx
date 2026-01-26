@@ -158,7 +158,7 @@ const Scheduler = () => {
                                 "w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-2xl transition-all font-bold text-xs md:text-sm",
                                 activeTab === tab.id
                                     ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                                    : "hover:bg-white text-slate-500 hover:text-slate-800"
+                                    : "hover:bg-white text-slate-700 hover:text-slate-900"
                             )}
                         >
                             <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
