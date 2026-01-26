@@ -48,38 +48,47 @@
   }
 
   .dark {
-    /* Keep existing dark mode or slightly adjust for consistency if needed, 
-       but user specifically asked for light mode theme update */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Warm/Sage Dark Mode Theme */
+    /* Background: Deep Warm Grey/Brown */
+    --background: 40 20% 10%;
+    --foreground: 40 30% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Card: Slightly lighter than background */
+    --card: 40 20% 13%;
+    --card-foreground: 40 30% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover matches Card */
+    --popover: 40 20% 13%;
+    --popover-foreground: 40 30% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary: Sage Green (Lighter/More saturated for dark mode) */
+    --primary: 146 40% 60%;
+    --primary-foreground: 40 20% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary: Muted Warm Element */
+    --secondary: 40 20% 20%;
+    --secondary-foreground: 40 30% 96%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Muted */
+    --muted: 40 10% 20%;
+    --muted-foreground: 40 10% 70%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent */
+    --accent: 146 30% 20%;
+    --accent-foreground: 146 40% 90%;
 
+    /* Destructive */
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Border/Input */
+    --border: 40 20% 20%;
+    --input: 40 20% 20%;
+    --ring: 146 40% 60%;
 
-    --gradient-home: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    --gradient-work: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    /* Gradients */
+    --gradient-home: linear-gradient(135deg, #1c1b19 0%, #252422 100%);
+    --gradient-work: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   }
 }
 

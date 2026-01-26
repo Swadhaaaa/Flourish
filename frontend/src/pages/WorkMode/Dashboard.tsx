@@ -119,7 +119,7 @@ export default function WorkDashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen text-slate-900 font-sans p-6 pb-20 relative overflow-hidden">
+        <div className="min-h-screen text-foreground font-sans p-6 pb-20 relative overflow-hidden">
             {/* Ambient Noise overlay for texture */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0 mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 
@@ -136,7 +136,7 @@ export default function WorkDashboard() {
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-6xl font-black text-slate-900 tracking-tighter mb-2"
+                            className="text-6xl font-black text-foreground tracking-tighter mb-2"
                         >
                             Hello, <span className="text-[#FF8A71]">{userProfile?.name?.split(' ')[0] || 'Friend'}</span>.
                         </motion.h1>
@@ -144,14 +144,14 @@ export default function WorkDashboard() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-xl text-slate-500 font-medium"
+                            className="text-xl text-muted-foreground font-medium"
                         >
                             Your workspace is ready. Energy levels look good.
                         </motion.p>
                     </div>
                     <div className="hidden md:block">
                         <div className="bg-white/50 backdrop-blur-md border border-white/60 p-2 rounded-2xl flex gap-2">
-                            <div className="px-4 py-2 bg-white rounded-xl shadow-sm text-sm font-bold text-slate-600">
+                            <div className="px-4 py-2 bg-white rounded-xl shadow-sm text-sm font-bold text-muted-foreground">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                             </div>
                         </div>
@@ -207,9 +207,9 @@ export default function WorkDashboard() {
                     </div>
 
                     {/* 3. Analytics Chart - NEW */}
-                    <div className="md:col-span-1 md:row-span-2 bg-white border border-slate-100 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden flex flex-col">
+                    <div className="md:col-span-1 md:row-span-2 bg-card border border-border rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-slate-800">Weekly Focus</h3>
+                            <h3 className="font-bold text-card-foreground">Weekly Focus</h3>
                             <div className="bg-emerald-50 text-emerald-600 text-xs font-black px-2 py-1 rounded-lg">+12%</div>
                         </div>
                         <div className="flex-1 w-full -ml-4">
@@ -278,13 +278,13 @@ export default function WorkDashboard() {
 
                     {/* 7. Burnout Watch (Square) */}
                     <Link to="/work/burnout" className="md:col-span-1 md:row-span-1 group perspective-1000">
-                        <div className="h-full bg-white border border-slate-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                        <div className="h-full bg-card border border-border rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
                             <div className="absolute right-0 top-0 w-32 h-32 bg-rose-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50" />
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <Activity className="w-8 h-8 text-rose-500" />
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800">Burnout</h3>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Check Levels</p>
+                                    <h3 className="text-xl font-black text-card-foreground">Burnout</h3>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Check Levels</p>
                                 </div>
                             </div>
                         </div>
@@ -296,8 +296,8 @@ export default function WorkDashboard() {
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <Truck className="w-8 h-8 text-emerald-500" />
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800">Safe Cab</h3>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Ride Safe</p>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-emerald-900">Safe Cab</h3>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-emerald-800 uppercase tracking-widest mt-1">Ride Safe</p>
                                 </div>
                             </div>
                         </div>
@@ -332,14 +332,14 @@ export default function WorkDashboard() {
                     </Link>
 
                     {/* 11. Dynamic Insight Widget */}
-                    <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-100 rounded-[2.5rem] p-6 flex items-center gap-6 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-slate-50/50 -z-10" />
+                    <div className="md:col-span-2 md:row-span-1 bg-card border border-border rounded-[2.5rem] p-6 flex items-center gap-6 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-secondary/50 -z-10" />
                         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-500 shrink-0">
                             {boundaryCheck?.status === 'red' ? <AlertTriangle className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
                         </div>
                         <div>
-                            <h4 className="font-bold text-slate-800 mb-1">{workloadInsight?.title || "Mindfulness Moment"}</h4>
-                            <p className="text-sm text-slate-500 leading-snug max-w-md">
+                            <h4 className="font-bold text-card-foreground mb-1">{workloadInsight?.title || "Mindfulness Moment"}</h4>
+                            <p className="text-sm text-muted-foreground leading-snug max-w-md">
                                 {workloadInsight?.recommendation || "Take a deep breath. You're doing great."}
                             </p>
                         </div>

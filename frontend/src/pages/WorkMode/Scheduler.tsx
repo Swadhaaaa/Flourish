@@ -132,16 +132,19 @@ const Scheduler = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex gap-6 relative">
+        <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row gap-4 md:gap-6 relative">
             <AssistantMiniPopup />
             {/* Sidebar Navigation for Scheduler */}
-            <div className="w-64 bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white flex flex-col shadow-xl shadow-orange-100/20">
-                <div className="mb-8">
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tighter">Assistant</h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Assistant</p>
+            <div className="w-full md:w-64 shrink-0 bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-4 md:p-6 border border-white flex flex-col shadow-xl shadow-orange-100/20 max-h-[30vh] md:max-h-full">
+                <div className="mb-4 md:mb-8 flex items-center justify-between md:block">
+                    <div>
+                        <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter">Assistant</h2>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">AI Assistant</p>
+                    </div>
+                    {/* Mobile: Show active tab name or toggle? Just keep simple header */}
                 </div>
 
-                <nav className="space-y-2 flex-1">
+                <nav className="grid grid-cols-2 gap-2 md:space-y-2 md:block flex-1 overflow-y-auto md:overflow-visible">
                     {[
                         { id: 'chat', icon: MessageSquare, label: 'Chat' },
                         { id: 'schedule', icon: CalIcon, label: 'Schedule' },
@@ -152,21 +155,21 @@ const Scheduler = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={cn(
-                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all font-bold text-sm",
+                                "w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-2xl transition-all font-bold text-xs md:text-sm",
                                 activeTab === tab.id
                                     ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
                                     : "hover:bg-white text-slate-500 hover:text-slate-800"
                             )}
                         >
-                            <tab.icon className="w-5 h-5" />
+                            <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
                             {tab.label}
                         </button>
                     ))}
                 </nav>
 
-                {/* Session List (Only visible in Chat mode) */}
+                {/* Session List (Only visible in Chat mode, Hidden on Mobile for space) */}
                 {activeTab === 'chat' && (
-                    <div className="mt-8 border-t border-slate-100 pt-6 flex-1 overflow-hidden flex flex-col">
+                    <div className="mt-8 border-t border-slate-100 pt-6 flex-1 overflow-hidden hidden md:flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">History</span>
                             <button onClick={() => handleNewChat(user?.uid)} className="p-2 hover:bg-orange-50 text-orange-400 rounded-full transition-colors active:scale-95">
@@ -203,50 +206,58 @@ const Scheduler = () => {
 
                 {/* CHAT VIEW */}
                 {activeTab === 'chat' && (
-                    <div className="h-full flex flex-col">
+                    <div className="h-full flex flex-col relative overflow-hidden">
+                        {/* Decorative Background Blobs */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2" />
+
                         {/* Header */}
-                        <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-md">
+                        <div className="p-6 border-b border-white/50 flex items-center justify-between bg-white/40 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF8A71] to-[#FF6B6B] flex items-center justify-center text-white shadow-lg shadow-orange-200/50">
                                     <MessageSquare className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-slate-800 text-lg">Assistant</h3>
-                                    <p className="text-xs font-bold text-slate-400">Online • Ready to help</p>
+                                    <h3 className="font-black text-slate-800 text-lg tracking-tight">Flourish Assistant</h3>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Online</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#FAFAFA]/50">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar relative z-0">
                             {messages.length === 0 && (
-                                <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-                                    <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
-                                        <MessageSquare className="w-8 h-8 text-slate-400" />
+                                <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                                    <div className="w-24 h-24 bg-gradient-to-tr from-orange-50 to-white rounded-[2rem] flex items-center justify-center mb-6 shadow-inner border border-white">
+                                        <MessageSquare className="w-10 h-10 text-[#FF8A71]" />
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-800 mb-2">How can I help?</h3>
-                                    <p className="text-sm font-bold text-slate-400 max-w-xs">I can schedule meetings, add tasks, or just chat about your day.</p>
+                                    <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">How can I help you thrive?</h3>
+                                    <p className="text-sm font-bold text-slate-400 max-w-xs leading-relaxed">I can schedule meetings, manage tasks, or just chat about your day.</p>
                                 </div>
                             )}
 
                             {messages.map((msg, i) => (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
                                     key={i}
-                                    className={cn("flex gap-4 max-w-[80%]", msg.role === 'user' ? "ml-auto flex-row-reverse" : "")}
+                                    className={cn("flex gap-4 max-w-[90%] md:max-w-[75%]", msg.role === 'user' ? "ml-auto flex-row-reverse" : "")}
                                 >
                                     <div className={cn(
-                                        "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
-                                        msg.role === 'user' ? "bg-slate-800 text-white" : "bg-white text-blue-500 border border-blue-100"
+                                        "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-md border-2 border-white",
+                                        msg.role === 'user' ? "bg-slate-900 text-white" : "bg-gradient-to-br from-[#FF8A71] to-[#FF6B6B] text-white"
                                     )}>
-                                        {msg.role === 'user' ? <User className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                                        {msg.role === 'user' ? <User className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
                                     </div>
                                     <div className={cn(
-                                        "p-4 rounded-2xl text-sm font-medium leading-relaxed shadow-sm",
+                                        "p-5 rounded-[1.5rem] text-sm font-medium leading-relaxed shadow-sm relative",
                                         msg.role === 'user'
-                                            ? "bg-slate-800 text-white rounded-tr-none"
-                                            : "bg-white text-slate-600 border border-slate-100 rounded-tl-none"
+                                            ? "bg-slate-900 text-white rounded-tr-sm"
+                                            : "bg-white/80 backdrop-blur-sm border border-white text-slate-600 rounded-tl-sm shadow-orange-100/50"
                                     )}>
                                         {msg.content}
                                     </div>
@@ -254,13 +265,13 @@ const Scheduler = () => {
                             ))}
                             {isTyping && (
                                 <div className="flex gap-4">
-                                    <div className="w-8 h-8 rounded-xl bg-white text-blue-500 border border-blue-100 flex items-center justify-center shrink-0">
-                                        <MessageSquare className="w-4 h-4" />
+                                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF8A71] to-[#FF6B6B] text-white border-2 border-white flex items-center justify-center shrink-0 shadow-md">
+                                        <MessageSquare className="w-5 h-5" />
                                     </div>
-                                    <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-none border border-slate-100 flex gap-1 items-center">
-                                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-75" />
-                                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-150" />
+                                    <div className="bg-white/80 backdrop-blur-sm px-6 py-4 rounded-[1.5rem] rounded-tl-sm border border-white flex gap-1.5 items-center shadow-sm">
+                                        <div className="w-2 h-2 bg-[#FF8A71] rounded-full animate-bounce" />
+                                        <div className="w-2 h-2 bg-[#FF8A71] rounded-full animate-bounce delay-75" />
+                                        <div className="w-2 h-2 bg-[#FF8A71] rounded-full animate-bounce delay-150" />
                                     </div>
                                 </div>
                             )}
@@ -268,19 +279,23 @@ const Scheduler = () => {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 bg-white border-t border-slate-100">
+                        <div className="p-4 md:p-6 pb-6 md:pb-8 bg-gradient-to-t from-[#FFF8F5] to-transparent z-10">
                             <form
                                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                                className="flex gap-2 bg-slate-50 p-2 rounded-[1.5rem] border border-slate-100 focus-within:border-blue-200 focus-within:bg-white focus-within:shadow-lg focus-within:shadow-blue-50/50 transition-all duration-300"
+                                className="flex gap-2 bg-white p-2 pl-6 rounded-[2rem] border border-orange-100 shadow-[0_20px_40px_-10px_rgba(255,138,113,0.15)] focus-within:shadow-[0_20px_40px_-5px_rgba(255,138,113,0.25)] focus-within:border-[#FF8A71]/50 transition-all duration-300 relative group"
                             >
                                 <input
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Type a message..."
-                                    className="flex-1 bg-transparent px-4 outline-none text-sm font-bold text-slate-700 placeholder:text-slate-400"
+                                    className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300 h-12"
                                 />
-                                <button type="submit" disabled={!input.trim()} className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100">
-                                    <Send className="w-4 h-4" />
+                                <button
+                                    type="submit"
+                                    disabled={!input.trim()}
+                                    className="w-12 h-12 bg-gradient-to-tr from-[#FF8A71] to-[#FF6B6B] text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-orange-200"
+                                >
+                                    <Send className="w-5 h-5 translate-x-0.5 translate-y-0.5" />
                                 </button>
                             </form>
                         </div>

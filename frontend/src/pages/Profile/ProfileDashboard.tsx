@@ -118,7 +118,7 @@ const ProfileDashboard = () => {
         <div className="min-h-full py-8">
             <header className="mb-12 relative">
                 <div className="overflow-hidden">
-                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase flex">
+                    <h2 className="text-4xl font-black text-foreground tracking-tighter italic uppercase flex">
                         {"ABOUT YOU".split("").map((char, index) => (
                             <motion.span
                                 key={index}
@@ -140,7 +140,7 @@ const ProfileDashboard = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.6 }}
-                        className="text-slate-500 font-bold mt-2"
+                        className="text-muted-foreground font-bold mt-2"
                     >
                         Comprehensive overview of your personal and professional profile.
                     </motion.p>
@@ -163,23 +163,23 @@ const ProfileDashboard = () => {
                     <motion.div
                         key={idx}
                         variants={cardVariants}
-                        className="bg-white/70 backdrop-blur-xl border border-white rounded-[3rem] p-8 shadow-[0_30px_60px_rgba(255,138,113,0.06)] hover:shadow-[0_40px_80px_rgba(255,138,113,0.1)] transition-all group"
+                        className="bg-card/70 backdrop-blur-xl border border-border rounded-[3rem] p-8 shadow-[0_30px_60px_rgba(255,138,113,0.06)] hover:shadow-[0_40px_80px_rgba(255,138,113,0.1)] transition-all group"
                     >
                         <div className="flex items-center gap-4 mb-8">
                             <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", section.bg, section.color)}>
                                 <section.icon className="w-7 h-7" />
                             </div>
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">{section.title}</h3>
+                            <h3 className="text-2xl font-black text-card-foreground tracking-tight">{section.title}</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             {section.items.map((item, i) => (
                                 <div key={i} className="space-y-1">
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 leading-none">
                                         <item.icon className="w-3 h-3" />
                                         {item.label}
                                     </p>
-                                    <p className="text-base font-black text-slate-700 tracking-tight group-hover:text-slate-900 transition-colors truncate">
+                                    <p className="text-base font-black text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
                                         {item.value}
                                     </p>
                                 </div>

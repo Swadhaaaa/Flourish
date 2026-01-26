@@ -52,7 +52,7 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFF8F5] text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             {showSidebar && <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />}
 
             {/* Full-Page Blurred Profile Onboarding Modal */}
@@ -194,11 +194,21 @@ const MainLayout = () => {
                 )}
             </AnimatePresence>
 
+            {/* Mobile Menu Toggle */}
+            <div className="lg:hidden fixed top-4 left-4 z-50">
+                <button
+                    onClick={() => { setIsSidebarOpen(!isSidebarOpen); }}
+                    className="p-3 bg-white/80 backdrop-blur-md shadow-lg rounded-xl border border-white/50 text-slate-600"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+            </div>
+
             <main className={cn(
                 "min-h-screen transition-all duration-500 ease-in-out",
-                showSidebar ? (isSidebarOpen ? "pl-72" : "pl-24") : "pl-0"
+                showSidebar ? (isSidebarOpen ? "lg:pl-72" : "lg:pl-24") : "pl-0"
             )}>
-                <div className="p-8 max-w-7xl mx-auto h-full">
+                <div className="p-4 md:p-8 max-w-7xl mx-auto h-full pt-20 lg:pt-8 min-h-screen">
                     <Outlet />
                 </div>
             </main>
