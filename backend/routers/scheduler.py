@@ -20,6 +20,13 @@ class ChatRequest(BaseModel):
     message: str
     session_id: int
 
+@router.post("/chat")
+async def chat(request: ChatRequest):
+    """Handle chat interaction."""
+    # Using a default user_id of 1 for now
+    result = engine.handle_user_message(request.message, request.session_id, user_id=1)
+    return result
+
 class SessionCreate(BaseModel):
     title: str = "New Chat"
     user_id: Optional[str] = None # Added user_id
