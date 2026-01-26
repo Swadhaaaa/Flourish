@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '../../lib/firebase';
+import { AutoSchedulerMiniPopup } from '../../components/AutoSchedulerMiniPopup';
 
 const getWeekDays = () => {
     const today = new Date();
@@ -250,6 +251,7 @@ export default function AutoSchedule() {
 
     return (
         <div className="min-h-screen bg-[#FFF8F5] text-slate-900 font-sans -m-8 relative overflow-hidden flex flex-col">
+            <AutoSchedulerMiniPopup />
             {/* Header Area */}
             <div className="p-8 pt-10 flex justify-between items-center">
                 <div className="flex bg-orange-100/50 p-1.5 rounded-2xl w-full max-w-[320px] backdrop-blur-sm">
