@@ -11,6 +11,7 @@ import PeriodCalendar from '../../components/PeriodCalendar';
 
 const PeriodTracker = () => {
     const { user } = useAuth();
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
     // View Mode State
     const [viewMode, setViewMode] = useState<'tracker' | 'calendar'>('tracker');
@@ -55,8 +56,7 @@ const PeriodTracker = () => {
 
         const fetchAI = async () => {
             try {
-                // Assuming backend is running on 8000
-                const res = await fetch('http://localhost:8000/api/ai/period-insight', {
+                const res = await fetch(`${API_URL}/api/ai/period-insight`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

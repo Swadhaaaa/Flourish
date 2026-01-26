@@ -12,6 +12,7 @@ interface LaborResult {
 }
 
 export default function InvisibleLaborLog({ onClose }: { onClose: () => void }) {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const [task, setTask] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<LaborResult | null>(null);
@@ -20,8 +21,7 @@ export default function InvisibleLaborLog({ onClose }: { onClose: () => void }) 
         if (!task.trim()) return;
         setLoading(true);
         try {
-            // Assuming backend is on port 8000
-            const response = await axios.post('http://localhost:8000/api/ai/invisible-labor', {
+            const response = await axios.post(`${API_URL}/api/ai/invisible-labor`, {
                 task_description: task
             });
             setResult(response.data);

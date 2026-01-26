@@ -1,10 +1,10 @@
-import { Plus, Search, Clock, CheckCircle2, Clock4, Bell, Target, Layers, X, Sparkles, Send, Flag, GripVertical, Calendar as CalendarIcon, Trash2, Users, Briefcase } from 'lucide-react';
+import { Plus, Search, Clock4, Bell, Target, Layers, X, Sparkles, Send, GripVertical, Calendar as CalendarIcon, Users, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
     getTasks, addTask,
     getEmployees, addEmployee,
-    getSchedulerSchedule, generateSchedulerSchedule,
+    getSchedulerSchedule,
     sendChatMessage, updateScheduleItem
 } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -28,7 +28,7 @@ const getWeekDays = () => {
 };
 
 export default function AutoSchedule() {
-    const { user } = useAuth();
+    const { user: _user } = useAuth();
     // Data State (Real Data from Backend)
     const [tasks, setTasks] = useState<any[]>([]);
     const [employees, setEmployees] = useState<any[]>([]);
@@ -36,7 +36,7 @@ export default function AutoSchedule() {
 
     const [activeView, setActiveView] = useState('Today');
     const [weekDays, setWeekDays] = useState<{ day: string, date: number, active: boolean }[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [_loading, setLoading] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
 
     // AI Chat State (The Assistant)
@@ -47,15 +47,15 @@ export default function AutoSchedule() {
     ]);
 
     // UI Popups
-    const [showTaskPopup, setShowTaskPopup] = useState(false);
+    const [_showTaskPopup, setShowTaskPopup] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
-    const [showPriorityPopup, setShowPriorityPopup] = useState(false);
+    const [_showPriorityPopup, setShowPriorityPopup] = useState(false);
     const [showEmployeePopup, setShowEmployeePopup] = useState(false);
 
     // Forms
     const [newTaskTitle, setNewTaskTitle] = useState('');
-    const [newTaskTime, setNewTaskTime] = useState('');
-    const [newTaskStatus, setNewTaskStatus] = useState('todo');
+    const [_newTaskTime, _setNewTaskTime] = useState('');
+    const [_newTaskStatus, _setNewTaskStatus] = useState('todo');
     const [newTaskPriority, setNewTaskPriority] = useState('Medium');
     const [newTaskHours, setNewTaskHours] = useState(1);
 
@@ -67,7 +67,6 @@ export default function AutoSchedule() {
     }>({ show: false, title: '', message: '', type: 'success' });
 
     const showAlert = (title: string, message: string, type: 'success' | 'error' = 'success') => setAlertConfig({ show: true, title, message, type });
-    const showConfirm = (title: string, message: string, onConfirm: () => void) => setAlertConfig({ show: true, title, message, type: 'confirm', onConfirm });
     const closeAlert = () => setAlertConfig(prev => ({ ...prev, show: false }));
 
     useEffect(() => {

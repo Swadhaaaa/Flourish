@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function Sisterhood() {
     const { userProfile } = useAuth();
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const [matches, setMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -19,8 +20,7 @@ export default function Sisterhood() {
             };
 
             try {
-                // Assuming backend runs on 8000
-                const response = await axios.post('http://localhost:8000/api/community/match', userData);
+                const response = await axios.post(`${API_URL}/api/community/match`, userData);
                 setMatches(response.data);
             } catch (error) {
                 console.error("Failed to fetch matches", error);

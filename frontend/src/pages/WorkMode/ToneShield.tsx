@@ -1,84 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Variants } from 'framer-motion';
-import { Shield, Sparkles, ChevronLeft, Info, Mail, X, ShieldCheck, User, Fingerprint, Lock } from 'lucide-react';
+import { Shield, ChevronLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ToneShieldMiniPopup } from '../../components/ToneShieldMiniPopup';
 
-const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
-};
-
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { type: 'spring', damping: 20, stiffness: 100 }
-    }
-};
-
 export default function ToneShield() {
     const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const [isActive, setIsActive] = useState(true);
-    const [showGmailPopup, setShowGmailPopup] = useState(false);
-    const [isGmailConnected, setIsGmailConnected] = useState(false);
-    const [showConsent, setShowConsent] = useState(false);
-
-    // AI Analysis Form State
+    // --- Analysis State ---
     const [sender, setSender] = useState('');
     const [content, setContent] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
 
     const handleAnalyze = async () => {
-        if (!sender || !content) return;
         setIsAnalyzing(true);
         try {
-            // Call Backend API
-            const response = await fetch('http://localhost:8000/api/ai/tone-shield', {
+            const res = await fetch(`${API_URL}/api/ai/tone-shield`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sender, content })
+                body: JSON.stringify({ content, sender })
             });
-            const data = await response.json();
-
+            const data = await res.json();
             setAnalysisResult({
-                sender: data.sender || sender,
-                tone: data.tone_category || 'Neutral',
-                analysis: data.analysis || 'Analysis complete.',
-                rewritten: data.rewritten,
-                isToxic: data.is_toxic,
-                isInvisibleLabor: data.is_invisible_labor
+                tone: data.tone_category,
+                isToxic: data.risk_level === 'Severe' || data.risk_level === 'Moderate',
+                analysis: data.analysis_text,
+                rewritten: data.rewritten
             });
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            // Fallback for demo if API fails
-            setTimeout(() => {
-                setAnalysisResult({
-                    sender: sender,
-                    tone: 'Analysis Failed',
-                    analysis: 'Could not connect to AI Neural Net.',
-                    rewritten: content,
-                    status: 'Error'
-                });
-            }, 1000);
+            // Refresh stats after manual analysis
+            fetchReports();
+        } catch (e) {
+            console.error(e);
         } finally {
             setIsAnalyzing(false);
         }
     };
 
-    const resetForm = () => {
-        setSender('');
-        setContent('');
-        setAnalysisResult(null);
-    };
+    // Check connection status on load
+    const [isGmailConnected, setIsGmailConnected] = useState(false);
+    useEffect(() => {
+        fetch(`${API_URL}/api/ai/tone-shield/status`)
+            .then(res => res.json())
+            .then(data => setIsGmailConnected(!!data.connected_email))
+            .catch(() => setIsGmailConnected(false));
+    }, []);
 
     const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -93,6 +60,49 @@ export default function ToneShield() {
     const confirmActivation = () => {
         setShowDisclaimer(false);
         setIsActive(true);
+    };
+
+    // --- Reports & Sync State ---
+    const [reports, setReports] = useState<any[]>([]);
+    const [syncLoading, setSyncLoading] = useState(false);
+
+    useEffect(() => {
+        if (isActive) {
+            fetchReports();
+            // Poll for verification
+            const interval = setInterval(fetchReports, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [isActive]);
+
+    const fetchReports = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/ai/tone-shield/reports`);
+            const data = await res.json();
+            setReports(data || []);
+        } catch (e) {
+            console.error("Failed to fetch reports", e);
+        }
+    };
+
+    const handleSync = async () => {
+        setSyncLoading(true);
+        try {
+            await fetch(`${API_URL}/api/ai/tone-shield/sync-gmail`, { method: 'POST' });
+            await fetchReports();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSyncLoading(false);
+        }
+    };
+
+    // --- Stats Aggregation ---
+    const stats = {
+        monitored: reports.length,
+        severe: reports.filter(r => r.risk_level === 'Severe').length,
+        moderate: reports.filter(r => r.risk_level === 'Moderate').length,
+        mild: reports.filter(r => r.risk_level === 'Mild').length,
     };
 
     return (
@@ -120,31 +130,12 @@ export default function ToneShield() {
                 )}
             </AnimatePresence>
 
-            {/* Animated Background Blobs */}
-            <motion.div
-                animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 90, 0],
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[100px] -mr-40 -mt-20 pointer-events-none"
-            />
-            <motion.div
-                animate={{
-                    scale: [1, 1.3, 1],
-                    x: [0, 50, 0],
-                }}
-                transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-[80px] -ml-40 -mb-20 pointer-events-none"
-            />
+            {/* Background Blobs */}
+            <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[100px] -mr-40 -mt-20 pointer-events-none" />
+            <motion.div animate={{ scale: [1, 1.3, 1], x: [0, 50, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }} className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-[80px] -ml-40 -mb-20 pointer-events-none" />
 
             {/* Header */}
-            <motion.div
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                className="p-8 pt-10 flex items-center gap-4 relative z-10"
-            >
+            <div className="p-8 pt-10 flex items-center gap-4 relative z-10 max-w-7xl mx-auto">
                 <button onClick={() => navigate(-1)} className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 active:scale-90 transition-transform">
                     <ChevronLeft className="w-6 h-6 text-slate-500" />
                 </button>
@@ -155,384 +146,174 @@ export default function ToneShield() {
                         {isActive ? 'Stress-aware notification protection' : 'Protection Paused'}
                     </p>
                 </div>
-            </motion.div>
-
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="px-8 space-y-8 relative z-10 max-w-xl mx-auto"
-            >
-                {/* 1. Main Protection Card */}
-                <motion.div
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-white rounded-[3rem] p-8 shadow-2xl shadow-purple-900/5 border border-purple-50 space-y-10 relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 blur-3xl -mr-10 -mt-10" />
-
-                    <div className="flex justify-between items-start relative">
-                        <div className="flex gap-5">
-                            <motion.div
-                                animate={{ rotate: isActive ? [0, 5, -5, 0] : 0 }}
-                                transition={{ duration: 4, repeat: Infinity }}
-                                className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-xl transition-colors ${isActive ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-200 shadow-slate-200'}`}
-                            >
-                                <Shield className="w-10 h-10 text-white" />
-                            </motion.div>
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-800">{isActive ? 'Tone Shield Active' : 'Shield Disabled'}</h2>
-                                <p className="text-xs font-bold text-slate-400 leading-relaxed mt-2 max-w-[220px]">
-                                    AI-powered linguistic softening synchronized with your real-time stress levels.
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleToggle}
-                            className={`w-16 h-9 rounded-full p-1.5 transition-colors duration-500 ${isActive ? 'bg-slate-900 shadow-xl shadow-slate-200' : 'bg-slate-100'}`}
-                        >
-                            <motion.div
-                                animate={{ x: isActive ? 28 : 0 }}
-                                className="w-6 h-6 bg-white rounded-full shadow-md"
-                            />
-                        </button>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-indigo-50/40 border border-indigo-100 rounded-[2rem] p-8 flex gap-5 backdrop-blur-sm"
+                <div className="ml-auto flex items-center gap-4">
+                    <button
+                        onClick={handleToggle}
+                        className={`bg-white border rounded-full px-6 py-3 font-black text-xs uppercase tracking-widest shadow-sm transition-colors ${isActive ? 'border-rose-200 text-rose-500 hover:bg-rose-50' : 'border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                     >
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
-                            <Info className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2 font-mono">Shield Statistics</h3>
-                            <p className="text-base font-bold text-slate-700 leading-tight">
-                                Currently protecting you from <span className="text-indigo-600 font-black text-2xl mx-1 tabular-nums">47</span> stressful notifications today.
-                            </p>
-                        </div>
-                    </motion.div>
-                </motion.div>
-
-                {/* 2. Your Current Status Section */}
-                <div className="space-y-6 pt-4">
-                    <motion.h3 variants={itemVariants} className="text-2xl font-black text-slate-800 tracking-tight ml-2">Vital Signs</motion.h3>
-                    <div className="space-y-4">
-                        {[
-                            { label: 'Stress Level', val: 'Moderate', emoji: '😐', color: 'orange', text: 'Moderate' },
-                            { label: 'Burnout Risk', val: '45%', emoji: null, color: 'rose', text: '45%' },
-                            { label: 'Period Cycle', val: '8 days', emoji: null, color: 'pink', text: '8 Days In' },
-                        ].map((item) => (
-                            <motion.div
-                                key={item.label}
-                                variants={itemVariants}
-                                whileHover={{ x: 5, backgroundColor: 'rgba(255,255,255,1)' }}
-                                className="bg-white/60 p-7 rounded-[2.5rem] border border-white shadow-sm flex items-center justify-between group transition-colors"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-2 h-2 rounded-full bg-${item.color}-400 group-hover:scale-150 transition-transform`} />
-                                    <span className="text-slate-500 font-black tracking-tight">{item.label}</span>
-                                </div>
-                                <div className={`bg-${item.color}-50 text-${item.color}-600 px-6 py-3 rounded-2xl border border-${item.color}-100 flex items-center gap-3 shadow-sm`}>
-                                    {item.emoji && <span className="text-2xl">{item.emoji}</span>}
-                                    <span className="font-black text-sm uppercase tracking-widest">{item.text}</span>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                        {isActive ? 'Deactivate Shield' : 'Activate Shield'}
+                    </button>
                 </div>
-
-                {/* AI Tip Footer */}
-                <motion.div
-                    variants={itemVariants}
-                    className="bg-rose-50/50 p-7 rounded-[2.5rem] border border-rose-100 flex gap-5 backdrop-blur-sm"
-                >
-                    <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm shrink-0"
-                    >
-                        <Sparkles className="w-6 h-6 fill-rose-500/20" />
-                    </motion.div>
-                    <p className="text-sm font-bold text-slate-600 leading-relaxed">
-                        Tone Shield is actively adaptive. Based on your moderate stress, we're applying a <span className="text-rose-600">Softened-Professional filter</span> to all incoming enterprise comms.
-                    </p>
-                </motion.div>
-            </motion.div>
-
-            {/* AI Gmail Icon (Floating) */}
-            <div className="fixed bottom-10 right-10 z-[100]">
-                <motion.button
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                        if (isGmailConnected) {
-                            setShowGmailPopup(true);
-                            resetForm();
-                        } else {
-                            setShowConsent(true);
-                        }
-                    }}
-                    className="w-20 h-20 bg-[#FF8A71] rounded-full flex items-center justify-center shadow-[0_20px_40px_rgba(255,138,113,0.3)] border-4 border-white group relative overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    {isGmailConnected ? (
-                        <Mail className="w-10 h-10 text-white relative z-10" />
-                    ) : (
-                        <Sparkles className="w-10 h-10 text-white relative z-10" />
-                    )}
-                </motion.button>
             </div>
 
-            {/* CONSENT MODAL (Privacy & Why) */}
-            <AnimatePresence>
-                {showConsent && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6"
-                    >
-                        <div className="absolute inset-0" onClick={() => setShowConsent(false)} />
+            <main className="px-8 pb-20 relative z-10 max-w-7xl mx-auto space-y-8">
 
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[3rem] max-w-lg w-full p-8 md:p-10 shadow-2xl relative z-20 overflow-hidden"
-                        >
-                            {/* Decorative Background */}
-                            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-rose-50 to-orange-50" />
+                {/* 1. STATUS GRID (Only if Active) */}
+                {isActive ? (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
 
-                            <div className="relative">
-                                {/* Header Icon */}
-                                <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 mx-auto relative group">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-rose-400 to-orange-400 rounded-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
-                                    <Mail className="w-10 h-10 text-[#FF8A71]" />
-                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
-                                        <div className="w-3 h-3 bg-white rounded-full" />
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {[
+                                { label: 'Total Monitored', val: stats.monitored, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                                { label: 'Severe Alerts', val: stats.severe, color: 'text-rose-600', bg: 'bg-rose-50' },
+                                { label: 'Moderate Flags', val: stats.moderate, color: 'text-orange-500', bg: 'bg-orange-50' },
+                                { label: 'Mild Warnings', val: stats.mild, color: 'text-blue-500', bg: 'bg-blue-50' },
+                            ].map((stat) => (
+                                <div key={stat.label} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{stat.label}</span>
+                                    <span className={`text-4xl font-black ${stat.color}`}>{stat.val}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Sync Button */}
+                        <div className="text-center">
+                            <button
+                                onClick={handleSync}
+                                disabled={syncLoading}
+                                className="inline-flex items-center gap-2 bg-[#DB4437] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                <Mail className="w-5 h-5" />
+                                {syncLoading ? 'Syncing Gmail...' : 'Sync Recent Gmails'}
+                            </button>
+                            {isGmailConnected && <p className="text-xs font-bold text-emerald-600 mt-2">Connected Securely</p>}
+                        </div>
+
+                        {/* Two Column Layout: Simulator & Logs */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                            {/* LEFT: SIMULATOR */}
+                            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+                                <h2 className="text-2xl font-black text-slate-800 mb-6">Live Email Analysis Simulator</h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-2 block">Sender Identity / Subject Line</label>
+                                        <input
+                                            type="text"
+                                            value={sender}
+                                            onChange={(e) => setSender(e.target.value)}
+                                            placeholder="e.g., 'Boss' or 'Urgent Request'"
+                                            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                        <p className="text-[10px] text-slate-400 mt-1 ml-2">Optional: Helps AI contextualize sender.</p>
                                     </div>
-                                </div>
-
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-3">Connect Your Inbox</h2>
-                                    <p className="text-slate-500 font-medium leading-relaxed">
-                                        Enable Tone Shield to analyze incoming emails for aggression and invisible labor before they drain your energy.
-                                    </p>
-                                </div>
-
-                                {/* Privacy Features */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                                    {[
-                                        { icon: ShieldCheck, label: 'Read-Only', desc: 'No write access' },
-                                        { icon: Lock, label: 'Encrypted', desc: 'Bank-grade security' },
-                                        { icon: Sparkles, label: 'AI Powered', desc: 'Running locally' },
-                                    ].map((item, i) => (
-                                        <div key={i} className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
-                                            <item.icon className="w-6 h-6 text-slate-400 mx-auto mb-2" />
-                                            <div className="text-xs font-black text-slate-800 uppercase tracking-wide mb-1">{item.label}</div>
-                                            <div className="text-[10px] text-slate-400">{item.desc}</div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Why we need this */}
-                                <div className="bg-rose-50/50 rounded-2xl p-5 border border-rose-100 mb-8 flex gap-4">
-                                    <div className="shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm">
-                                        <Info className="w-5 h-5" />
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-2 block">Email Body</label>
+                                        <textarea
+                                            rows={6}
+                                            value={content}
+                                            onChange={(e) => setContent(e.target.value)}
+                                            placeholder="Paste email content here..."
+                                            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 resize-none"
+                                        />
                                     </div>
-                                    <div className="text-left">
-                                        <h4 className="text-xs font-black text-rose-800 uppercase tracking-widest mb-1">Why Integration?</h4>
-                                        <p className="text-xs font-bold text-rose-600/80 leading-relaxed">
-                                            To provide real-time protection, Tone Shield needs to "read" the sentiment of emails as they arrive. We never store your raw email content.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="space-y-3">
                                     <button
-                                        onClick={() => {
-                                            // Mock Connection Delay
-                                            const btn = document.getElementById('connect-btn');
-                                            if (btn) btn.innerText = 'Connecting Securely...';
-                                            setTimeout(() => {
-                                                setIsGmailConnected(true);
-                                                setShowConsent(false);
-                                                setShowGmailPopup(true);
-                                                resetForm();
-                                            }, 1500);
-                                        }}
-                                        id="connect-btn"
-                                        className="w-full bg-[#FF8A71] text-white font-black py-5 rounded-2xl shadow-xl shadow-orange-200 active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-[#ff7a5c]"
+                                        onClick={handleAnalyze}
+                                        disabled={isAnalyzing || !content}
+                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all"
                                     >
-                                        <Mail className="w-5 h-5" />
-                                        <span>Grant Secure Access</span>
+                                        {isAnalyzing ? 'Analyzing...' : 'Analyze Tone'}
                                     </button>
-                                    <button
-                                        onClick={() => setShowConsent(false)}
-                                        className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 text-sm"
-                                    >
-                                        Not Now
-                                    </button>
+
+                                    {/* Result Display */}
+                                    <AnimatePresence>
+                                        {analysisResult && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className={`rounded-2xl p-6 border-l-4 ${analysisResult.isToxic ? 'bg-rose-50 border-rose-500' : 'bg-emerald-50 border-emerald-500'}`}
+                                            >
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <h3 className={`font-black uppercase tracking-widest text-sm ${analysisResult.isToxic ? 'text-rose-700' : 'text-emerald-700'}`}>
+                                                        Result: {analysisResult.tone}
+                                                    </h3>
+                                                    {analysisResult.isToxic && <span className="bg-rose-200 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded">Toxic</span>}
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-600 mb-3">{analysisResult.analysis}</p>
+
+                                                {analysisResult.rewritten && (
+                                                    <div className="bg-white/60 p-3 rounded-xl">
+                                                        <div className="text-[10px] font-black uppercase text-indigo-400 mb-1">Rewritten Selection</div>
+                                                        <p className="text-sm text-slate-800">{analysisResult.rewritten}</p>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
-            {/* AI Gmail Analysis Popup - INTERACTIVE FORM */}
-            <AnimatePresence>
-                {showGmailPopup && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-orange-950/40 backdrop-blur-md flex items-end justify-center"
-                    >
-                        <div className="absolute inset-0" onClick={() => setShowGmailPopup(false)} />
-                        {/* Overlay closer handles */}
+                            {/* RIGHT: RECENT ALERTS */}
+                            <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-white">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 blur-[100px] opacity-20" />
+                                <h2 className="text-2xl font-black mb-6 relative z-10">Recent Alerts Log</h2>
 
-                        <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="bg-white rounded-t-[4rem] w-full max-w-xl p-10 pb-16 shadow-2xl relative z-20"
-                        >
-                            <div className="absolute top-5 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-slate-100 rounded-full" />
-
-                            <div className="flex justify-between items-center mb-10 pt-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 shadow-inner">
-                                        <Mail className="w-8 h-8" />
-                                    </div>
-                                    <h3 className="text-3xl font-black text-slate-800 tracking-tighter">AI Tone Insight</h3>
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
+                                    {reports.length === 0 ? (
+                                        <p className="text-slate-500 font-medium italic">No alerts recorded yet.</p>
+                                    ) : (
+                                        [...reports].reverse().map((report, i) => (
+                                            <div key={i} className="bg-white/10 p-4 rounded-2xl flex justify-between items-center hover:bg-white/20 transition-colors cursor-pointer group">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-bold text-sm">{report.sender}</span>
+                                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${report.risk_level === 'Severe' ? 'bg-rose-500 text-white' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                                                            {report.risk_level}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-400 line-clamp-1">{report.subject}</p>
+                                                    <p className="text-[10px] text-slate-500 mt-1">{new Date(report.timestamp).toLocaleString()}</p>
+                                                </div>
+                                                <button className="text-xs font-bold text-indigo-300 group-hover:text-white uppercase tracking-widest">View</button>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                                <button onClick={() => setShowGmailPopup(false)} className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-                                    <X className="w-6 h-6" />
-                                </button>
                             </div>
 
-                            <AnimatePresence mode="wait">
-                                {!analysisResult ? (
-                                    <motion.div
-                                        key="form-view"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="space-y-8"
-                                    >
-                                        <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center gap-3 mb-6">
-                                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                            <span className="text-xs font-bold text-emerald-700">Gmail Connected Securely</span>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 ml-2">Sender's Identity</label>
-                                            <div className="relative">
-                                                <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-300" />
-                                                <input
-                                                    type="text"
-                                                    value={sender}
-                                                    onChange={(e) => setSender(e.target.value)}
-                                                    placeholder="Who sent the email?"
-                                                    className="w-full bg-orange-50/40 border-none rounded-3xl py-6 pl-14 pr-6 focus:ring-4 focus:ring-[#FF8A71]/10 text-slate-800 placeholder:text-orange-200 font-bold"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 ml-2">Email Content</label>
-                                            <textarea
-                                                rows={5}
-                                                value={content}
-                                                onChange={(e) => setContent(e.target.value)}
-                                                placeholder="Paste the message context here..."
-                                                className="w-full bg-orange-50/40 border-none rounded-[2.5rem] p-8 focus:ring-4 focus:ring-[#FF8A71]/10 text-slate-800 placeholder:text-orange-200 font-bold resize-none"
-                                            />
-                                        </div>
-
-                                        <button
-                                            onClick={handleAnalyze}
-                                            disabled={isAnalyzing || !sender || !content}
-                                            className="w-full bg-[#FF8A71] text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-orange-200 flex items-center justify-center gap-4 active:scale-95 transition-all text-sm uppercase tracking-[0.2em] disabled:opacity-50"
-                                        >
-                                            {isAnalyzing ? (
-                                                <>
-                                                    <Sparkles className="w-5 h-5 animate-spin" />
-                                                    <span>Analyzing Sentiment...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>Shield & Analyze</span>
-                                                    <Fingerprint className="w-5 h-5" />
-                                                </>
-                                            )}
-                                        </button>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="results-view"
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="space-y-6"
-                                    >
-                                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2.5rem] text-center space-y-2">
-                                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                                                <ShieldCheck className="w-8 h-8 text-emerald-500" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xl font-black text-emerald-900 leading-none mb-1">Shield Active</h4>
-                                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Content Softened</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Analysis Breakdown */}
-                                        <div className="bg-slate-50 p-6 rounded-[2rem] border border-white space-y-4">
-                                            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                                                <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Detected Tone</span>
-                                                <span className={`font-black ${analysisResult.isToxic ? 'text-rose-500' : 'text-slate-800'}`}>
-                                                    {analysisResult.tone}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-600 italic">
-                                                "{analysisResult.analysis}"
-                                            </p>
-                                        </div>
-
-                                        {/* Rewritten Content */}
-                                        <div className="bg-white p-6 rounded-[2rem] border-2 border-emerald-100 shadow-lg shadow-emerald-50/50">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <Sparkles className="w-4 h-4 text-emerald-500" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Rewritten for Clarity</span>
-                                            </div>
-                                            <p className="text-slate-800 font-medium leading-relaxed">
-                                                {analysisResult.rewritten || content}
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            onClick={resetForm}
-                                            className="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] active:scale-95 transition-all text-sm uppercase tracking-[0.2em]"
-                                        >
-                                            Process Next Email
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
+                        </div>
+                    </motion.div>
+                ) : (
+                    /* INACTIVE STATE */
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.01 }}
+                        className="bg-white rounded-[3rem] p-12 shadow-2xl shadow-purple-900/5 border border-purple-50 text-center space-y-8 relative overflow-hidden group max-w-2xl mx-auto mt-20"
+                    >
+                        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Shield className="w-10 h-10 text-slate-300" />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-800">Tone Shield is Paused</h2>
+                        <p className="text-slate-500 font-medium max-w-md mx-auto">
+                            Activate to enable AI-powered stress protection. We'll simulate notification interception and provide real-time rewriting.
+                        </p>
+                        <button
+                            onClick={handleToggle}
+                            className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-slate-200 hover:bg-slate-800 transition-transform hover:scale-105"
+                        >
+                            Enable Protection
+                        </button>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </main>
 
             <style>{`
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
             `}</style>
         </div>
     );
