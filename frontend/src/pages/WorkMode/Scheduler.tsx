@@ -202,7 +202,7 @@ const Scheduler = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-xl shadow-orange-100/20 border border-white overflow-hidden relative">
+            <div className="flex-1 bg-white rounded-[2.5rem] shadow-xl shadow-orange-100/20 border border-slate-100 overflow-hidden relative">
 
                 {/* CHAT VIEW */}
                 {activeTab === 'chat' && (
@@ -230,12 +230,12 @@ const Scheduler = () => {
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar relative z-0">
                             {messages.length === 0 && (
-                                <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
-                                    <div className="w-24 h-24 bg-gradient-to-tr from-orange-50 to-white rounded-[2rem] flex items-center justify-center mb-6 shadow-inner border border-white">
+                                <div className="h-full flex flex-col items-center justify-center text-center">
+                                    <div className="w-24 h-24 bg-gradient-to-tr from-orange-100 to-orange-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg border border-orange-100">
                                         <MessageSquare className="w-10 h-10 text-[#FF8A71]" />
                                     </div>
-                                    <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">How can I help you thrive?</h3>
-                                    <p className="text-sm font-bold text-slate-400 max-w-xs leading-relaxed">I can schedule meetings, manage tasks, or just chat about your day.</p>
+                                    <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">How can I help you thrive?</h3>
+                                    <p className="text-sm font-bold text-slate-600 max-w-xs leading-relaxed">I can schedule meetings, manage tasks, or just chat about your day.</p>
                                 </div>
                             )}
 
