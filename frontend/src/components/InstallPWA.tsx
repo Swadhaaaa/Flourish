@@ -51,16 +51,26 @@ const InstallPWA = () => {
                     </motion.button>
 
                     {showInstructions && (
-                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-slate-900 text-white text-xs p-4 rounded-xl shadow-xl">
-                            <div className="font-bold mb-2">How to install:</div>
-                            <p className="mb-2">1. Click the <span className="font-bold">Share</span> or <span className="font-bold">Menu</span> button in your browser.</p>
-                            <p>2. Select <span className="font-bold">"Add to Home Screen"</span> or <span className="font-bold">"Install App"</span>.</p>
-                            <button
+                        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+                            <div
+                                className="absolute inset-0"
                                 onClick={() => setShowInstructions(false)}
-                                className="mt-3 w-full py-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
-                            >
-                                Got it
-                            </button>
+                            />
+                            <div className="relative bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl w-full max-w-xs text-center border border-slate-100 dark:border-slate-800">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+                                    <Download className="w-6 h-6" />
+                                </div>
+                                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-2">Install App</h3>
+                                <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                                    To install, tap the <span className="font-bold text-slate-900 dark:text-slate-300">Share</span> button <span className="inline-block bg-slate-100 px-1 rounded">⎋</span> or <span className="font-bold text-slate-900 dark:text-slate-300">Menu</span>, then select <span className="font-bold text-blue-600">"Add to Home Screen"</span>.
+                                </p>
+                                <button
+                                    onClick={() => setShowInstructions(false)}
+                                    className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                                >
+                                    Got it
+                                </button>
+                            </div>
                         </div>
                     )}
                 </motion.div>

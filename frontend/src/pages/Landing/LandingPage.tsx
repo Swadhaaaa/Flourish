@@ -193,27 +193,27 @@ const LandingPage = () => {
             </motion.div>
 
             {/* Central Content */}
-            <div className="relative md:absolute md:inset-0 z-10 flex flex-col items-center justify-center pointer-events-none min-h-screen py-28 md:py-0">
-                <main className="text-center max-w-4xl mx-auto px-4 pointer-events-auto">
+            <div className="relative md:absolute md:inset-0 z-10 flex flex-col items-center justify-start md:justify-center pointer-events-none min-h-screen pt-20 pb-12 md:py-0">
+                <main className="text-center max-w-4xl mx-auto px-6 pointer-events-auto">
                     {/* Center Logo Icon */}
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring' }}
-                        className="w-24 h-24 bg-white rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] flex items-center justify-center mx-auto mb-10 border border-slate-50 relative"
+                        className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] flex items-center justify-center mx-auto mb-8 md:mb-10 border border-slate-50 relative"
                     >
                         {/* Glow */}
                         <div className="absolute inset-0 bg-blue-500/5 blur-2xl rounded-full -z-10" />
-                        <div className="grid grid-cols-2 gap-2.5">
-                            <div className="w-3.5 h-3.5 rounded-full bg-slate-800" />
-                            <div className="w-3.5 h-3.5 rounded-full bg-slate-800" />
-                            <div className="w-3.5 h-3.5 rounded-full bg-[#3B82F6]" />
-                            <div className="w-3.5 h-3.5 rounded-full bg-slate-800" />
+                        <div className="grid grid-cols-2 gap-2 md:gap-2.5">
+                            <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-slate-800" />
+                            <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-slate-800" />
+                            <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-[#3B82F6]" />
+                            <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-slate-800" />
                         </div>
                     </motion.div>
 
-                    <h1 className="font-display font-black text-slate-900 tracking-tight mb-8 leading-[1.05] drop-shadow-sm
-                        text-[clamp(3rem,5vw,5.5rem)]">
+                    <h1 className="font-display font-black text-slate-900 tracking-tight mb-6 md:mb-8 leading-[1.05] drop-shadow-sm
+                        text-4xl md:text-6xl lg:text-[5.5rem]">
                         Thrive at Work,<br />
                         <span className="text-[#94A3B8]">Without the Overwhelm</span>
                     </h1>
