@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Shield, Sparkles, ChevronLeft, Info, Mail, X, ShieldCheck, User, Fingerprint, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ToneShieldMiniPopup } from '../../components/ToneShieldMiniPopup';
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -81,6 +82,7 @@ export default function ToneShield() {
 
     return (
         <div className="min-h-screen bg-[#FFFBFB] text-slate-900 font-sans -m-8 relative overflow-hidden pb-32">
+            <ToneShieldMiniPopup />
             {/* Animated Background Blobs */}
             <motion.div
                 animate={{

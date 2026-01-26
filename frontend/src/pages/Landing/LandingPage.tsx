@@ -387,6 +387,23 @@ const LandingPage = () => {
                     </div>
                 )
             }
+
+            {/* Footer - Simple and Minimal */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 py-4 px-6 bg-white/50 backdrop-blur-sm border-t border-slate-100">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-4">
+                        <span className="font-medium">
+                            Terms & Conditions
+                        </span>
+                        <span className="font-medium">
+                            Privacy
+                        </span>
+                    </div>
+                    <div className="font-medium">
+                        © 2026 All Rights Reserved
+                    </div>
+                </div>
+            </div>
         </div >
     );
 };
