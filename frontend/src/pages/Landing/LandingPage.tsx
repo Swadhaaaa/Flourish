@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Chrome, X, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Heart, Activity, Calendar as CalendarIcon, Car, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import InstallPWA from '../../components/InstallPWA';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -223,30 +224,33 @@ const LandingPage = () => {
                         nurture your wellbeing—all in one empowering platform.
                     </p>
 
-                    <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(37,99,235,0.5)" }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setShowAuth(true)}
-                        className="bg-[#2563EB] text-white px-12 py-5 rounded-full font-bold text-lg shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] transition-all font-display hover:bg-[#1d4ed8]"
-                    >
-                        Start your journey
-                    </motion.button>
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(37,99,235,0.5)" }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowAuth(true)}
+                            className="bg-[#2563EB] text-white px-12 py-5 rounded-full font-bold text-lg shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] transition-all font-display hover:bg-[#1d4ed8]"
+                        >
+                            Start your journey
+                        </motion.button>
+                        <InstallPWA />
+                    </div>
                 </main>
-            </div>
+            </div >
 
             {/* Mobile Features Grid (Visible only on small screens) */}
-            <div className="grid grid-cols-1 gap-6 mt-16 md:hidden w-full max-w-sm mx-auto pb-8">
+            < div className="grid grid-cols-1 gap-6 mt-16 md:hidden w-full max-w-sm mx-auto pb-8" >
 
                 {/* 1. Sticky Note */}
-                <div className="bg-[#FFEBA4] p-6 shadow-xl transform -rotate-1 mx-auto w-full rounded-sm relative">
+                < div className="bg-[#FFEBA4] p-6 shadow-xl transform -rotate-1 mx-auto w-full rounded-sm relative" >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-rose-500 shadow-sm border-2 border-white/40 z-20" />
                     <p className="font-display font-bold text-slate-800 text-lg leading-tight text-left mt-2">
                         Take notes to keep track of details!
                     </p>
-                </div>
+                </div >
 
                 {/* 2. Safe Cab */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 flex items-center gap-4 w-full">
+                < div className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 flex items-center gap-4 w-full" >
                     <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
                         <Car className="w-6 h-6" />
                     </div>
@@ -263,10 +267,10 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 {/* 3. Tasks */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100">
+                < div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100" >
                     <div className="text-sm font-black text-slate-900 mb-4 font-display pl-1">Today's tasks</div>
                     <div className="space-y-3">
                         <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex items-center gap-3">
@@ -280,10 +284,10 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 {/* 4. Period Tracker */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100">
+                < div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100" >
                     <div className="mb-4">
                         <div className="text-sm font-black text-slate-900 font-display">Period Tracker</div>
                         <div className="text-xs font-medium text-slate-400 leading-tight mt-1">Track cycles & insights.</div>
@@ -293,9 +297,9 @@ const LandingPage = () => {
                         <div className="w-12 h-12 rounded-[1rem] bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100"><Activity className="w-5 h-5" /></div>
                         <div className="w-12 h-12 rounded-[1rem] bg-pink-50 flex items-center justify-center text-pink-500 shadow-sm border border-pink-100"><CalendarIcon className="w-5 h-5" /></div>
                     </div>
-                </div>
+                </div >
 
-            </div>
+            </div >
             <AnimatePresence>
                 {showAuth && (
                     <motion.div

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateUserDailyData, type DailyData } from '../../utils/syntheticData';
 import { useAuth } from '../../context/AuthContext';
 import { addPeriodLog, getPeriodProfile, updatePeriodProfile, getPeriodLogs, type PeriodLog } from '../../services/firestore';
-import { Utensils, Plus, Sparkles, TrendingUp } from 'lucide-react';
+import { Utensils, Sparkles } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { PeriodTrackerMiniPopup } from '../../components/PeriodTrackerMiniPopup';
