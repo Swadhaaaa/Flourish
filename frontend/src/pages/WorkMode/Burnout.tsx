@@ -20,7 +20,7 @@ const InputRange = ({ label, value, onChange, min = 1, max = 10, isDark }: any) 
             onChange={(e) => onChange(parseInt(e.target.value))}
             className={cn(
                 "w-full h-1.5 rounded-lg appearance-none cursor-pointer transition-all",
-                isDark ? "bg-slate-800 accent-purple-500 hover:accent-purple-400" : "bg-slate-200 accent-rose-400 hover:accent-rose-500"
+                isDark ? "bg-slate-800 accent-amber-500 hover:accent-purple-400" : "bg-slate-200 accent-rose-400 hover:accent-rose-500"
             )}
         />
         <div className="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-tighter">
@@ -39,7 +39,7 @@ const CustomSelect = ({ label, options, value, onChange, isDark }: any) => (
             className={cn(
                 "w-full border rounded-2xl p-4 outline-none font-bold transition-all appearance-none cursor-pointer",
                 isDark
-                    ? "bg-slate-900 border-slate-800 text-slate-300 focus:border-purple-500/50"
+                    ? "bg-slate-900 border-slate-800 text-slate-300 focus:border-amber-500/50"
                     : "bg-white border-orange-100 text-slate-700 focus:border-orange-300"
             )}
         >
@@ -327,7 +327,7 @@ export default function BurnoutPage() {
                                 className={cn(
                                     "px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl group",
                                     isDark
-                                        ? "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20"
+                                        ? "bg-purple-600 hover:bg-amber-500 text-white shadow-purple-900/20"
                                         : "bg-[#FF8A71] hover:bg-slate-900 text-white shadow-orange-200"
                                 )}>
                                 <Zap className={cn("w-4 h-4 transition-transform", isLoading ? "animate-spin" : "group-hover:scale-125")} />
@@ -379,7 +379,7 @@ export default function BurnoutPage() {
                             className={cn(
                                 "px-12 py-6 rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center gap-4 transition-all active:scale-95 shadow-2xl group",
                                 isDark
-                                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-900/40"
+                                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-amber-500 hover:to-indigo-500 text-white shadow-purple-900/40"
                                     : "bg-gradient-to-r from-[#FF8A71] to-orange-400 hover:from-slate-800 hover:to-slate-900 text-white shadow-orange-100"
                             )}>
                             <Sparkles className={cn("w-5 h-5 transition-transform", isLoading ? "animate-spin" : "group-hover:rotate-12")} />

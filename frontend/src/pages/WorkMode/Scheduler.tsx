@@ -135,11 +135,11 @@ const Scheduler = () => {
         <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row gap-4 md:gap-6 relative">
             <AssistantMiniPopup />
             {/* Sidebar Navigation for Scheduler */}
-            <div className="w-full md:w-64 shrink-0 bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-4 md:p-6 border border-white flex flex-col shadow-xl shadow-orange-100/20 max-h-[30vh] md:max-h-full">
+            <div className="w-full md:w-64 shrink-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-4 md:p-6 border border-white dark:border-slate-800 flex flex-col shadow-xl shadow-orange-100/20 dark:shadow-none max-h-[30vh] md:max-h-full">
                 <div className="mb-4 md:mb-8 flex items-center justify-between md:block">
                     <div>
-                        <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter">Assistant</h2>
-                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">AI Assistant</p>
+                        <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tighter">Assistant</h2>
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">AI Assistant</p>
                     </div>
                     {/* Mobile: Show active tab name or toggle? Just keep simple header */}
                 </div>
@@ -157,8 +157,8 @@ const Scheduler = () => {
                             className={cn(
                                 "w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-2xl transition-all font-bold text-xs md:text-sm",
                                 activeTab === tab.id
-                                    ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                                    : "hover:bg-white text-slate-700 hover:text-slate-900"
+                                    ? "bg-slate-900 dark:bg-rose-500 text-white shadow-lg shadow-slate-200 dark:shadow-none"
+                                    : "hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                             )}
                         >
                             <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
@@ -202,7 +202,7 @@ const Scheduler = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-white rounded-[2.5rem] shadow-xl shadow-orange-100/20 border border-slate-100 overflow-hidden relative">
+            <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl shadow-orange-100/20 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative">
 
                 {/* CHAT VIEW */}
                 {activeTab === 'chat' && (
@@ -212,30 +212,30 @@ const Scheduler = () => {
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2" />
 
                         {/* Header */}
-                        <div className="p-6 border-b border-white/50 flex items-center justify-between bg-white/40 backdrop-blur-md z-10">
+                        <div className="p-6 border-b border-white/50 dark:border-slate-800 flex items-center justify-between bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF8A71] to-[#FF6B6B] flex items-center justify-center text-white shadow-lg shadow-orange-200/50">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF8A71] to-[#FF6B6B] flex items-center justify-center text-white shadow-lg shadow-orange-200/50 dark:shadow-none">
                                     <MessageSquare className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-slate-800 text-lg tracking-tight">Flourish Assistant</h3>
+                                    <h3 className="font-black text-slate-800 dark:text-white text-lg tracking-tight">Flourish Assistant</h3>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Online</p>
+                                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Online</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar relative z-0">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32 space-y-6 custom-scrollbar relative z-0">
                             {messages.length === 0 && (
                                 <div className="h-full flex flex-col items-center justify-center text-center">
-                                    <div className="w-24 h-24 bg-gradient-to-tr from-orange-100 to-orange-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg border border-orange-100">
-                                        <MessageSquare className="w-10 h-10 text-[#FF8A71]" />
+                                    <div className="w-24 h-24 bg-gradient-to-tr from-orange-100 to-orange-50 dark:from-slate-800 dark:to-slate-800 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg border border-orange-100 dark:border-slate-700">
+                                        <MessageSquare className="w-10 h-10 text-[#FF8A71] dark:text-rose-400" />
                                     </div>
-                                    <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">How can I help you thrive?</h3>
-                                    <p className="text-sm font-bold text-slate-600 max-w-xs leading-relaxed">I can schedule meetings, manage tasks, or just chat about your day.</p>
+                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">How can I help you thrive?</h3>
+                                    <p className="text-sm font-bold text-slate-600 dark:text-slate-400 max-w-xs leading-relaxed">I can schedule meetings, manage tasks, or just chat about your day.</p>
                                 </div>
                             )}
 
@@ -248,16 +248,16 @@ const Scheduler = () => {
                                     className={cn("flex gap-4 max-w-[90%] md:max-w-[75%]", msg.role === 'user' ? "ml-auto flex-row-reverse" : "")}
                                 >
                                     <div className={cn(
-                                        "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-md border-2 border-white",
-                                        msg.role === 'user' ? "bg-slate-900 text-white" : "bg-gradient-to-br from-[#FF8A71] to-[#FF6B6B] text-white"
+                                        "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-md border-2 border-white dark:border-slate-700",
+                                        msg.role === 'user' ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "bg-gradient-to-br from-[#FF8A71] to-[#FF6B6B] text-white"
                                     )}>
                                         {msg.role === 'user' ? <User className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
                                     </div>
                                     <div className={cn(
                                         "p-5 rounded-[1.5rem] text-sm font-medium leading-relaxed shadow-sm relative",
                                         msg.role === 'user'
-                                            ? "bg-slate-900 text-white rounded-tr-sm"
-                                            : "bg-white/80 backdrop-blur-sm border border-white text-slate-600 rounded-tl-sm shadow-orange-100/50"
+                                            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-tr-sm"
+                                            : "bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white dark:border-slate-700 text-slate-600 dark:text-slate-200 rounded-tl-sm shadow-orange-100/50 dark:shadow-none"
                                     )}>
                                         {msg.content}
                                     </div>
@@ -279,16 +279,16 @@ const Scheduler = () => {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 md:p-6 pb-6 md:pb-8 bg-gradient-to-t from-[#FFF8F5] to-transparent z-10">
+                        <div className="pt-4 px-4 md:pt-6 md:px-6 pb-0 bg-gradient-to-t from-[#FFF8F5] dark:from-slate-900/50 to-transparent z-10 w-full absolute bottom-0">
                             <form
                                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                                className="flex gap-2 bg-white p-2 pl-6 rounded-[2rem] border border-orange-100 shadow-[0_20px_40px_-10px_rgba(255,138,113,0.15)] focus-within:shadow-[0_20px_40px_-5px_rgba(255,138,113,0.25)] focus-within:border-[#FF8A71]/50 transition-all duration-300 relative group"
+                                className="flex gap-2 bg-white dark:bg-slate-800 p-2 pl-6 rounded-[2rem] border border-orange-100 dark:border-slate-700 shadow-[0_20px_40px_-10px_rgba(255,138,113,0.15)] dark:shadow-none focus-within:shadow-[0_20px_40px_-5px_rgba(255,138,113,0.25)] dark:focus-within:shadow-none focus-within:border-[#FF8A71]/50 dark:focus-within:border-rose-500/50 transition-all duration-300 relative group"
                             >
                                 <input
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Type a message..."
-                                    className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300 h-12"
+                                    className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-700 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 h-12"
                                 />
                                 <button
                                     type="submit"
@@ -306,23 +306,23 @@ const Scheduler = () => {
                 {activeTab === 'schedule' && (
                     <div className="h-full p-8 overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Schedule</h2>
-                            <button onClick={() => generateSchedulerSchedule()} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2">
+                            <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">Schedule</h2>
+                            <button onClick={() => generateSchedulerSchedule()} className="bg-slate-900 dark:bg-rose-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-rose-600 transition-all flex items-center gap-2 shadow-lg dark:shadow-rose-900/20">
                                 <Clock className="w-4 h-4" /> Optimize
                             </button>
                         </div>
                         <div className="space-y-4">
                             {schedule.map((slot, i) => (
-                                <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6 group hover:border-blue-100 transition-colors">
+                                <div key={i} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-6 group hover:border-blue-100 dark:hover:border-rose-500/50 transition-colors">
                                     <div className="w-20 text-center">
-                                        <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{slot.scheduled_day}</div>
-                                        <div className="text-lg font-black text-slate-800">{slot.start_time}</div>
+                                        <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{slot.scheduled_day}</div>
+                                        <div className="text-lg font-black text-slate-800 dark:text-white">{slot.start_time}</div>
                                     </div>
-                                    <div className="w-1 h-12 bg-slate-100 rounded-full group-hover:bg-blue-200 transition-colors" />
+                                    <div className="w-1 h-12 bg-slate-100 dark:bg-slate-700 rounded-full group-hover:bg-blue-200 dark:group-hover:bg-rose-500 transition-colors" />
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-slate-800 mb-1">{slot.task_title}</h4>
+                                        <h4 className="font-bold text-slate-800 dark:text-white mb-1">{slot.task_title}</h4>
                                         <div className="flex items-center gap-2">
-                                            <span className="px-2 py-1 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-bold uppercase tracking-wide">{slot.emp_name}</span>
+                                            <span className="px-2 py-1 bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded-lg text-[10px] font-bold uppercase tracking-wide">{slot.emp_name}</span>
                                             <span className={cn(
                                                 "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide",
                                                 slot.priority === 'High' ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
@@ -343,11 +343,11 @@ const Scheduler = () => {
 
                 {/* OTHER TABS SIMPLIFIED FOR NOW */}
                 {(activeTab === 'tasks' || activeTab === 'team') && (
-                    <div className="h-full flex items-center justify-center flex-col text-slate-400">
-                        <div className="bg-slate-50 p-6 rounded-3xl mb-4">
+                    <div className="h-full flex items-center justify-center flex-col text-slate-400 dark:text-slate-500">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl mb-4">
                             {activeTab === 'tasks' ? <CheckSquare className="w-10 h-10" /> : <Users className="w-10 h-10" />}
                         </div>
-                        <h3 className="text-xl font-black text-slate-800 mb-2">Coming Soon</h3>
+                        <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Coming Soon</h3>
                         <p className="text-sm font-bold max-w-xs text-center">This section is being migrated from the legacy system. Please use the Chat to manage tasks/team for now.</p>
                     </div>
                 )}

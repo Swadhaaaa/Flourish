@@ -106,7 +106,7 @@ const ProfileSetup = () => {
                             {step === 1 && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-4 mb-8">
-                                        <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center">
+                                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
                                             <User className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-xl font-black text-slate-800 tracking-tight">Personal Details</h3>

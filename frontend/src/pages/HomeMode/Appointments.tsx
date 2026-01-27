@@ -139,10 +139,10 @@ export default function Appointments() {
                         key={day.toString()}
                         className={cn(
                             "h-10 w-10 flex items-center justify-center rounded-full text-sm cursor-pointer transition-all mb-1",
-                            !isCurrentMonth ? "text-slate-300" : "text-slate-600",
+                            !isCurrentMonth ? "text-slate-300 dark:text-slate-600" : "text-slate-600 dark:text-slate-300",
                             isSelected
-                                ? "bg-rose-500 text-white font-bold shadow-lg shadow-rose-200 transform scale-105"
-                                : "hover:bg-rose-50 hover:text-rose-600"
+                                ? "bg-rose-500 text-white font-bold shadow-lg shadow-rose-200 dark:shadow-rose-900/50 transform scale-105"
+                                : "hover:bg-rose-50 dark:hover:bg-slate-700 hover:text-rose-600 dark:hover:text-rose-400"
                         )}
                         onClick={() => setSelectedDate(cloneDay)}
                     >
@@ -163,13 +163,13 @@ export default function Appointments() {
 
 
     return (
-        <div className="min-h-screen bg-[#FFF0E5] dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4 lg:p-8 font-sans overflow-y-auto relative">
+        <div className="min-h-screen bg-[#FFF0E5] dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4 lg:p-8 font-sans overflow-y-auto overflow-x-hidden relative">
             <RemindersMiniPopup />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-display font-bold text-rose-950">Reminders</h1>
-                    <p className="text-rose-800/60">Schedule & Health Tracking</p>
+                    <h1 className="text-3xl font-display font-bold text-rose-950 dark:text-white">Reminders</h1>
+                    <p className="text-rose-800/60 dark:text-white/80">Schedule & Health Tracking</p>
                 </div>
 
                 <div className="flex items-center gap-6">
@@ -179,7 +179,7 @@ export default function Appointments() {
                         <input
                             type="text"
                             placeholder="Search doctors..."
-                            className="bg-white rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 w-64 shadow-sm border border-rose-100"
+                            className="bg-white dark:bg-slate-800 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 w-64 shadow-sm border border-rose-100 dark:border-slate-700 dark:text-white placeholder:text-slate-400"
                         />
                     </div>
                 </div>
@@ -193,21 +193,21 @@ export default function Appointments() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-xl shadow-rose-900/5 border border-white relative overflow-hidden"
+                        className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 lg:p-8 shadow-xl shadow-rose-900/5 dark:shadow-none border border-white dark:border-slate-700 relative overflow-hidden"
                     >
                         {/* Title */}
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-rose-950">Book Reminder</h2>
+                            <h2 className="text-xl font-bold text-rose-950 dark:text-white">Book Reminder</h2>
                             <p className="text-slate-400 text-sm">Select date for consultation</p>
                         </div>
 
                         {/* Calendar Header */}
                         <div className="flex justify-between items-center mb-6">
-                            <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="p-2 hover:bg-rose-50 rounded-full transition-colors">
+                            <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="p-2 hover:bg-rose-50 dark:hover:bg-slate-700 rounded-full transition-colors">
                                 <ChevronLeft className="w-5 h-5 text-rose-400" />
                             </button>
-                            <span className="font-bold text-lg text-slate-700">{format(currentDate, "MMMM yyyy")}</span>
-                            <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="p-2 hover:bg-rose-50 rounded-full transition-colors">
+                            <span className="font-bold text-lg text-slate-700 dark:text-white">{format(currentDate, "MMMM yyyy")}</span>
+                            <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="p-2 hover:bg-rose-50 dark:hover:bg-slate-700 rounded-full transition-colors">
                                 <ChevronRight className="w-5 h-5 text-rose-400" />
                             </button>
                         </div>
@@ -234,8 +234,8 @@ export default function Appointments() {
                                     <label key={slot} className={cn(
                                         "flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all border",
                                         selectedTime === slot
-                                            ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200"
-                                            : "bg-slate-50 border-transparent hover:bg-rose-50 text-slate-600"
+                                            ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200 dark:shadow-rose-900/20"
+                                            : "bg-slate-50 dark:bg-slate-700 border-transparent hover:bg-rose-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300"
                                     )}>
                                         <input
                                             type="radio"
@@ -254,17 +254,17 @@ export default function Appointments() {
                         </div>
 
                         {/* Doctor Profile */}
-                        <div className="flex items-center gap-4 mb-6 bg-rose-50/50 p-4 rounded-2xl border border-rose-100">
+                        <div className="flex items-center gap-4 mb-6 bg-rose-50/50 dark:bg-slate-700/50 p-4 rounded-2xl border border-rose-100 dark:border-slate-600">
                             <div className="w-12 h-12 rounded-xl bg-rose-200 overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=150" alt="Doctor" className="w-full h-full object-cover" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-lg leading-tight text-rose-950">Dr. A. Phina</h4>
+                                <h4 className="font-bold text-lg leading-tight text-rose-950 dark:text-white">Dr. A. Phina</h4>
                                 <p className="text-rose-500 text-xs font-medium">Orthopedic</p>
                             </div>
                             <div className="ml-auto flex gap-2">
-                                <button className="p-2 bg-white rounded-full text-rose-400 hover:text-rose-600 shadow-sm"><Phone className="w-4 h-4" /></button>
-                                <button className="p-2 bg-white rounded-full text-rose-400 hover:text-rose-600 shadow-sm"><Mail className="w-4 h-4" /></button>
+                                <button className="p-2 bg-white dark:bg-slate-600 rounded-full text-rose-400 hover:text-rose-600 dark:text-white dark:hover:text-rose-300 shadow-sm"><Phone className="w-4 h-4" /></button>
+                                <button className="p-2 bg-white dark:bg-slate-600 rounded-full text-rose-400 hover:text-rose-600 dark:text-white dark:hover:text-rose-300 shadow-sm"><Mail className="w-4 h-4" /></button>
                             </div>
                         </div>
 
@@ -283,8 +283,8 @@ export default function Appointments() {
                 <div className="lg:col-span-8 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-display font-bold text-rose-950">Health Overview</h2>
-                            <div className="flex items-center gap-2 text-rose-800/60 text-sm mt-1">
+                            <h2 className="text-2xl font-display font-bold text-rose-950 dark:text-white">Health Overview</h2>
+                            <div className="flex items-center gap-2 text-rose-800/60 dark:text-white/80 text-sm mt-1">
                                 <CalendarIcon className="w-4 h-4" />
                                 <span>Today, {format(new Date(), 'd MMMM yyyy')}</span>
                             </div>
@@ -299,7 +299,7 @@ export default function Appointments() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-white rounded-[2.5rem] p-5 relative overflow-hidden flex flex-col justify-between h-48 border border-white shadow-lg shadow-rose-900/5 group hover:shadow-xl transition-all"
+                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-5 relative overflow-hidden flex flex-col justify-between h-48 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none group hover:shadow-xl transition-all"
                         >
                             <div className="flex justify-between items-start z-10">
                                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Weight</span>
@@ -324,11 +324,11 @@ export default function Appointments() {
                                             onChange={(e) => setTempWeight(e.target.value)}
                                             onBlur={handleWeightBlur}
                                             onKeyDown={handleWeightKeyDown}
-                                            className="w-24 text-4xl font-bold text-slate-800 bg-transparent border-b-2 border-rose-200 focus:outline-none focus:border-rose-500 p-0 m-0"
+                                            className="w-24 text-4xl font-bold text-slate-800 dark:text-white bg-transparent border-b-2 border-rose-200 focus:outline-none focus:border-rose-500 p-0 m-0"
                                         />
                                     ) : (
                                         <h3
-                                            className="text-4xl font-bold text-slate-800 cursor-pointer hover:text-rose-500 transition-colors"
+                                            className="text-4xl font-bold text-slate-800 dark:text-white cursor-pointer hover:text-rose-500 transition-colors"
                                             onClick={() => {
                                                 setIsEditingWeight(true);
                                                 setTempWeight(weight.toString());
@@ -403,7 +403,7 @@ export default function Appointments() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-white rounded-[2.5rem] p-5 text-slate-800 flex flex-col justify-between h-48 relative border border-white shadow-lg shadow-rose-900/5 group"
+                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-5 text-slate-800 dark:text-white flex flex-col justify-between h-48 relative border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none group"
                         >
                             {/* Decorative Blob */}
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-50 rounded-full mix-blend-multiply filter blur-2xl opacity-50" />
@@ -417,7 +417,7 @@ export default function Appointments() {
 
                             <div className="relative z-10 flex flex-col items-start gap-1">
                                 <div className="flex items-end gap-1">
-                                    <h3 className="text-4xl font-bold text-slate-800">{hydration.toFixed(1)}</h3>
+                                    <h3 className="text-4xl font-bold text-slate-800 dark:text-white">{hydration.toFixed(1)}</h3>
                                     <span className="text-base text-slate-400 font-normal mb-1">L</span>
                                 </div>
                                 <p className="text-[10px] text-slate-400">Daily Goal: 2.2L</p>
@@ -426,7 +426,7 @@ export default function Appointments() {
                                 <div className="flex items-center gap-2 mt-2">
                                     <button
                                         onClick={() => updateHydration(-0.25)}
-                                        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 flex items-center justify-center transition-colors"
+                                        className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-blue-100 dark:hover:bg-blue-900 text-slate-400 hover:text-blue-500 dark:hover:text-blue-200 flex items-center justify-center transition-colors"
                                     >
                                         <Minus className="w-4 h-4" />
                                     </button>
@@ -445,7 +445,7 @@ export default function Appointments() {
                                         key={i}
                                         className={cn(
                                             "flex-1 rounded-full transition-colors duration-500",
-                                            i < (hydration / 2.2 * 6) ? "bg-blue-400" : "bg-slate-100"
+                                            i < (hydration / 2.2 * 6) ? "bg-blue-400" : "bg-slate-100 dark:bg-slate-700"
                                         )}
                                     />
                                 ))}
@@ -458,7 +458,7 @@ export default function Appointments() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-white rounded-[2.5rem] p-8 border border-white shadow-lg shadow-rose-900/5 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8"
+                        className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8"
                     >
                         {/* Stats */}
                         <div>
@@ -466,31 +466,31 @@ export default function Appointments() {
                                 <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
                                     <span className="text-lg">☾</span>
                                 </div>
-                                <h3 className="font-bold text-lg text-slate-800">Sleep Quality</h3>
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-white">Sleep Quality</h3>
                             </div>
 
                             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Average</p>
-                            <h2 className="text-5xl font-display font-bold text-slate-800 mb-1">6.5</h2>
+                            <h2 className="text-5xl font-display font-bold text-slate-800 dark:text-white mb-1">6.5</h2>
                             <span className="text-sm text-slate-500 block mb-6">Hours / Night</span>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="flex items-center gap-2 text-slate-600">
+                                    <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                                         <span className="w-2 h-2 rounded-full bg-indigo-400" /> Deep Sleep
                                     </span>
-                                    <span className="font-bold text-slate-800">2h 10m</span>
+                                    <span className="font-bold text-slate-800 dark:text-white">2h 10m</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="flex items-center gap-2 text-slate-600">
+                                    <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                                         <span className="w-2 h-2 rounded-full bg-rose-300" /> REM
                                     </span>
-                                    <span className="font-bold text-slate-800">1h 45m</span>
+                                    <span className="font-bold text-slate-800 dark:text-white">1h 45m</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Chart */}
-                        <div className="h-full min-h-[180px] bg-slate-50/50 rounded-3xl p-4">
+                        <div className="h-full min-h-[180px] bg-slate-50/50 dark:bg-slate-700/50 rounded-3xl p-4">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={sleepData} barGap={8}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -511,11 +511,11 @@ export default function Appointments() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="bg-white rounded-[2.5rem] p-8 border border-white shadow-lg shadow-rose-900/5"
+                        className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none"
                     >
                         <div className="flex justify-between items-end mb-8">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800">Blood Pressure</h3>
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-white">Blood Pressure</h3>
                                 <p className="text-sm text-slate-400 mt-1">Weekly Trends</p>
                             </div>
                             <div className="flex gap-2">

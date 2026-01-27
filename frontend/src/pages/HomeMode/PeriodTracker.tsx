@@ -182,33 +182,33 @@ const PeriodTracker = () => {
                     >
                         {/* LEFT COL: Cycle Visuals */}
                         <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-purple-200">
+                            <div className="bg-gradient-to-br from-[#FDEEE8] to-[#F8DDD4] rounded-3xl p-8 text-rose-950 relative overflow-hidden shadow-xl shadow-rose-200/50">
                                 <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                                     <div className="flex flex-col items-center gap-6 shrink-0">
-                                        <div className="w-40 h-40 rounded-full border-4 border-white/30 flex flex-col items-center justify-center relative bg-white/10 backdrop-blur-sm shadow-inner shadow-white/20">
-                                            <span className="text-5xl font-black">{data.dayInCycle}</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Cycle Day</span>
-                                            <span className="text-[9px] font-medium text-white/60">of 28 Days</span>
-                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[50%] w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-purple-500" />
+                                        <div className="w-40 h-40 rounded-full border-4 border-rose-300/50 flex flex-col items-center justify-center relative bg-white/40 backdrop-blur-sm shadow-inner shadow-rose-200/30">
+                                            <span className="text-5xl font-black text-rose-950">{data.dayInCycle}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-rose-800/90">Cycle Day</span>
+                                            <span className="text-[9px] font-medium text-rose-700/60">of 28 Days</span>
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[50%] w-4 h-4 bg-rose-400 rounded-full shadow-[0_0_15px_rgba(244,63,94,0.4)] border-2 border-white" />
                                         </div>
                                         <div className="text-center w-64">
-                                            <div className="inline-block px-3 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/10 mb-2 text-[10px] font-bold uppercase">Next Period Likely</div>
+                                            <div className="inline-block px-3 py-1 rounded-full bg-rose-900/80 backdrop-blur-md border border-rose-800/30 mb-2 text-[10px] font-bold uppercase text-white">Next Period Likely</div>
                                             <div className="text-xl font-black">
                                                 {startDate && format(new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000), 'MMM d')}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-center md:text-left flex-1">
-                                        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3 border border-white/20">
+                                        <div className="inline-flex items-center gap-2 bg-rose-100/60 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3 border border-rose-200/40 text-rose-800">
                                             <Sparkles className="w-3 h-3" />
                                             <span>{data.phase} Phase</span>
                                         </div>
                                         <h2 className="text-xl md:text-2xl font-bold mb-3 leading-tight italic">
                                             "{aiInsight || data.dailyInsight}"
                                         </h2>
-                                        <p className="text-white/80 text-sm font-medium">
-                                            Focus on <strong className="text-white">{data.workLife.focusAdvice}</strong> today.
+                                        <p className="text-rose-800/80 text-sm font-medium">
+                                            Focus on <strong className="text-rose-950">{data.workLife.focusAdvice}</strong> today.
                                         </p>
                                     </div>
                                 </div>

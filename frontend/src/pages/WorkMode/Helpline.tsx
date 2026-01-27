@@ -10,7 +10,7 @@ const HELPLINE_NUMBERS = [
     { id: 2, name: 'Pregnancy Medic', number: '102', icon: HeartPulse, color: 'bg-[#E8EAF6]', iconColor: 'text-indigo-600' },
     { id: 3, name: 'Ambulance', number: '108', icon: Ambulance, color: 'bg-[#FCE4EC]', iconColor: 'text-rose-600' },
     { id: 4, name: 'Fire Service', number: '101', icon: Flame, color: 'bg-[#FFF9C4]', iconColor: 'text-amber-600' },
-    { id: 5, name: 'Women Helpline', number: '1091', icon: ShieldAlert, color: 'bg-[#F3E5F5]', iconColor: 'text-purple-600' },
+    { id: 5, name: 'Women Helpline', number: '1091', icon: ShieldAlert, color: 'bg-[#F3E5F5]', iconColor: 'text-rose-600' },
     { id: 6, name: 'Child Helpline', number: '1098', icon: Baby, color: 'bg-[#FFF3E0]', iconColor: 'text-orange-600' },
 ];
 
@@ -57,7 +57,7 @@ export default function Helpline() {
                     "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center border shadow-sm",
                     isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-purple-100"
                 )}>
-                    <ChevronLeft className={cn("w-5 h-5", isDark ? "text-purple-400" : "text-purple-600")} />
+                    <ChevronLeft className={cn("w-5 h-5", isDark ? "text-rose-400" : "text-rose-600")} />
                 </button>
                 <h1 className={cn("text-xl font-bold tracking-tight", isDark ? "text-white" : "text-slate-800")}>
                     {activeTab === 'numbers' ? 'Helpline Numbers' :
@@ -67,7 +67,7 @@ export default function Helpline() {
                     "w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center border shadow-sm",
                     isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-purple-100"
                 )}>
-                    <Settings className={cn("w-5 h-5", isDark ? "text-purple-400" : "text-purple-600")} />
+                    <Settings className={cn("w-5 h-5", isDark ? "text-rose-400" : "text-rose-600")} />
                 </button>
             </div>
 
@@ -118,7 +118,7 @@ export default function Helpline() {
                                     className="w-full h-full object-cover opacity-60 grayscale"
                                     alt="map"
                                 />
-                                <div className="absolute inset-0 bg-purple-500/10 pointer-events-none" />
+                                <div className="absolute inset-0 bg-amber-500/10 pointer-events-none" />
 
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                     <div className="w-6 h-6 bg-purple-600 rounded-full border-4 border-white shadow-xl animate-pulse" />
@@ -126,16 +126,16 @@ export default function Helpline() {
                                 </div>
 
                                 <div className="absolute top-6 right-6 flex flex-col gap-3">
-                                    <button className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center border border-purple-50">
+                                    <button className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center border border-amber-50">
                                         <MapIcon className="w-5 h-5 text-purple-600" />
                                     </button>
-                                    <button className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center border border-purple-50">
+                                    <button className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center border border-amber-50">
                                         <Signal className="w-5 h-5 text-purple-600" />
                                     </button>
                                 </div>
 
                                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-                                    <button className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(147,51,234,0.4)] border-4 border-white active:scale-95 transition-all group">
+                                    <button className="w-20 h-20 bg-rose-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(225,29,72,0.4)] border-4 border-white active:scale-95 transition-all group">
                                         <Signal className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
                                     </button>
                                 </div>
@@ -161,8 +161,8 @@ export default function Helpline() {
                                     contacts.map((contact) => (
                                         <div key={contact.id} className="bg-white/60 border border-white/80 backdrop-blur-md p-6 rounded-[2rem] flex justify-between items-center shadow-sm">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                                    <User className="w-6 h-6 text-purple-600" />
+                                                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+                                                    <User className="w-6 h-6 text-rose-600" />
                                                 </div>
                                                 <div>
                                                     <div className="font-black text-slate-800">{contact.name}</div>
@@ -182,7 +182,7 @@ export default function Helpline() {
 
                             <button
                                 onClick={() => setShowAddModal(true)}
-                                className="w-full bg-purple-900 text-white font-black py-5 rounded-2xl shadow-xl shadow-purple-900/20 uppercase tracking-widest text-sm hover:bg-purple-800 active:scale-[0.98] transition-all mt-8"
+                                className="w-full bg-rose-900 text-white font-black py-5 rounded-2xl shadow-xl shadow-rose-900/20 uppercase tracking-widest text-sm hover:bg-rose-800 active:scale-[0.98] transition-all mt-8"
                             >
                                 Add Your Trusted Contacts
                             </button>
@@ -218,7 +218,7 @@ export default function Helpline() {
                                         value={newContactName}
                                         onChange={(e) => setNewContactName(e.target.value)}
                                         placeholder="Enter contact name"
-                                        className="w-full bg-purple-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-purple-500 outline-none"
+                                        className="w-full bg-amber-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-amber-500 outline-none"
                                     />
                                 </div>
 
@@ -229,7 +229,7 @@ export default function Helpline() {
                                         value={newContactPhone}
                                         onChange={(e) => setNewContactPhone(e.target.value)}
                                         placeholder="Enter phone number"
-                                        className="w-full bg-purple-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-purple-500 outline-none"
+                                        className="w-full bg-amber-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-amber-500 outline-none"
                                     />
                                 </div>
                             </div>

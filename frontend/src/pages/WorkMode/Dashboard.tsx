@@ -163,19 +163,19 @@ export default function WorkDashboard() {
 
                     {/* 1. Main Feature: Tone Shield (Large Card) */}
                     <Link to="/work/tone-shield" className="md:col-span-2 md:row-span-2 group perspective-1000">
-                        <TiltCard className="h-full bg-gradient-to-br from-indigo-500 to-violet-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-200 overflow-hidden relative">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                        <TiltCard className="h-full bg-gradient-to-br from-[#FDEEE8] to-[#F8DDD4] rounded-[2.5rem] p-8 text-rose-950 shadow-2xl shadow-rose-200/50 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full blur-3xl -mr-16 -mt-16" />
                             <div className="relative z-10 flex flex-col h-full justify-between">
-                                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                    <Shield className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-white/60 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-sm">
+                                    <Shield className="w-8 h-8 text-rose-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-3xl font-black mb-2">Tone Shield</h3>
-                                    <p className="text-indigo-100 font-medium text-lg leading-relaxed max-w-xs">
+                                    <h3 className="text-3xl font-black mb-2 text-rose-950">Tone Shield</h3>
+                                    <p className="text-rose-800/80 font-medium text-lg leading-relaxed max-w-xs">
                                         Detect & diffuse conflict before it starts. AI-powered communication armor.
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest opacity-80 group-hover:gap-4 transition-all">
+                                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rose-900 opacity-80 group-hover:gap-4 transition-all">
                                     <span>Activate Shield</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </div>
@@ -246,7 +246,7 @@ export default function WorkDashboard() {
                     {/* 5. Helpline (Square) */}
                     <Link to="/work/helpline" className="md:col-span-1 md:row-span-1 group perspective-1000">
                         <div className="h-full bg-slate-900 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
-                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl -mr-10 -mb-10 opacity-20" />
+                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-amber-500 rounded-full blur-3xl -mr-10 -mb-10 opacity-20" />
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <Phone className="w-8 h-8 text-purple-400" />
                                 <div>
@@ -319,10 +319,10 @@ export default function WorkDashboard() {
 
                     {/* 10. Sisterhood (Square) - NEW */}
                     <Link to="/work/sisterhood" className="md:col-span-1 md:row-span-1 group perspective-1000">
-                        <TiltCard className="h-full bg-purple-50 border border-purple-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
+                        <TiltCard className="h-full bg-amber-50 border border-purple-100 rounded-[2.5rem] p-6 hover:shadow-xl transition-all relative overflow-hidden group-hover:-translate-y-1">
                             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-purple-100/30" />
                             <div className="relative z-10 flex flex-col h-full justify-between">
-                                <Users className="w-8 h-8 text-purple-500" />
+                                <Users className="w-8 h-8 text-amber-500" />
                                 <div>
                                     <h3 className="text-xl font-black text-slate-800">Sisterhood</h3>
                                     <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mt-1">Find your Tribe</p>

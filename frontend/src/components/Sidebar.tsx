@@ -95,7 +95,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 {/* Collapse Toggle */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="absolute -right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-[#FF8A71] text-white rounded-l-xl flex items-center justify-center shadow-lg active:scale-90 transition-transform z-[110]"
+                    className="absolute -right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-rose-500 text-white rounded-l-xl flex items-center justify-center shadow-lg active:scale-90 transition-transform z-[110]"
                 >
                     {isOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
@@ -107,12 +107,12 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                             layout
                             onClick={() => navigate('/profile')}
                             className={cn(
-                                "rounded-full border-4 border-white shadow-xl bg-[#FF8A71]/10 flex items-center justify-center overflow-hidden transition-all hover:scale-110 active:scale-95",
+                                "rounded-full border-4 border-white shadow-xl bg-rose-500/10 flex items-center justify-center overflow-hidden transition-all hover:scale-110 active:scale-95",
                                 isOpen ? "w-24 h-24 mb-4" : "w-12 h-12"
                             )}
                         >
                             {imgError && !avatarUrl.includes('dicebear') ? (
-                                <User className="w-1/2 h-1/2 text-[#FF8A71]" />
+                                <User className="w-1/2 h-1/2 text-rose-500" />
                             ) : (
                                 <img
                                     src={avatarUrl}
@@ -127,7 +127,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                         {isOpen && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setAvatarSeed(prev => prev + 1); }}
-                                className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border border-orange-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-orange-50 text-orange-400"
+                                className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border border-rose-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50 text-rose-400"
                                 title="Shuffle Avatar"
                             >
                                 <RotateCcw className="w-3 h-3" />
@@ -143,7 +143,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="text-center mt-4"
                             >
-                                <h3 className="text-xl font-black text-foreground tracking-tight">{displayName}</h3>
+                                <h3 className="text-xl font-black text-foreground tracking-tight dark:text-white">{displayName}</h3>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -156,8 +156,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                         className={cn(
                             "w-full flex items-center gap-4 p-3 rounded-2xl text-sm font-black transition-all border-b-4",
                             isHome
-                                ? "bg-secondary text-primary border-primary/20 shadow-primary/10"
-                                : "bg-secondary text-blue-600 border-blue-100 shadow-blue-100/50",
+                                ? "bg-rose-50 text-rose-600 border-rose-200 shadow-rose-100"
+                                : "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100/50",
                             !isOpen && "justify-center px-0"
                         )}
                     >
@@ -168,7 +168,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
                 {/* Nav Items */}
                 <div className="flex-1 px-4 py-2 space-y-3 overflow-y-auto no-scrollbar">
-                    <p className={cn("text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2", !isOpen && "text-center ml-0")}>Main</p>
+                    <p className={cn("text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 dark:text-slate-500", !isOpen && "text-center ml-0")}>Main</p>
                     {items.map((item) => {
                         const isActive = location.pathname === item.path || (item.label === 'Dashboard' && location.pathname === '/work');
                         return (
@@ -178,8 +178,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                                 className={cn(
                                     "w-full flex items-center px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
                                     isActive
-                                        ? "bg-[#FF8A71] text-white shadow-xl shadow-orange-200"
-                                        : "hover:bg-white text-slate-400 hover:text-[#FF8A71]",
+                                        ? "bg-rose-500 text-white shadow-xl shadow-rose-200"
+                                        : "hover:bg-white text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400",
                                     !isOpen && "justify-center"
                                 )}
                             >
@@ -199,11 +199,11 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 </div>
 
                 {/* Bottom Section */}
-                <div className="p-4 bg-white/50 backdrop-blur-sm rounded-t-[3rem] mt-2 border-t border-white/50 space-y-4">
+                <div className="p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-t-[3rem] mt-2 border-t border-white/50 dark:border-slate-700/50 space-y-4">
                     <div className={cn("flex gap-3", !isOpen && "flex-col items-center")}>
                         <button
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="flex-1 w-full bg-[#FF8A71]/10 text-[#FF8A71] p-3 rounded-2xl flex items-center justify-center hover:bg-[#FF8A71]/20 transition-colors"
+                            className="flex-1 w-full bg-white dark:bg-slate-700 text-rose-500 dark:text-rose-400 p-3 rounded-2xl flex items-center justify-center hover:bg-rose-50 dark:hover:bg-slate-600 transition-colors shadow-sm"
                         >
                             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                         </button>

@@ -116,7 +116,7 @@ const MainLayout = () => {
                             <div className="absolute top-0 left-0 w-32 h-32 bg-purple-100/40 blur-3xl -ml-16 -mt-16 pointer-events-none" />
 
                             <div className="text-center mb-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 text-purple-600 text-[9px] font-black uppercase tracking-widest mb-4">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-purple-600 text-[9px] font-black uppercase tracking-widest mb-4">
                                     Home Setup Phase {homeStep}/4
                                 </div>
                                 <h3 className="text-3xl font-black text-slate-800 tracking-tighter mb-2 italic">Start Flourishing</h3>
@@ -140,7 +140,7 @@ const MainLayout = () => {
                                                         <button
                                                             key={type}
                                                             onClick={nextHomeStep}
-                                                            className="w-full py-5 px-6 bg-slate-50 hover:bg-purple-50 hover:text-purple-600 rounded-2xl border-2 border-transparent hover:border-purple-100 transition-all font-bold text-slate-700 text-left flex items-center justify-between group"
+                                                            className="w-full py-5 px-6 bg-slate-50 hover:bg-amber-50 hover:text-purple-600 rounded-2xl border-2 border-transparent hover:border-purple-100 transition-all font-bold text-slate-700 text-left flex items-center justify-between group"
                                                         >
                                                             {type}
                                                             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
@@ -186,7 +186,7 @@ const MainLayout = () => {
 
                             <div className="flex justify-center gap-1.5 mt-8">
                                 {[1, 2, 3, 4].map(s => (
-                                    <div key={s} className={cn("h-1.5 rounded-full transition-all duration-500", homeStep === s ? "w-6 bg-purple-500" : "w-1.5 bg-slate-100")} />
+                                    <div key={s} className={cn("h-1.5 rounded-full transition-all duration-500", homeStep === s ? "w-6 bg-amber-500" : "w-1.5 bg-slate-100")} />
                                 ))}
                             </div>
                         </motion.div>

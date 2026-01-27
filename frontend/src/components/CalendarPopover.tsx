@@ -81,7 +81,7 @@ const CalendarPopover = ({ selectedDate, onSelect, onClose }: CalendarPopoverPro
                             className={`
                                 h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium transition-all
                                 ${!isCurrentMonth ? 'text-slate-300' : 'text-slate-700'}
-                                ${isToday(day) && !isSelected ? 'border border-purple-500 text-purple-600 font-bold' : ''}
+                                ${isToday(day) && !isSelected ? 'border border-amber-500 text-purple-600 font-bold' : ''}
                                 ${isSelected ? 'bg-purple-600 text-white shadow-md shadow-purple-200 font-bold' : 'hover:bg-slate-50'}
                             `}
                         >

@@ -133,7 +133,7 @@ export default function ToneShield() {
             </AnimatePresence>
 
             {/* Background Blobs */}
-            <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[100px] -mr-40 -mt-20 pointer-events-none" />
+            <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-100/40 rounded-full blur-[100px] -mr-40 -mt-20 pointer-events-none" />
             <motion.div animate={{ scale: [1, 1.3, 1], x: [0, 50, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }} className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-[80px] -ml-40 -mb-20 pointer-events-none" />
 
             {/* Header */}
@@ -142,7 +142,7 @@ export default function ToneShield() {
                     <ChevronLeft className="w-6 h-6 text-slate-500" />
                 </button>
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tighter">Tone Shield</h1>
+                    <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">Tone Shield</h1>
                     <p className="text-sm font-bold text-slate-400 flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                         {isActive ? 'Stress-aware notification protection' : 'Protection Paused'}
@@ -196,34 +196,35 @@ export default function ToneShield() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                             {/* LEFT: SIMULATOR */}
-                            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-                                <h2 className="text-2xl font-black text-slate-800 mb-6">Live Email Analysis Simulator</h2>
+                            {/* LEFT: SIMULATOR */}
+                            <div className="bg-gradient-to-br from-[#FDEEE8] to-[#F8DDD4] rounded-[2.5rem] p-8 shadow-xl shadow-rose-200/50 border border-white/50">
+                                <h2 className="text-2xl font-black text-rose-950 mb-6">Live Email Analysis Simulator</h2>
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-2 block">Sender Identity / Subject Line</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-rose-800/60 ml-2 mb-2 block">Sender Identity / Subject Line</label>
                                         <input
                                             type="text"
                                             value={sender}
                                             onChange={(e) => setSender(e.target.value)}
                                             placeholder="e.g., 'Boss' or 'Urgent Request'"
-                                            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full bg-white/60 border-none rounded-2xl p-4 font-bold text-rose-900 focus:ring-2 focus:ring-rose-500 placeholder:text-rose-300"
                                         />
-                                        <p className="text-[10px] text-slate-400 mt-1 ml-2">Optional: Helps AI contextualize sender.</p>
+                                        <p className="text-[10px] text-rose-800/50 mt-1 ml-2">Optional: Helps AI contextualize sender.</p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-2 block">Email Body</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-rose-800/60 ml-2 mb-2 block">Email Body</label>
                                         <textarea
                                             rows={6}
                                             value={content}
                                             onChange={(e) => setContent(e.target.value)}
                                             placeholder="Paste email content here..."
-                                            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 resize-none"
+                                            className="w-full bg-white/60 border-none rounded-2xl p-4 font-medium text-rose-900 focus:ring-2 focus:ring-rose-500 resize-none placeholder:text-rose-300"
                                         />
                                     </div>
                                     <button
                                         onClick={handleAnalyze}
                                         disabled={isAnalyzing || !content}
-                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all"
+                                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-4 rounded-xl shadow-lg shadow-rose-200 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
                                     >
                                         {isAnalyzing ? 'Analyzing...' : 'Analyze Tone'}
                                     </button>
@@ -293,7 +294,7 @@ export default function ToneShield() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.01 }}
-                        className="bg-white rounded-[3rem] p-12 shadow-2xl shadow-purple-900/5 border border-purple-50 text-center space-y-8 relative overflow-hidden group max-w-2xl mx-auto mt-20"
+                        className="bg-white rounded-[3rem] p-12 shadow-2xl shadow-rose-900/5 border border-amber-50 text-center space-y-8 relative overflow-hidden group max-w-2xl mx-auto mt-20"
                     >
                         <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Shield className="w-10 h-10 text-slate-300" />

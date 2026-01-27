@@ -255,24 +255,24 @@ export default function AutoSchedule() {
             <AutoSchedulerMiniPopup />
             {/* Header Area */}
             <div className="p-8 pt-10 flex justify-between items-center">
-                <div className="flex bg-orange-100/50 p-1.5 rounded-2xl w-full max-w-[320px] backdrop-blur-sm">
+                <div className="flex bg-orange-100/50 dark:bg-slate-800 p-1.5 rounded-2xl w-full max-w-[320px] backdrop-blur-sm">
                     {['Today', 'Calendar', 'Team'].map(view => (
                         <button
                             key={view}
                             onClick={() => setActiveView(view)}
-                            className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${activeView === view ? 'bg-[#FF8A71] text-white shadow-lg' : 'text-orange-900/40 hover:text-orange-600'}`}
+                            className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${activeView === view ? 'bg-[#FF8A71] text-white shadow-lg' : 'text-orange-900/40 dark:text-slate-400 hover:text-orange-600 dark:hover:text-slate-200'}`}
                         >
                             {view}
                         </button>
                     ))}
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCalendarSync} title="Sync to Google Calendar" className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-orange-100 transition-transform active:scale-95 text-indigo-500">
+                    <button onClick={handleCalendarSync} title="Sync to Google Calendar" className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm border border-orange-100 dark:border-slate-700 transition-transform active:scale-95 text-indigo-500">
                         {isSyncing ? <Sparkles className="w-6 h-6 animate-spin" /> : <CalendarIcon className="w-6 h-6" />}
                     </button>
-                    <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-orange-100 relative">
+                    <button className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm border border-orange-100 dark:border-slate-700 relative">
                         <Bell className="w-6 h-6 text-orange-400" />
-                        <div className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+                        <div className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800" />
                     </button>
                 </div>
             </div>
@@ -288,7 +288,7 @@ export default function AutoSchedule() {
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                             className="px-8 pt-6 space-y-8"
                         >
-                            <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                            <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-tight">
                                 Hi there!<br />
                                 <span className="text-[#FF8A71]">You have {tasks.length} tasks</span>
                             </h1>
@@ -296,7 +296,7 @@ export default function AutoSchedule() {
                             <div className="relative flex items-center gap-3">
                                 <div className="flex-1 relative">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-300" />
-                                    <input type="text" placeholder="Search a task...." className="w-full bg-white/60 border border-orange-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#FF8A71]/20 transition-all placeholder:text-orange-200" />
+                                    <input type="text" placeholder="Search a task...." className="w-full bg-white/60 dark:bg-slate-800 border border-orange-100 dark:border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#FF8A71]/20 transition-all placeholder:text-orange-200 dark:placeholder:text-slate-500 dark:text-white" />
                                 </div>
                             </div>
 
@@ -307,16 +307,16 @@ export default function AutoSchedule() {
                                     { label: 'Team', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50', action: () => setActiveView('Team') }
                                 ].map(stat => (
                                     <button key={stat.label} onClick={stat.action} className="flex flex-col items-center gap-2 group">
-                                        <div className={`w-16 h-16 ${stat.bg} rounded-full flex items-center justify-center border border-white shadow-sm ring-4 ring-[#FFF8F5] group-active:scale-95 transition-transform`}>
+                                        <div className={`w-16 h-16 ${stat.bg} dark:bg-slate-800 rounded-full flex items-center justify-center border border-white dark:border-slate-700 shadow-sm ring-4 ring-[#FFF8F5] dark:ring-slate-900 group-active:scale-95 transition-transform`}>
                                             <stat.icon className={`w-7 h-7 ${stat.color}`} />
                                         </div>
-                                        <span className="text-xs font-black text-orange-900/40 uppercase tracking-widest">{stat.label}</span>
+                                        <span className="text-xs font-black text-orange-900/40 dark:text-slate-400 uppercase tracking-widest">{stat.label}</span>
                                     </button>
                                 ))}
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="text-xl font-black text-slate-800">Your Backlog</h3>
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white">Your Backlog</h3>
                                 <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
                                     {displayTasks.length > 0 ? displayTasks.map((task, i) => (
                                         <motion.div
@@ -338,7 +338,7 @@ export default function AutoSchedule() {
                                             </div>
                                         </motion.div>
                                     )) : (
-                                        <div className="min-w-[280px] bg-slate-100 rounded-[2.5rem] p-8 text-slate-400 flex flex-col items-center justify-center text-center">
+                                        <div className="min-w-[280px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] p-8 text-slate-400 dark:text-slate-300 flex flex-col items-center justify-center text-center">
                                             <p className="font-bold">No tasks yet.</p>
                                         </div>
                                     )}
@@ -354,15 +354,15 @@ export default function AutoSchedule() {
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                             className="px-8 pt-6 space-y-8"
                         >
-                            <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                            <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-tight">
                                 Task<br /><span className="text-[#FF8A71]">schedule</span>
                             </h1>
 
                             <div className="flex justify-between gap-2 overflow-x-auto no-scrollbar py-2">
                                 {weekDays.map(day => (
-                                    <button key={`${day.day}-${day.date}`} className={`flex flex-col items-center gap-2 p-2 min-w-[50px] transition-all ${day.active ? '' : 'text-orange-900/40'}`}>
+                                    <button key={`${day.day}-${day.date}`} className={`flex flex-col items-center gap-2 p-2 min-w-[50px] transition-all ${day.active ? '' : 'text-orange-900/40 dark:text-slate-500'}`}>
                                         <span className="text-[10px] font-black uppercase tracking-widest">{day.day}</span>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${day.active ? 'bg-[#FF8A71] text-white shadow-lg shadow-orange-100' : 'hover:bg-orange-50'}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${day.active ? 'bg-[#FF8A71] text-white shadow-lg shadow-orange-100 dark:shadow-none' : 'hover:bg-orange-50 dark:hover:bg-slate-800 dark:text-white'}`}>
                                             {day.date}
                                         </div>
                                     </button>
@@ -377,13 +377,13 @@ export default function AutoSchedule() {
                                             <Reorder.Item key={item.id} value={item} className="flex gap-4 relative group cursor-grab active:cursor-grabbing">
                                                 <div className="absolute -left-[27px] top-6 w-4 h-4 rounded-full border-4 border-[#FFF8F5] ring-2 bg-orange-100 ring-transparent z-10" />
                                                 <div className="flex flex-col pt-5 min-w-[60px]">
-                                                    <span className="text-xs font-black text-orange-900/40 whitespace-nowrap">{item.start_time}</span>
+                                                    <span className="text-xs font-black text-orange-900/40 dark:text-slate-400 whitespace-nowrap">{item.start_time}</span>
                                                     <span className="text-[10px] text-orange-200 font-bold">{item.end_time}</span>
                                                 </div>
-                                                <div className="flex-1 p-6 rounded-[2rem] border border-orange-50 shadow-sm relative overflow-hidden bg-white/80 backdrop-blur-sm group-hover:shadow-md transition-all">
+                                                <div className="flex-1 p-6 rounded-[2rem] border border-orange-50 dark:border-slate-800 shadow-sm relative overflow-hidden bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:shadow-md transition-all">
                                                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-400 opacity-40" />
-                                                    <h4 className="text-lg font-black text-slate-800 mb-1">{item.task_title || "Task"}</h4>
-                                                    <p className="text-xs font-medium text-slate-500 leading-relaxed mb-2">Assigned to: <span className="text-orange-500 font-bold">{item.emp_name}</span></p>
+                                                    <h4 className="text-lg font-black text-slate-800 dark:text-white mb-1">{item.task_title || "Task"}</h4>
+                                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-2">Assigned to: <span className="text-orange-500 font-bold">{item.emp_name}</span></p>
                                                     <div className="flex gap-2">
                                                         <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wide">{item.priority}</span>
                                                         <GripVertical className="w-4 h-4 text-slate-300 absolute top-6 right-6" />
@@ -410,7 +410,7 @@ export default function AutoSchedule() {
                             className="px-8 pt-6 space-y-8"
                         >
                             <div className="flex justify-between items-center">
-                                <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                                <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-tight">
                                     Your<br /><span className="text-blue-500">Team</span>
                                 </h1>
                                 <button onClick={() => setShowEmployeePopup(true)} className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-200 active:scale-90 transition-transform">
@@ -420,13 +420,13 @@ export default function AutoSchedule() {
 
                             <div className="grid gap-4">
                                 {employees.length > 0 ? employees.map((emp) => (
-                                    <div key={emp.id} className="bg-white p-6 rounded-[2rem] flex items-center justify-between border border-blue-50 hover:shadow-lg transition-all">
+                                    <div key={emp.id} className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] flex items-center justify-between border border-blue-50 dark:border-slate-700 hover:shadow-lg transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center font-black text-2xl">
+                                            <div className="w-14 h-14 bg-blue-50 dark:bg-slate-700 text-blue-500 rounded-2xl flex items-center justify-center font-black text-2xl">
                                                 {emp.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-slate-800 text-lg">{emp.name}</h3>
+                                                <h3 className="font-bold text-slate-800 dark:text-white text-lg">{emp.name}</h3>
                                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
                                                     <Briefcase className="w-3 h-3" /> {emp.role}
                                                 </p>
@@ -434,11 +434,11 @@ export default function AutoSchedule() {
                                         </div>
                                         <div className="text-right">
                                             <div className="text-[10px] text-slate-300 font-bold uppercase mb-1">Weekly Limit</div>
-                                            <div className="font-black text-slate-700">{emp.weekly_hours_limit}h</div>
+                                            <div className="font-black text-slate-700 dark:text-white">{emp.weekly_hours_limit}h</div>
                                         </div>
                                     </div>
                                 )) : (
-                                    <div className="text-center py-20 bg-white rounded-[2rem]">
+                                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-[2rem]">
                                         <p className="text-slate-400 font-bold">No team members yet.</p>
                                     </div>
                                 )}

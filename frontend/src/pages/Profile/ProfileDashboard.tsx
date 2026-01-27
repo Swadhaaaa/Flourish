@@ -46,8 +46,8 @@ const ProfileDashboard = () => {
         {
             title: "Personal Information",
             icon: User,
-            color: "text-purple-500",
-            bg: "bg-purple-50",
+            color: "text-amber-500",
+            bg: "bg-amber-50",
             items: [
                 { label: "Age", value: p('age'), key: 'age', icon: Clock },
                 { label: "Gender", value: p('gender'), key: 'gender', icon: Heart },
