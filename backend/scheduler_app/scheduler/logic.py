@@ -222,6 +222,34 @@ class SchedulerEngine:
 
         elif action_type == "manage_schedule":
             pass
+
+        elif action_type == "delete_task":
+            details = result.get("action_details", {})
+            title = details.get("title")
+            if title:
+                # 1. Try strict match
+                task = self.db.find_task_by_title(title, user_id=user_id)
+                
+                # 2. Fuzzy/Case-insensitive search if strict failed
+                if not task:
+                    all_tasks = self.db.get_all_active_tasks(user_id=user_id)
+                    # Find candidates where title appears in task title (case insensitive)
+                    candidates = [t for t in all_tasks if title.lower() in t.title.lower()]
+                    
+                    if len(candidates) == 1:
+                        task = candidates[0]
+                    elif len(candidates) > 1:
+                        names = ", ".join([f"'{t.title}'" for t in candidates])
+                        response_text = f"I found multiple tasks matching '{title}': {names}. Which one did you mean?"
+                        return { "text": response_text, "response": response_text, "action": action_type, "action_performed": action_type }
+                
+                if task:
+                    self.db.delete_task(task.id, user_id=user_id)
+                    response_text = f"I've removed the task '{task.title}' from your list."
+                else:
+                    response_text = f"I couldn't find a task named '{title}'. Please check the name."
+            else:
+                response_text = "Please specify the name of the task you want to delete."
             
         return {
             "text": response_text, 

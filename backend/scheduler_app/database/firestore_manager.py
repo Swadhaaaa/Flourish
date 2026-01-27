@@ -140,6 +140,32 @@ class FirestoreManager:
     def update_task_status_with_user(self, task_id: str, status: str, user_id: str):
         self._user_ref(user_id).collection('tasks').document(str(task_id)).update({"status": status})
 
+    def delete_task(self, task_id: str, user_id: str = "1"):
+        # Delete task
+        self._user_ref(user_id).collection('tasks').document(str(task_id)).delete()
+        # Also delete schedules associated with it
+        self.clear_schedule_for_task(task_id, user_id)
+
+    def find_task_by_title(self, title: str, user_id: str = "1") -> Optional[Task]:
+        # Case insensitive search would be better but Firestore is strict.
+        # We'll fetch all active tasks and filter in python for better matching or use exact match query.
+        # Strict match for now:
+        docs = self._user_ref(user_id).collection('tasks').where('title', '==', title).limit(1).stream()
+        for doc in docs:
+            d = doc.to_dict()
+            return Task(
+                id=doc.id,
+                title=d.get('title', ''),
+                description=d.get('description', ''),
+                priority=d.get('priority', 'Medium'),
+                estimated_hours=d.get('estimated_hours', 1.0),
+                deadline=d.get('deadline', ''),
+                assigned_to=d.get('assigned_to'),
+                status=d.get('status', 'Pending'),
+                user_id=user_id
+            )
+        return None
+
     def create_schedule(self, employee_id: str, task_id: str, day: str, start: str, end: str, 
                        task_title: str = "", emp_name: str = "", priority: str = "", user_id: str = "1") -> str:
         ref = self._user_ref(user_id).collection('schedules').document()

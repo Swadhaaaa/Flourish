@@ -38,7 +38,7 @@ class ConversationResponse(BaseModel):
     sentiment: str = Field("neutral", description="User sentiment: positive/neutral/stressed/tired")
     stress_score: int = Field(1, description="Stress score from 1-10")
     response_text: str = Field(description="The reply to show the user")
-    internal_action: Optional[str] = Field(None, description="Action to perform: add_task, optimize_schedule, log_wellness, chat, command")
+    internal_action: Optional[str] = Field(None, description="Action to perform: add_task, delete_task, optimize_schedule, log_wellness, chat, command")
     action_details: Optional[ActionDetails] = Field(default_factory=ActionDetails)
 
 
@@ -93,6 +93,7 @@ POSSIBLE INTENTS:
 3. **wellness_check**: User mentions stress, burnout, tiredness. RETURN: "internal_action": "log_wellness", "sentiment": "negative/stressed"
 5. **chat**: General conversation, advice, venting. RETURN: "internal_action": "chat"
 6. **command**: Explicit commands like "/private on". RETURN: "internal_action": "command"
+7. **task_deletion**: User wants to delete/remove a task. RETURN: "internal_action": "delete_task", "action_details": {{"title": "Task Name"}}
 
 {self.parser.get_format_instructions()}
 

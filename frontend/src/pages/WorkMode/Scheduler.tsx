@@ -12,7 +12,11 @@ import {
     getSessionHistory,
 
     generateSchedulerSchedule,
-    getSchedulerSchedule
+    getSchedulerSchedule,
+    getTasks,
+    addTask,
+    updateTask,
+    deleteTask
 } from '../../services/api';
 
 const Scheduler = () => {
@@ -29,6 +33,16 @@ const Scheduler = () => {
 
     // Data State
     const [schedule, setSchedule] = useState<any[]>([]);
+    const [tasks, setTasks] = useState<any[]>([]);
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<any>(null);
+    const [taskForm, setTaskForm] = useState({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        estimated_hours: 1,
+        deadline: ''
+    });
 
     const { user } = useAuth(); // Get User
 
@@ -36,8 +50,9 @@ const Scheduler = () => {
     useEffect(() => {
         if (user) {
             loadSessions(user.uid);
+            loadSchedule();
+            loadTasks();
         }
-        loadSchedule();
     }, [user]);
 
     // React to Session Change
@@ -95,14 +110,42 @@ const Scheduler = () => {
         } catch (e) { console.error(e); }
     };
 
-
-
     const loadSchedule = async () => {
         try {
             const data = await getSchedulerSchedule(user?.uid);
             setSchedule(data);
         } catch (e) { console.error(e); }
-    }
+    };
+
+    const loadTasks = async () => {
+        try {
+            const data = await getTasks(true, user?.uid);
+            setTasks(data);
+        } catch (e) { console.error(e); }
+    };
+
+    const handleSaveTask = async () => {
+        try {
+            if (editingTask) {
+                await updateTask(editingTask.id, { ...taskForm, user_id: user?.uid });
+            } else {
+                await addTask(taskForm, user?.uid);
+            }
+            setIsTaskModalOpen(false);
+            loadTasks();
+        } catch (e) { console.error(e); }
+    };
+
+    const handleDeleteTask = async (id: number) => {
+        if (!confirm("Are you sure you want to delete this task?")) return;
+        try {
+            await deleteTask(id, user?.uid);
+            setTasks(tasks.filter(t => t.id !== id));
+        } catch (e) {
+            console.error(e);
+            alert("Failed to delete task");
+        }
+    };
 
     const handleSend = async () => {
         if (!input.trim() || !currentSessionId) return;
@@ -118,8 +161,8 @@ const Scheduler = () => {
             setMessages(prev => [...prev, botMsg]);
 
             // Handle Side Effects
-            if (res.action_performed === 'add_task') {
-                // loadTasks(); // Disabled until tasks UI is ready
+            if (res.action_performed === 'add_task' || res.action_performed === 'delete_task') {
+                loadTasks();
             } else if (res.action_performed === 'manage_schedule') {
                 loadSchedule();
             }
@@ -141,7 +184,6 @@ const Scheduler = () => {
                         <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tighter">Assistant</h2>
                         <p className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">AI Assistant</p>
                     </div>
-                    {/* Mobile: Show active tab name or toggle? Just keep simple header */}
                 </div>
 
                 <nav className="grid grid-cols-2 gap-2 md:space-y-2 md:block flex-1 overflow-y-auto md:overflow-visible">
@@ -341,17 +383,171 @@ const Scheduler = () => {
                     </div>
                 )}
 
-                {/* OTHER TABS SIMPLIFIED FOR NOW */}
-                {(activeTab === 'tasks' || activeTab === 'team') && (
-                    <div className="h-full flex items-center justify-center flex-col text-slate-400 dark:text-slate-500">
-                        <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl mb-4">
-                            {activeTab === 'tasks' ? <CheckSquare className="w-10 h-10" /> : <Users className="w-10 h-10" />}
+                {/* TASKS VIEW */}
+                {activeTab === 'tasks' && (
+                    <div className="h-full p-8 overflow-y-auto relative">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">Tasks</h2>
+                                <p className="text-slate-500 font-bold text-sm">Manage your todo list</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setEditingTask(null);
+                                    setTaskForm({ title: '', description: '', priority: 'Medium', estimated_hours: 1, deadline: '' });
+                                    setIsTaskModalOpen(true);
+                                }}
+                                className="bg-slate-900 dark:bg-rose-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-rose-600 transition-all flex items-center gap-2 shadow-lg"
+                            >
+                                <Plus className="w-4 h-4" /> Add Task
+                            </button>
                         </div>
-                        <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Coming Soon</h3>
-                        <p className="text-sm font-bold max-w-xs text-center">This section is being migrated from the legacy system. Please use the Chat to manage tasks/team for now.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {tasks.map((task) => (
+                                <div key={task.id} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm group hover:shadow-md transition-all relative">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <span className={cn(
+                                            "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide",
+                                            task.priority === 'High' ? "bg-red-50 text-red-500" :
+                                                task.priority === 'Medium' ? "bg-blue-50 text-blue-500" : "bg-green-50 text-green-500"
+                                        )}>{task.priority}</span>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingTask(task);
+                                                    setTaskForm({
+                                                        title: task.title,
+                                                        description: task.description || '',
+                                                        priority: task.priority,
+                                                        estimated_hours: task.estimated_hours,
+                                                        deadline: task.deadline || ''
+                                                    });
+                                                    setIsTaskModalOpen(true);
+                                                }}
+                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-500 transition-colors"
+                                            >
+                                                <CheckSquare className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteTask(task.id)}
+                                                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2">{task.title}</h3>
+                                    {task.description && (
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{task.description}</p>
+                                    )}
+                                    <div className="flex items-center justify-between text-xs font-bold text-slate-400 dark:text-slate-500 mt-auto pt-4 border-t border-slate-50 dark:border-slate-700/50">
+                                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {task.estimated_hours}h</span>
+                                        {task.deadline && <span>Due: {task.deadline}</span>}
+                                    </div>
+                                </div>
+                            ))}
+                            {tasks.length === 0 && (
+                                <div className="col-span-full text-center py-20 text-slate-400">
+                                    <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                    <p className="font-bold">No tasks yet. Add one to get started!</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Task Modal */}
+                        {isTaskModalOpen && (
+                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                                <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+                                    <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">
+                                        {editingTask ? 'Edit Task' : 'New Task'}
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-2">Title</label>
+                                            <input
+                                                value={taskForm.title}
+                                                onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                                placeholder="Task name"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-2">Description</label>
+                                            <textarea
+                                                value={taskForm.description}
+                                                onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 font-medium text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none h-24"
+                                                placeholder="Add details..."
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-2">Priority</label>
+                                                <select
+                                                    value={taskForm.priority}
+                                                    onChange={e => setTaskForm({ ...taskForm, priority: e.target.value })}
+                                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                >
+                                                    <option>High</option>
+                                                    <option>Medium</option>
+                                                    <option>Low</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-2">Hours</label>
+                                                <input
+                                                    type="number"
+                                                    value={taskForm.estimated_hours}
+                                                    onChange={e => setTaskForm({ ...taskForm, estimated_hours: parseFloat(e.target.value) })}
+                                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    min="0.5"
+                                                    step="0.5"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-2">Deadline (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={taskForm.deadline}
+                                                onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-4 font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                placeholder="e.g., Friday 5pm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 mt-8">
+                                        <button
+                                            onClick={() => setIsTaskModalOpen(false)}
+                                            className="flex-1 py-4 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSaveTask}
+                                            className="flex-1 bg-slate-900 dark:bg-rose-500 text-white py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg"
+                                        >
+                                            {editingTask ? 'Update Task' : 'Create Task'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
+
+                {/* TEAM VIEW */}
+                {activeTab === 'team' && (
+                    <div className="h-full flex items-center justify-center flex-col text-slate-400 dark:text-slate-500">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl mb-4">
+                            <Users className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Team Coming Soon</h3>
+                        <p className="text-sm font-bold max-w-xs text-center">Manage your team members here.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

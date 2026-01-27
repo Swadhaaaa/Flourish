@@ -142,4 +142,9 @@ export const updateScheduleItem = async (scheduleId: number, updates: any) => {
     return response.data;
 };
 
+export const deleteTask = async (taskId: number | string, userId: string = "1") => {
+    const response = await api.delete(`/api/scheduler/tasks/${taskId}?user_id=${userId}`);
+    return response.data;
+};
+
 export default api;

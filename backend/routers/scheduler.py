@@ -152,6 +152,7 @@ async def get_schedule(user_id: str = "1"):
 # Updates
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
+    description: Optional[str] = None
     priority: Optional[str] = None
     estimated_hours: Optional[float] = None
     deadline: Optional[str] = None
@@ -159,9 +160,27 @@ class TaskUpdate(BaseModel):
 
 @router.put("/tasks/{task_id}")
 async def update_task(task_id: str, task: TaskUpdate):
-    # Use Firestore update. We must use task.user_id to find it.
-    db.update_task_with_user(task_id, task.model_dump(exclude_unset=True), task.user_id)
+    """Update task details."""
+    updates = task.model_dump(exclude_unset=True)
+    
+    # Remove user_id from updates dict as it's not a field to update in the doc generally (or handled separately)
+    # The TaskUpdate model has user_id defaults to "1", we use it to find the collection but maybe shouldn't update the field itself unless intentional.
+    # Usually user_id doesn't change.
+    uid = updates.pop("user_id", "1")
+    
+    # Ensure we don't accidentally update nulls if exclude_unset didn't catch (it should though)
+    
+    # Perform update using direct Firestore access for now
+    # Ideally move this to FirestoreManager.update_task(task_id, updates, user_id)
+    db._user_ref(uid).collection('tasks').document(task_id).update(updates)
+    
     return {"message": "Task updated"}
+
+@router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, user_id: str = "1"):
+    """Delete a task."""
+    db.delete_task(task_id, user_id)
+    return {"message": "Task deleted"}
 
 class ScheduleUpdate(BaseModel):
     start_time: str
