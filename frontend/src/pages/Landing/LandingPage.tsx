@@ -63,9 +63,9 @@ const LandingPage = () => {
 
     return (
         // FIXED POSITIONING to break out of MainLayout's padding and enforce 100vh
-        <div className="fixed inset-0 z-50 overflow-y-auto md:overflow-hidden bg-[#FDFDFD] font-sans selection:bg-blue-100">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#FDFDFD] font-sans selection:bg-blue-100">
             {/* Dot Grid Background */}
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-60"
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-60"
                 style={{
                     backgroundImage: 'radial-gradient(#CBD5E1 1.5px, transparent 1.5px)',
                     backgroundSize: '40px 40px'
@@ -77,7 +77,7 @@ const LandingPage = () => {
                 initial={{ scale: 0, rotate: -15, y: -50 }}
                 animate={{ scale: 1, rotate: -6, y: 0 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="absolute top-8 left-8 md:top-12 md:left-12 lg:top-16 lg:left-24 hidden md:block group z-20"
+                className="absolute top-8 left-8 md:top-12 md:left-12 lg:top-16 lg:left-24 hidden xl:block group z-20"
             >
                 {/* The Note */}
                 <div className="w-48 aspect-square bg-[#FFEBA4] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] transform -rotate-2 relative">
@@ -103,7 +103,7 @@ const LandingPage = () => {
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="absolute top-8 right-8 md:top-12 md:right-12 lg:top-16 lg:right-24 hidden md:block z-20"
+                className="absolute top-8 right-8 md:top-12 md:right-12 lg:top-16 lg:right-24 hidden xl:block z-20"
             >
                 <div className="relative bg-white rounded-[2rem] p-6 pr-10 shadow-[0_30px_60px_rgba(0,0,0,0.08)] border border-slate-100 flex items-center gap-6 min-w-[280px]">
                     {/* Floating Car Button (Top Left Outside) */}
@@ -138,7 +138,7 @@ const LandingPage = () => {
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="absolute bottom-8 left-8 md:bottom-12 md:left-12 lg:bottom-16 lg:left-24 hidden md:block z-20"
+                className="absolute bottom-8 left-8 md:bottom-12 md:left-12 lg:bottom-16 lg:left-24 hidden xl:block z-20"
             >
                 <div className="bg-white rounded-[2rem] p-6 shadow-[0_30px_60px_rgba(0,0,0,0.08)] w-72 text-left border border-slate-100 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
                     <div className="text-sm font-black text-slate-900 mb-5 font-display pl-1">Today's tasks</div>
@@ -165,7 +165,7 @@ const LandingPage = () => {
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="absolute bottom-8 right-8 md:bottom-12 md:right-12 lg:bottom-16 lg:right-24 hidden md:block z-20"
+                className="absolute bottom-8 right-8 md:bottom-12 md:right-12 lg:bottom-16 lg:right-24 hidden xl:block z-20"
             >
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_30px_60px_rgba(0,0,0,0.08)] w-80 text-left border border-slate-100 transform rotate-2 hover:rotate-0 transition-transform duration-500">
                     <div className="mb-6">
@@ -193,7 +193,7 @@ const LandingPage = () => {
             </motion.div>
 
             {/* Central Content */}
-            <div className="relative md:absolute md:inset-0 z-10 flex flex-col items-center justify-start md:justify-center pointer-events-none min-h-screen pt-20 pb-12 md:py-0">
+            <div className="relative w-full z-30 flex flex-col items-center justify-start md:justify-center pointer-events-none min-h-screen pt-20 pb-32 md:pb-32 md:pt-20">
                 <main className="text-center max-w-4xl mx-auto px-6 pointer-events-auto">
                     {/* Center Logo Icon */}
                     <motion.div
@@ -210,6 +210,45 @@ const LandingPage = () => {
                             <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-[#3B82F6]" />
                             <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-slate-800" />
                         </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            visible: {
+                                opacity: 1,
+                                transition: {
+                                    staggerChildren: 0.1,
+                                    delayChildren: 0.3
+                                }
+                            }
+                        }}
+                        className="font-cursive text-4xl md:text-6xl text-blue-600 mb-4 font-bold inline-block"
+                        style={{ fontFamily: '"Dancing Script", cursive' }}
+                    >
+                        {['F', 'l', 'o', 'u', 'r', 'i', 's', 'h'].map((char, index) => (
+                            <motion.span
+                                key={index}
+                                variants={{
+                                    hidden: { opacity: 0, y: 20, rotate: -5 },
+                                    visible: {
+                                        opacity: 1,
+                                        y: 0,
+                                        rotate: 0,
+                                        transition: {
+                                            type: "spring",
+                                            damping: 12,
+                                            stiffness: 100
+                                        }
+                                    }
+                                }}
+                                className="inline-block origin-bottom"
+                            >
+                                {char}
+                            </motion.span>
+                        ))}
                     </motion.div>
 
                     <h1 className="font-display font-black text-slate-900 tracking-tight mb-6 md:mb-8 leading-[1.05] drop-shadow-sm
@@ -238,68 +277,7 @@ const LandingPage = () => {
                 </main>
             </div >
 
-            {/* Mobile Features Grid (Visible only on small screens) */}
-            < div className="grid grid-cols-1 gap-6 mt-16 md:hidden w-full max-w-sm mx-auto pb-8" >
 
-                {/* 1. Sticky Note */}
-                < div className="bg-[#FFEBA4] p-6 shadow-xl transform -rotate-1 mx-auto w-full rounded-sm relative" >
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-rose-500 shadow-sm border-2 border-white/40 z-20" />
-                    <p className="font-display font-bold text-slate-800 text-lg leading-tight text-left mt-2">
-                        Take notes to keep track of details!
-                    </p>
-                </div >
-
-                {/* 2. Safe Cab */}
-                < div className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 flex items-center gap-4 w-full" >
-                    <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
-                        <Car className="w-6 h-6" />
-                    </div>
-                    <div className="text-left flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-black text-slate-900 font-display">Safe Cab</span>
-                            <div className="flex gap-1"><div className="w-1 h-1 rounded-full bg-slate-200" /><div className="w-1 h-1 rounded-full bg-slate-200" /></div>
-                        </div>
-                        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100/50">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-700 leading-tight">Verified Ride</div>
-                                <div className="text-[8px] font-medium text-slate-400">Arriving in 2 min</div>
-                            </div>
-                        </div>
-                    </div>
-                </div >
-
-                {/* 3. Tasks */}
-                < div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100" >
-                    <div className="text-sm font-black text-slate-900 mb-4 font-display pl-1">Today's tasks</div>
-                    <div className="space-y-3">
-                        <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-[10px] font-bold text-orange-600 shrink-0">6</div>
-                            <span className="text-xs font-bold text-slate-700">New Ideas</span>
-                        </div>
-                        <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm relative overflow-hidden">
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-[10px] font-bold text-emerald-600 shrink-0">3</div>
-                                <span className="text-xs font-bold text-slate-700">Design PPT</span>
-                            </div>
-                        </div>
-                    </div>
-                </div >
-
-                {/* 4. Period Tracker */}
-                < div className="bg-white rounded-[2rem] p-6 shadow-xl w-full text-left border border-slate-100" >
-                    <div className="mb-4">
-                        <div className="text-sm font-black text-slate-900 font-display">Period Tracker</div>
-                        <div className="text-xs font-medium text-slate-400 leading-tight mt-1">Track cycles & insights.</div>
-                    </div>
-                    <div className="flex items-center justify-around">
-                        <div className="w-12 h-12 rounded-[1rem] bg-rose-50 flex items-center justify-center text-rose-500 shadow-sm border border-rose-100"><Heart className="w-5 h-5" /></div>
-                        <div className="w-12 h-12 rounded-[1rem] bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100"><Activity className="w-5 h-5" /></div>
-                        <div className="w-12 h-12 rounded-[1rem] bg-pink-50 flex items-center justify-center text-pink-500 shadow-sm border border-pink-100"><CalendarIcon className="w-5 h-5" /></div>
-                    </div>
-                </div >
-
-            </div >
             <AnimatePresence>
                 {showAuth && (
                     <motion.div
@@ -454,7 +432,7 @@ const LandingPage = () => {
             }
 
             {/* Footer - Simple and Minimal */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 py-4 px-6 bg-white/50 backdrop-blur-sm border-t border-slate-100">
+            <div className="fixed bottom-0 left-0 right-0 z-40 py-4 px-6 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-400">
                     <div className="flex items-center gap-4">
                         <span className="font-medium">
