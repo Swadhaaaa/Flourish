@@ -1,6 +1,6 @@
 {
-    "name": "Tea Hack - Women's Wellness Platform",
-    "short_name": "Tea Hack",
+    "name": "Flourish - Women's Wellness Platform",
+    "short_name": "Flourish",
     "description": "Comprehensive wellness platform for women's health, safety, and productivity",
     "start_url": "/",
     "display": "standalone",
@@ -9,7 +9,7 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/LOGO1.png",
+            "src": "/logo.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
