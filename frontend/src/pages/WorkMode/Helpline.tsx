@@ -96,9 +96,12 @@ export default function Helpline() {
                                             <div className="text-xs font-bold text-slate-500">{item.name}</div>
                                         </div>
                                     </div>
-                                    <button className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                                    <a
+                                        href={`tel:${item.number}`}
+                                        className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                                    >
                                         <Phone className="w-5 h-5 text-white" />
-                                    </button>
+                                    </a>
                                 </div>
                             ))}
                         </motion.div>
@@ -169,12 +172,20 @@ export default function Helpline() {
                                                     <div className="text-sm font-bold text-slate-500">{contact.phone}</div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteContact(contact.id)}
-                                                className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <a
+                                                    href={`tel:${contact.phone}`}
+                                                    className="p-2 hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 rounded-xl transition-colors"
+                                                >
+                                                    <Phone className="w-5 h-5" />
+                                                </a>
+                                                <button
+                                                    onClick={() => handleDeleteContact(contact.id)}
+                                                    className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))
                                 )}
