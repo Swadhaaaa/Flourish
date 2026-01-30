@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Chrome, X, User, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Heart, Activity, Calendar as CalendarIcon, Car, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import InstallPWA from '../../components/InstallPWA';
@@ -435,12 +435,12 @@ const LandingPage = () => {
             <div className="fixed bottom-0 left-0 right-0 z-40 py-4 px-6 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-400">
                     <div className="flex items-center gap-4">
-                        <span className="font-medium">
+                        <Link to="/terms" className="font-medium hover:text-slate-600 transition-colors">
                             Terms & Conditions
-                        </span>
-                        <span className="font-medium">
+                        </Link>
+                        <Link to="/privacy" className="font-medium hover:text-slate-600 transition-colors">
                             Privacy
-                        </span>
+                        </Link>
                     </div>
                     <div className="font-medium">
                         © 2026 All Rights Reserved
