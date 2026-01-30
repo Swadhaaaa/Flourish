@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download } from 'lucide-react';
+import { getDeferredPrompt, clearDeferredPrompt } from '../utils/pwa';
 
 const InstallPWA = () => {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -8,6 +9,12 @@ const InstallPWA = () => {
     const [showInstructions, setShowInstructions] = useState(false);
 
     useEffect(() => {
+        // Check if we captured the prompt already
+        const existingPrompt = getDeferredPrompt();
+        if (existingPrompt) {
+            setDeferredPrompt(existingPrompt);
+        }
+
         const handler = (e: any) => {
             e.preventDefault();
             setDeferredPrompt(e);
@@ -27,8 +34,16 @@ const InstallPWA = () => {
             return;
         }
         deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
+        const { outcome } = await deferredPrompt.userChoice;
+
+        // If user accepted, hide the button? Or keep it?
+        // Usually, if installed, the app reloads or we can hide it.
+        if (outcome === 'accepted') {
+            setIsInstalled(true);
+        }
+
         setDeferredPrompt(null);
+        clearDeferredPrompt();
         setShowInstructions(false);
     };
 
