@@ -555,5 +555,44 @@ class AIService:
             "short_tip": "Listen to your body."
         }
 
-
-
+    def scout_rides(self, pickup: str, dropoff: str, distance_km: float):
+        """
+        Uses Groq API to generate dynamic cab prices and ETAs.
+        """
+        system_prompt = "You are a dynamic pricing engine for a ride-hailing aggregator. Output valid JSON only."
+        user_prompt = f"""
+        Generate 3 cab options (Uber, Ola, SafeCab) for a ride from {pickup} to {dropoff}.
+        The distance is approximately {distance_km} km.
+        Base price should be around {distance_km * 15} INR.
+        Vary the exact price, ETA, and safety score for each dynamically.
+        SafeCab should always have the highest safety score and competitive pricing.
+        
+        Output JSON format exactly like this:
+        {{
+            "providers": [
+                {{
+                    "id": "safe-cab",
+                    "provider": "SafeCab",
+                    "price": 450,
+                    "eta": "4 min",
+                    "safety_score": 98,
+                    "type": "Premium Electric"
+                }}
+            ]
+        }}
+        Provide 3 items in the providers array.
+        """
+        try:
+            response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
+            if response and "providers" in response:
+                return response["providers"]
+        except Exception as e:
+            print(f"Scout Rides Failed: {e}")
+        
+        # Fallback
+        base = int(distance_km * 15)
+        return [
+            {"id": "safe-cab", "provider": "SafeCab", "price": base, "eta": "4 min", "safety_score": 98, "type": "Premium"},
+            {"id": "uber", "provider": "Uber", "price": base - 10, "eta": "7 min", "safety_score": 85, "type": "Go"},
+            {"id": "ola", "provider": "Ola", "price": base + 5, "eta": "5 min", "safety_score": 88, "type": "Mini"}
+        ]

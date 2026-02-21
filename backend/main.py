@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from ai_service import AIService
 from events_service import EventsService
+from scraper_service import scrape_events
 
 load_dotenv()
 from model_engine import generate_synthetic_data # We will use this to generate demo data if needed
@@ -183,6 +184,100 @@ async def period_insight(request: PeriodInsightRequest):
         # Fallback if AI fails
         print(f"AI Generation Failed: {e}")
         return {"insight": f"Day {request.day} ({request.phase}): Listen to your body and prioritize rest if needed."}
+
+
+import httpx
+
+@app.get("/api/ridesync/geocode")
+async def geocode_proxy(q: str):
+    """Proxy for Nominatim OpenStreetMap to avoid CORS issues from browser."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"format": "json", "q": q, "limit": 1, "countrycodes": "in"},
+            headers={"User-Agent": "SafeCab-Demo/1.0"}
+        )
+    return resp.json()
+
+@app.get("/api/ridesync/route")
+async def osrm_proxy(lon1: float, lat1: float, lon2: float, lat2: float):
+    """Proxy for OSRM routing to avoid CORS issues from browser."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"https://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}",
+            params={"overview": "full", "geometries": "geojson"}
+        )
+    return resp.json()
+
+class ScoutRequest(BaseModel):
+    pickup: str
+    dropoff: str
+    distance_km: float
+
+@app.post("/api/ridesync/scout")
+async def scout_rides_endpoint(request: ScoutRequest):
+    results = ai_service.scout_rides(request.pickup, request.dropoff, request.distance_km)
+    return {"results": results}
+
+class EmailShareRequest(BaseModel):
+    to_email: str
+    message: str
+
+@app.post("/api/ridesync/share")
+async def ridesync_share(request: EmailShareRequest):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    sender_email = os.getenv("SENDER_EMAIL")
+    sender_password = os.getenv("SENDER_APP_PASSWORD")
+
+    if not sender_email or not sender_password:
+        print(f"[MOCK EMAIL] to={request.to_email} | {request.message}")
+        return {"status": "success", "message": "Email simulated (no credentials set)"}
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "🚨 SafeCab Live Tracking Alert"
+        msg["From"] = f"SafeCab Safety <{sender_email}>"
+        msg["To"] = request.to_email
+
+        html_body = f"""
+        <html><body style="font-family:sans-serif;background:#fff0e5;padding:20px">
+          <div style="max-width:480px;margin:auto;background:white;border-radius:24px;padding:32px;border:2px solid #ef4444">
+            <h2 style="color:#ef4444;margin-top:0">🛡️ SafeCab Live Alert</h2>
+            <p style="color:#555;font-size:15px">{request.message}</p>
+            <hr style="border:none;border-top:1px solid #ffe4e1;margin:20px 0"/>
+            <p style="color:#aaa;font-size:12px">Sent automatically by SafeCab Safety System.</p>
+          </div>
+        </body></html>
+        """
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, request.to_email, msg.as_string())
+
+        return {"status": "success", "message": "Email sent successfully!"}
+    except Exception as e:
+        print(f"Email error: {e}")
+        raise HTTPException(status_code=500, detail=f"Email failed: {str(e)}")
+
+
+# ─── EVENT SCRAPER ENDPOINT ───────────────────────────────────────────────────
+@app.get("/api/events/scrape")
+async def scrape_events_endpoint(city: str = "Mumbai", category: str = None):
+    """
+    Scrapes real, current hobby/activity events from Meetup.com and insider.in
+    for any city entered by the user. Falls back to city-specific generated events.
+    """
+    try:
+        cat = None if (not category or category == "All") else category
+        events = scrape_events(city, cat)
+        return events
+    except Exception as e:
+        print(f"Scraper endpoint error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

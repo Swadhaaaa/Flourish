@@ -1,6 +1,8 @@
-import { MapPin, ShieldCheck, Star, Car, Search, Bell, Filter, Users, Fuel, Gauge, Music, ArrowRight, ChevronLeft, Calendar, Clock, X, Check, BellRing, User, Users2 } from 'lucide-react';
-import { useState } from 'react';
+import { MapPin, ShieldCheck, Star, Car, Search, Bell, Filter, Users, Fuel, Gauge, Music, ArrowRight, ChevronLeft, Calendar, Clock, X, Check, BellRing, User, Users2, Navigation, Share2, Send, Activity, Loader2 } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+// Leaflet is loaded via CDN in index.html as window.L
+// Leaflet CSS is loaded via CDN link in index.html
 
 const CAB_MODELS = [
     {
@@ -56,6 +58,135 @@ export default function SafeCab() {
     // Agentic AI States
     const [isScanning, setIsScanning] = useState(false);
     const [scanResults, setScanResults] = useState<any[] | null>(null);
+
+    // RideSync States
+    const [rsPickup, setRsPickup] = useState('');
+    const [rsDropoff, setRsDropoff] = useState('');
+    const [rsDistance, setRsDistance] = useState<string | null>(null);
+    const [rsEta, setRsEta] = useState<string | null>(null);
+    const [rsProviders, setRsProviders] = useState<any[] | null>(null);
+    const [rsLoading, setRsLoading] = useState(false);
+    const [rsEmail, setRsEmail] = useState('');
+    const [rsEmailStatus, setRsEmailStatus] = useState<'sending' | 'sent' | 'error' | ''>('');
+    const leafletMapRef = useRef<any>(null);
+    const routeLayerRef = useRef<any>(null);
+    const markersRef = useRef<any[]>([]);
+
+    // Callback ref — fires the instant the div is actually in the DOM
+    const mapCallbackRef = useCallback((node: HTMLDivElement | null) => {
+        if (!node || leafletMapRef.current) return;
+        const L = (window as any).L;
+        if (!L) return;
+        const map = L.map(node, { zoomControl: true }).setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 18,
+        }).addTo(map);
+        leafletMapRef.current = map;
+        setTimeout(() => map.invalidateSize(), 600);
+    }, [activeTab]);  // re-create when tab switches so map remounts cleanly
+
+    const drawRouteOnMap = (pickCoord: [number, number], dropCoord: [number, number], routeCoords: [number, number][]) => {
+        const L = (window as any).L;
+        const map = leafletMapRef.current;
+        if (!map || !L) return;
+        // Clear old layers
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
+        routeLayerRef.current?.remove();
+
+        const pickIcon = L.divIcon({ className: '', html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>' });
+        const dropIcon = L.divIcon({ className: '', html: '<div style="background:#10b981;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>' });
+
+        const m1 = L.marker(pickCoord, { icon: pickIcon }).addTo(map).bindPopup(`<b>Pickup:</b> ${rsPickup}`);
+        const m2 = L.marker(dropCoord, { icon: dropIcon }).addTo(map).bindPopup(`<b>Drop:</b> ${rsDropoff}`);
+        markersRef.current = [m1, m2];
+
+        const polyline = L.polyline(routeCoords, { color: '#ef4444', weight: 5, opacity: 0.85, dashArray: '12, 6' }).addTo(map);
+        routeLayerRef.current = polyline;
+        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+    };
+
+    const handleRideSyncRoute = async () => {
+        if (!rsPickup || !rsDropoff) return;
+        setRsLoading(true);
+        setRsProviders(null);
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const [pickData, dropData] = await Promise.all([
+                fetch(`${API_URL}/api/ridesync/geocode?q=${encodeURIComponent(rsPickup)}`).then(r => r.json()),
+                fetch(`${API_URL}/api/ridesync/geocode?q=${encodeURIComponent(rsDropoff)}`).then(r => r.json()),
+            ]);
+
+            let distance_km = 12;
+            let duration_min = 25;
+
+            if (pickData?.[0] && dropData?.[0]) {
+                const { lon: lon1, lat: lat1 } = pickData[0];
+                const { lon: lon2, lat: lat2 } = dropData[0];
+
+                const osrmData = await fetch(
+                    `${API_URL}/api/ridesync/route?lon1=${lon1}&lat1=${lat1}&lon2=${lon2}&lat2=${lat2}`
+                ).then(r => r.json());
+
+                if (osrmData.routes?.[0]) {
+                    const route = osrmData.routes[0];
+                    distance_km = route.distance / 1000;
+                    const rawMin = route.duration / 60;
+
+                    // India traffic multiplier — OSRM has zero traffic, real roads don't
+                    const hr = new Date().getHours();
+                    let trafficMultiplier = 2.2; // default midday
+                    if ((hr >= 8 && hr <= 11) || (hr >= 17 && hr <= 21)) trafficMultiplier = 3.0; // peak rush
+                    else if (hr >= 22 || hr < 6) trafficMultiplier = 1.8; // late night / early morning
+                    duration_min = Math.round(rawMin * trafficMultiplier);
+
+                    setRsDistance(distance_km.toFixed(1) + ' km');
+                    setRsEta(duration_min + ' mins');
+
+                    // Draw on map: convert GeoJSON [lon,lat] to Leaflet [lat,lon]
+                    const routeCoords: [number, number][] = route.geometry.coordinates.map(
+                        ([lo, la]: [number, number]) => [la, lo] as [number, number]
+                    );
+                    drawRouteOnMap(
+                        [parseFloat(lat1), parseFloat(lon1)],
+                        [parseFloat(lat2), parseFloat(lon2)],
+                        routeCoords
+                    );
+                }
+            }
+
+            const scoutRes = await fetch(`${API_URL}/api/ridesync/scout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pickup: rsPickup, dropoff: rsDropoff, distance_km })
+            });
+            const scoutData = await scoutRes.json();
+            setRsProviders(scoutData.results || []);
+        } catch (err) {
+            console.error('RideSync error:', err);
+        }
+        setRsLoading(false);
+    };
+
+    const handleShareTrip = async () => {
+        setRsEmailStatus('sending');
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            await fetch(`${API_URL}/api/ridesync/share`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to_email: rsEmail,
+                    message: `🚨 LIVE TRACKING: SafeCab ride from "${rsPickup}" → "${rsDropoff}". Distance: ${rsDistance}. ETA: ${rsEta}. Stay safe! - Sent via SafeCab App`
+                })
+            });
+            setRsEmailStatus('sent');
+            setTimeout(() => setRsEmailStatus(''), 3000);
+        } catch {
+            setRsEmailStatus('error');
+        }
+    };
 
     const MOCK_PROVIDERS = [
         {
@@ -540,6 +671,102 @@ export default function SafeCab() {
                     </motion.div>
                 )}
 
+                {/* 2.5 RIDESYNC VIEW */}
+                {activeTab === 'ridesync' && (
+                    <motion.div
+                        key="ridesync-view"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="p-8 pb-32 space-y-8"
+                    >
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h1 className="text-4xl font-display font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                    <Activity className="w-8 h-8 text-rose-500" />
+                                    RideSync
+                                </h1>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-1">Live map · Real routing · AI pricing</p>
+                            </div>
+                        </div>
+
+                        {/* REAL LEAFLET MAP */}
+                        <div
+                            className="rounded-[2rem] overflow-hidden border-2 border-rose-100 dark:border-slate-700 shadow-xl relative"
+                            style={{ height: '260px', isolation: 'isolate', zIndex: 0 }}
+                        >
+                            <div ref={mapCallbackRef} style={{ width: '100%', height: '100%' }} />
+                            {!rsProviders && !rsLoading && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-rose-50/60 dark:bg-slate-900/60 backdrop-blur-sm pointer-events-none">
+                                    <MapPin className="w-8 h-8 text-rose-400 mb-2" />
+                                    <p className="text-sm font-bold text-rose-400">Enter places below to see your route</p>
+                                </div>
+                            )}
+                            {rsLoading && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm pointer-events-none">
+                                    <Loader2 className="w-8 h-8 text-rose-500 animate-spin mb-2" />
+                                    <p className="text-sm font-bold text-rose-500">Calculating real route...</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* OpenStreetMap Routing & Groq Scout */}
+                        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-[2.5rem] p-6 border border-rose-100 dark:border-slate-700 shadow-xl shadow-rose-100/50 dark:shadow-none space-y-6">
+                            <h3 className="font-bold text-lg dark:text-white flex items-center gap-2">
+                                <Navigation className="w-5 h-5 text-rose-500" />
+                                Real-Time Route & Pricing
+                            </h3>
+                            <div className="space-y-4">
+                                <input value={rsPickup} onChange={e => setRsPickup(e.target.value)} type="text" placeholder="Pick-up (e.g. Bangalore Airport)" className="w-full bg-rose-50/50 dark:bg-slate-800/50 border border-rose-100/50 dark:border-slate-700 rounded-2xl p-4 font-medium dark:text-white outline-none focus:border-rose-300" />
+                                <input value={rsDropoff} onChange={e => setRsDropoff(e.target.value)} type="text" placeholder="Destination (e.g. Koramangala)" className="w-full bg-rose-50/50 dark:bg-slate-800/50 border border-rose-100/50 dark:border-slate-700 rounded-2xl p-4 font-medium dark:text-white outline-none focus:border-rose-300" />
+                                <button onClick={handleRideSyncRoute} disabled={rsLoading} className="w-full bg-rose-500 text-white font-bold py-4 rounded-2xl flex justify-center items-center gap-2 shadow-lg hover:bg-rose-600 transition-all disabled:opacity-60">
+                                    {rsLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                                    {rsLoading ? 'Calculating route...' : 'Calculate & Scout APIs'}
+                                </button>
+                            </div>
+
+                            {rsProviders && (
+                                <div className="mt-6 space-y-4">
+                                    <div className="flex justify-between text-sm font-bold text-slate-500 bg-rose-50 dark:bg-slate-800 p-3 rounded-xl border border-rose-100 dark:border-slate-700">
+                                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-emerald-500" /> Distance: {rsDistance}</span>
+                                        <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-amber-500" /> ETA: {rsEta}</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {rsProviders.map(p => (
+                                            <div key={p.id} className={`p-4 rounded-2xl border-2 flex justify-between items-center ${p.id === 'safe-cab' ? 'border-rose-500 bg-rose-50 dark:bg-slate-800 shadow-md' : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900'}`}>
+                                                <div>
+                                                    <div className="font-bold text-lg dark:text-white flex items-center gap-2">
+                                                        {p.provider}
+                                                        {p.id === 'safe-cab' && <ShieldCheck className="w-4 h-4 text-emerald-500" />}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wide">Score: {p.safety_score} | {p.eta}</div>
+                                                </div>
+                                                <div className="text-2xl font-black text-slate-900 dark:text-white">₹{p.price}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* NodeMailer/Email Free Alternative - Share Live */}
+                        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-[2.5rem] p-6 border border-emerald-100 dark:border-emerald-900/50 shadow-xl shadow-emerald-100/30 flex flex-col gap-4">
+                            <h3 className="font-bold text-lg dark:text-white flex items-center gap-2">
+                                <Share2 className="w-5 h-5 text-emerald-500" />
+                                Share Trip Live (Email)
+                            </h3>
+                            <div className="flex gap-2">
+                                <input value={rsEmail} onChange={e => setRsEmail(e.target.value)} type="email" placeholder="Emergency Contact Email" className="flex-1 bg-emerald-50/50 dark:bg-slate-800/50 border border-emerald-100/50 dark:border-slate-700 rounded-2xl px-4 font-medium dark:text-white text-sm outline-none focus:border-emerald-300" />
+                                <button onClick={handleShareTrip} className="bg-emerald-500 hover:bg-emerald-600 shadow-md text-white p-4 rounded-2xl self-stretch flex items-center justify-center transition-all disabled:opacity-50">
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
+                            {rsEmailStatus === 'sent' && <p className="text-emerald-500 text-xs font-bold mt-1 text-center bg-emerald-50 py-2 rounded-lg">Alert Mail Sent Successfully! ✓</p>}
+                            {rsEmailStatus === 'error' && <p className="text-rose-500 text-xs font-bold mt-1 text-center bg-rose-50 py-2 rounded-lg">Failed to send.</p>}
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* 3. FAMILY VIEW */}
                 {activeTab === 'profile' && (
                     <motion.div
@@ -679,15 +906,16 @@ export default function SafeCab() {
                 <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] p-3 border border-rose-100 dark:border-slate-800 shadow-2xl shadow-rose-200 dark:shadow-none flex justify-between items-center overflow-hidden relative">
                     <div className="absolute inset-x-3 inset-y-3 flex pointer-events-none">
                         <motion.div
-                            animate={{ x: activeTab === 'home' ? 0 : activeTab === 'search' ? '125%' : '250%' }}
+                            animate={{ x: activeTab === 'home' ? 0 : activeTab === 'search' ? '108%' : activeTab === 'ridesync' ? '216%' : '325%' }}
                             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                            className="w-[28%] h-full bg-rose-500 rounded-3xl shadow-xl shadow-rose-500/20"
+                            className="w-[23%] h-full bg-rose-500 rounded-3xl shadow-xl shadow-rose-500/20"
                         />
                     </div>
 
                     {[
                         { id: 'home', icon: Car },
                         { id: 'search', icon: Calendar },
+                        { id: 'ridesync', icon: Navigation },
                         { id: 'profile', icon: Users },
                     ].map(tab => (
                         <button
