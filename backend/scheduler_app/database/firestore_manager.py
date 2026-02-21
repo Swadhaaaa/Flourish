@@ -4,6 +4,13 @@ from typing import List, Dict, Any, Optional
 import os
 from dataclasses import dataclass
 from datetime import datetime
+import json
+import base64
+from cryptography.fernet import Fernet
+
+_FALLBACK_KEY = base64.urlsafe_b64encode(b"TEA_HACK_TOKEN_ENCRYPTION_SECRET_KEY_12345678")[:43] + b"="
+SECRET_KEY = os.getenv("ENCRYPTION_KEY", _FALLBACK_KEY.decode("utf-8")).encode("utf-8")
+fernet = Fernet(SECRET_KEY)
 
 # Initialize Firebase Admin
 # Expects serviceAccountKey.json in the backend directory
@@ -283,3 +290,19 @@ class FirestoreManager:
             "notes": notes,
             "date": firestore.SERVER_TIMESTAMP
         })
+
+    def save_user_token(self, user_id: str, token_str: str):
+        encrypted_token = fernet.encrypt(token_str.encode("utf-8")).decode("utf-8")
+        self._user_ref(user_id).set({"oauth_token": encrypted_token}, merge=True)
+
+    def get_user_token(self, user_id: str) -> Optional[str]:
+        doc = self._user_ref(user_id).get()
+        if doc.exists:
+            encrypted_token = doc.to_dict().get("oauth_token")
+            if encrypted_token:
+                try:
+                    return fernet.decrypt(encrypted_token.encode("utf-8")).decode("utf-8")
+                except Exception as e:
+                    print(f"Token decryption failed: {e}")
+                    return None
+        return None

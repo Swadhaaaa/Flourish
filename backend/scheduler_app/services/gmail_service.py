@@ -7,6 +7,8 @@ from googleapiclient.discovery import build
 from typing import List
 from typing import List, Optional
 from pydantic import BaseModel
+import json
+from scheduler_app.database.firestore_manager import FirestoreManager
 
 class EmailData(BaseModel):
     id: str
@@ -24,7 +26,7 @@ class GmailService:
         self.services = {} 
         self.creds_map = {}
         self.last_scanned_email = None # Just tracks mostly recent global, or make it dict if needed. 
-        # For simplicity, last_scanned_email can remain single or be unused in multi-user logic effectively.
+        self.db = FirestoreManager()
 
     def get_profile_email(self, user_id: str = "1"):
         """Returns the email address of the authenticated user."""
@@ -49,20 +51,24 @@ class GmailService:
         
     def authenticate(self, user_id: str = "1", prompt_login: bool = True):
         """Authenticates the user, forcing account selection if no token exists."""
-        token_file = f'token_{user_id}.json'
         creds = None
         
-        # Check for existing token
-        if not os.path.exists(token_file) and prompt_login == False:
-            # Fallback to the default token.json if available
+        # 1. Check Firestore for existing secure token
+        token_str = self.db.get_user_token(user_id)
+        if token_str:
+            print(f"Using securely encrypted token from Firestore for user_id: {user_id}")
+            try:
+                creds = Credentials.from_authorized_user_info(json.loads(token_str), SCOPES)
+            except Exception as e:
+                print(f"Failed to parse token from Firestore: {e}")
+                creds = None
+                
+        # 2. Fallback to default local token.json if no user token and prompt_login is False (Hackathon fallback)
+        if not creds and prompt_login == False:
             if os.path.exists('token.json'):
-                print(f"Token for {user_id} not found, falling back to default token.json")
-                token_file = 'token.json'
+                print(f"Token for {user_id} not found in Firestore, falling back to default shared token.json")
+                creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 
-        if os.path.exists(token_file):
-            print(f"Using token file: {token_file} for user_id: {user_id}")
-            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
-            
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
@@ -85,9 +91,9 @@ class GmailService:
                 # Note: This opens a window on the SERVER. For local hackathon app this is fine.
                 creds = flow.run_local_server(port=0, prompt='select_account')
             
-                # Save the credentials for the next run
-                with open(token_file, 'w') as token:
-                    token.write(creds.to_json())
+                # Save the credentials securely to Firestore for the next run
+                self.db.save_user_token(user_id, creds.to_json())
+                print(f"Saved new securely encrypted token to Firestore for user_id: {user_id}")
 
         self.creds_map[user_id] = creds
         self.services[user_id] = build('gmail', 'v1', credentials=creds)
