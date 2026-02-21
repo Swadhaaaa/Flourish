@@ -66,7 +66,7 @@ export const FeatureGuidePopup: React.FC<FeatureGuidePopupProps> = ({
                     <div className={`absolute -inset-1 bg-gradient-to-br ${gradientClass} opacity-30 blur-2xl rounded-[2rem] -z-10`} />
 
                     {/* Beautiful Glassmorphism Container */}
-                    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-[32px] rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.6)] border border-white/80 dark:border-slate-700/60 overflow-hidden relative">
+                    <div className="bg-white/30 dark:bg-slate-900/40 backdrop-blur-[48px] rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.6)] border border-white/80 dark:border-slate-700/60 overflow-hidden relative">
 
                         {/* Decorative Top Gradient Line */}
                         <div className={`h-1.5 w-full bg-gradient-to-r ${gradientClass} opacity-90`} />
