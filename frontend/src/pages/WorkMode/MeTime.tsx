@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Users, ArrowRight, Search, Zap, Coffee, Music, Palette, Loader2, Sparkles, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, Users, Search, Zap, Coffee, Music, Palette, Loader2, Sparkles, ExternalLink } from 'lucide-react';
 import { API_URL } from '../../services/api';
 
 export default function MeTime() {
