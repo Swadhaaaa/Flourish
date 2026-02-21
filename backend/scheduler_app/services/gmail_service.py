@@ -53,7 +53,14 @@ class GmailService:
         creds = None
         
         # Check for existing token
+        if not os.path.exists(token_file) and prompt_login == False:
+            # Fallback to the default token.json if available
+            if os.path.exists('token.json'):
+                print(f"Token for {user_id} not found, falling back to default token.json")
+                token_file = 'token.json'
+
         if os.path.exists(token_file):
+            print(f"Using token file: {token_file} for user_id: {user_id}")
             creds = Credentials.from_authorized_user_file(token_file, SCOPES)
             
         # If there are no (valid) credentials available, let the user log in.
@@ -90,12 +97,16 @@ class GmailService:
         if user_id not in self.services:
             print(f"Service not initialized for {user_id}. Authenticating...")
             try:
-                self.authenticate(user_id)
+                # Do not prompt login here because this runs on the server API route
+                self.authenticate(user_id, prompt_login=False)
             except Exception as e:
                 print(f"Authentication failed: {e}")
                 return []
 
-        service = self.services[user_id]
+        service = self.services.get(user_id)
+        if not service:
+            print(f"No valid service could be created for {user_id}")
+            return []
         
         try:
             # Filter for Primary Inbox only (ignores Promotions, Social, Updates)

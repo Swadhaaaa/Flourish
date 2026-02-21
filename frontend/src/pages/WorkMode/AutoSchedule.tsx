@@ -1,11 +1,11 @@
-import { Plus, Search, Clock4, Bell, Target, Layers, X, Sparkles, Send, GripVertical, Calendar as CalendarIcon, Users, Briefcase } from 'lucide-react';
+import { Plus, Search, Clock4, Bell, Target, Layers, X, Sparkles, Send, GripVertical, Calendar as CalendarIcon, Users, Briefcase, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
     getTasks, addTask,
     getEmployees, addEmployee,
     getSchedulerSchedule,
-    sendChatMessage, updateScheduleItem
+    sendChatMessage, updateScheduleItem, deleteTask
 } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -114,6 +114,22 @@ export default function AutoSchedule() {
             setShowAddTask(false);
             setNewTaskTitle('');
         } catch (e) { console.error(e); showAlert("Error", "Failed to create task", "error"); } finally { setLoading(false); }
+    };
+
+    const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this task?")) return;
+        setLoading(true);
+        try {
+            await deleteTask(taskId, _user?.uid);
+            await fetchData();
+            showAlert("Success", "Task deleted!");
+        } catch (error) {
+            console.error(error);
+            showAlert("Error", "Failed to delete task.", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCreateEmployee = async () => {
@@ -331,6 +347,13 @@ export default function AutoSchedule() {
                                                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
                                                         {task.priority === 'High' ? <Target className="w-6 h-6 text-white" /> : <Layers className="w-6 h-6 text-white" />}
                                                     </div>
+                                                    <button
+                                                        onClick={(e) => handleDeleteTask(task.id, e)}
+                                                        className="w-10 h-10 bg-black/10 hover:bg-rose-500/80 rounded-xl flex items-center justify-center backdrop-blur-sm transition-colors"
+                                                        title="Delete Task"
+                                                    >
+                                                        <Trash2 className="w-5 h-5 text-white/90 group-hover:text-white" />
+                                                    </button>
                                                 </div>
                                                 <h4 className="text-2xl font-black mb-2 truncate pr-2">{task.title}</h4>
                                                 <p className="text-sm opacity-80 mb-6 font-medium line-clamp-1">{task.desc}</p>

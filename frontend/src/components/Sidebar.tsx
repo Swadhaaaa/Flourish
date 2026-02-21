@@ -118,6 +118,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                                     src={avatarUrl}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                    crossOrigin="anonymous"
                                     onError={() => setImgError(true)}
                                 />
                             )}
