@@ -4,7 +4,8 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    signInWithPopup
+    signInWithPopup,
+    GoogleAuthProvider
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -14,6 +15,7 @@ interface AuthContextType {
     user: User | null;
     userProfile: any;
     loading: boolean;
+    googleAccessToken: string | null;
     signIn: (email: string, pass: string) => Promise<void>;
     signUp: (email: string, pass: string, name: string, additionalData?: any) => Promise<void>;
     googleSignIn: (additionalData?: any) => Promise<void>;
@@ -27,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -67,6 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const googleSignIn = async (additionalData: any = {}) => {
         const result = await signInWithPopup(auth, googleProvider);
+        // Store Google OAuth access token for Calendar API calls
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential?.accessToken) {
+            setGoogleAccessToken(credential.accessToken);
+        }
         const userDocRef = doc(db, "users", result.user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -104,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading, signIn, signUp, googleSignIn, logout, updateUserProfile }}>
+        <AuthContext.Provider value={{ user, userProfile, loading, googleAccessToken, signIn, signUp, googleSignIn, logout, updateUserProfile }}>
             {!loading && children}
         </AuthContext.Provider>
     );

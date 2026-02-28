@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, User } from 'lucide-react';
+import { Send, Calendar as CalIcon, CheckSquare, Users, MessageSquare, Plus, Clock, Trash2, User, CalendarPlus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 import { AssistantMiniPopup } from '../../components/AssistantMiniPopup';
+import { syncScheduleToGoogleCalendar } from '../../utils/googleCalendar';
 import {
     sendChatMessage,
     getSessions,
@@ -44,7 +45,11 @@ const Scheduler = () => {
         deadline: ''
     });
 
-    const { user } = useAuth(); // Get User
+    const { user, googleAccessToken } = useAuth(); // Get User
+
+    // Calendar Sync State
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncStatus, setSyncStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // Fetch Initial Data
     useEffect(() => {
@@ -115,6 +120,29 @@ const Scheduler = () => {
             const data = await getSchedulerSchedule(user?.uid);
             setSchedule(data);
         } catch (e) { console.error(e); }
+    };
+
+    const handleSyncToCalendar = async () => {
+        if (!googleAccessToken) {
+            setSyncStatus({ type: 'error', message: 'Please sign out and sign back in with Google to enable Calendar sync.' });
+            setTimeout(() => setSyncStatus(null), 5000);
+            return;
+        }
+        setIsSyncing(true);
+        setSyncStatus(null);
+        try {
+            const result = await syncScheduleToGoogleCalendar(schedule, googleAccessToken);
+            if (result.failed === 0) {
+                setSyncStatus({ type: 'success', message: `✅ ${result.success} event${result.success !== 1 ? 's' : ''} synced to Google Calendar!` });
+            } else {
+                setSyncStatus({ type: 'error', message: `⚠️ ${result.success} synced, ${result.failed} failed. ${result.errors[0] || ''}` });
+            }
+        } catch (e: any) {
+            setSyncStatus({ type: 'error', message: `❌ Sync failed: ${e.message}` });
+        } finally {
+            setIsSyncing(false);
+            setTimeout(() => setSyncStatus(null), 6000);
+        }
     };
 
     const loadTasks = async () => {
@@ -349,10 +377,40 @@ const Scheduler = () => {
                     <div className="h-full p-8 overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">Schedule</h2>
-                            <button onClick={() => generateSchedulerSchedule()} className="bg-slate-900 dark:bg-rose-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-rose-600 transition-all flex items-center gap-2 shadow-lg dark:shadow-rose-900/20">
-                                <Clock className="w-4 h-4" /> Optimize
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {schedule.length > 0 && (
+                                    <button
+                                        onClick={handleSyncToCalendar}
+                                        disabled={isSyncing}
+                                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-500 transition-all flex items-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {isSyncing ? (
+                                            <><span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> Syncing...</>
+                                        ) : (
+                                            <><CalendarPlus className="w-4 h-4" /> Sync to Google Calendar</>
+                                        )}
+                                    </button>
+                                )}
+                                <button onClick={() => generateSchedulerSchedule()} className="bg-slate-900 dark:bg-rose-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-rose-600 transition-all flex items-center gap-2 shadow-lg dark:shadow-rose-900/20">
+                                    <Clock className="w-4 h-4" /> Optimize
+                                </button>
+                            </div>
                         </div>
+                        {/* Sync Status Toast */}
+                        {syncStatus && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={cn(
+                                    "mb-6 px-5 py-4 rounded-2xl font-bold text-sm",
+                                    syncStatus.type === 'success'
+                                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800"
+                                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-800"
+                                )}
+                            >
+                                {syncStatus.message}
+                            </motion.div>
+                        )}
                         <div className="space-y-4">
                             {schedule.map((slot, i) => (
                                 <div key={i} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-6 group hover:border-blue-100 dark:hover:border-rose-500/50 transition-colors">
