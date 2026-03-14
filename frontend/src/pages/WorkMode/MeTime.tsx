@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Calendar, Users, Search, Zap, Coffee, Music, Palette, Loader2, Sparkles, ExternalLink } from 'lucide-react';
 import { API_URL } from '../../services/api';
+import MeTimeLoading from '../../components/MeTimeLoading';
 
 export default function MeTime() {
     const [filter, setFilter] = useState('All');
@@ -168,11 +169,9 @@ export default function MeTime() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            className="w-full flex"
                         >
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="bg-white/50 dark:bg-slate-800/50 rounded-[2.5rem] h-64 animate-pulse" />
-                            ))}
+                            <MeTimeLoading />
                         </motion.div>
                     ) : filteredEvents.length === 0 ? (
                         <motion.div
