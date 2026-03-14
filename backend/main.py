@@ -2,7 +2,11 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
+import json
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from ai_service import AIService
 from events_service import EventsService
@@ -155,6 +159,56 @@ async def match_community(data: dict = Body(...)):
     Matches a user with a 'Sisterhood' mentor/peer based on profile.
     """
     return community_matcher.match_user(data)
+
+class NotificationRequest(BaseModel):
+    recipient_email: str
+    sender_name: str
+    sender_role: str
+    type: str = "connection_request"
+
+@app.post("/api/notifications/connection-request")
+async def send_connection_notification(request: NotificationRequest):
+    """
+    Sends an email notification for a new connection request.
+    """
+    sender_email = os.getenv("SENDER_EMAIL")
+    sender_password = os.getenv("SENDER_APP_PASSWORD")
+
+    if not sender_email or not sender_password:
+        return {"status": "error", "message": "Email credentials not configured"}
+
+    subject = f"New Sisterhood Connection Request from {request.sender_name}"
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #f43f5e;">Sisterhood Connection Request</h2>
+            <p>Hi there,</p>
+            <p><strong>{request.sender_name}</strong> ({request.sender_role}) would like to connect with you in the Sisterhood network!</p>
+            <p>Head over to the app to accept the request and start a secure, encrypted conversation.</p>
+            <div style="margin: 30px 0;">
+                <a href="#" style="background-color: #f43f5e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Request</a>
+            </div>
+            <p style="font-size: 12px; color: #888;">Empowering women through professional support and mental well-being.</p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = request.recipient_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        return {"status": "success", "message": "Notification sent"}
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return {"status": "error", "message": str(e)}
 
 @app.get("/api/events/nearby")
 async def get_nearby_events(lat: float = 40.7128, long: float = -74.0060, category: str = None):
