@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Lock, MessageCircle } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
@@ -19,6 +20,7 @@ interface SisterhoodChatProps {
 
 export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, onClose }: SisterhoodChatProps) {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [messages, setMessages] = useState<any[]>([]);
     const [inputText, setInputText] = useState('');
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
@@ -278,8 +280,9 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                                     onClick={() => {
                                         localStorage.removeItem(`e2ee_priv_${user?.uid}`);
                                         // Force user to onboarding by clearing public key too
-                                        // In a real app, you'd show a specialized reset UI
-                                        window.location.href = '/sisterhood';
+                                        // Navigate to the correct WORK MODE sisterhood path
+                                        navigate('/work/sisterhood');
+                                        onClose();
                                     }}
                                     className="w-full py-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl font-bold text-xs uppercase"
                                 >

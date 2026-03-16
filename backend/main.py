@@ -30,9 +30,8 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# Set to empty list to let FastAPI's CORSMiddleware handle all CORS headers
-# This prevents the "multiple values" error in the browser.
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=[])
+# Set Socket.io to handle its own CORS (we will exclude it from FastAPI middleware)
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
 # We will wrap the app at the bottom of the file to ensure all routes are registered.
 
 @sio.event
@@ -73,23 +72,43 @@ async def stop_typing(sid, data):
 from routers.scheduler import router as scheduler_router
 app.include_router(scheduler_router)
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# Custom CORS Middleware that skips Socket.io to prevent duplicate headers
 @app.middleware("http")
-async def add_private_network_header(request, call_next):
+async def custom_cors_middleware(request, call_next):
+    # If it's a Socket.io request, SKIP this middleware and let sio handle it
+    if request.url.path.startswith("/socket.io"):
+        return await call_next(request)
+    
+    # Handle preflight OPTIONS requests for API
     if request.method == "OPTIONS":
-        response = await call_next(request)
-        response.headers["Access-Control-Allow-Private-Network"] = "true"
-        return response
+        origin = request.headers.get("Origin")
+        if origin in ALLOWED_ORIGINS:
+            from fastapi.responses import Response
+            return Response(
+                content="OK",
+                headers={
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Methods": "*",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Allow-Private-Network": "true",
+                }
+            )
+        return await call_next(request)
+
+    # Standard path: Add CORS headers to the response
     response = await call_next(request)
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
+# Standard CORSMiddleware removed to prevent global duplication
+
+# Private network header handled inside custom_cors_middleware
 
 # Initialize Services
 ai_service = AIService()
