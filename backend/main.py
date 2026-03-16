@@ -30,7 +30,9 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
+# Set to empty list to let FastAPI's CORSMiddleware handle all CORS headers
+# This prevents the "multiple values" error in the browser.
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=[])
 # We will wrap the app at the bottom of the file to ensure all routes are registered.
 
 @sio.event
