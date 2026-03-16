@@ -304,7 +304,7 @@ export default function Sisterhood() {
                 </AnimatePresence>
             </div>
 
-            {activeChat && <SisterhoodChat peerId={activeChat.id} peerName={activeChat.name} peerPhoto={activeChat.photo} onClose={() => setActiveChat(null)} />}
+            {activeChat && <SisterhoodChat apiUrl={API_URL} peerId={activeChat.id} peerName={activeChat.name} peerPhoto={activeChat.photo} onClose={() => setActiveChat(null)} />}
             <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap'); .font-display { font-family: 'Outfit', sans-serif; }`}</style>
         </div>
     );

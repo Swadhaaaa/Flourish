@@ -7,24 +7,26 @@ import { useAuth } from '../context/AuthContext';
 import { importPublicKey, importPrivateKey, deriveSharedSecret, encryptMessage, decryptMessage } from '../utils/e2ee';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:8000'; // Update this for production
-
+// URL is now passed as a prop for consistency
 
 interface SisterhoodChatProps {
     peerId: string;
     peerName: string;
     peerPhoto: string;
+    apiUrl: string;
     onClose: () => void;
 }
 
-export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }: SisterhoodChatProps) {
+export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, onClose }: SisterhoodChatProps) {
     const { user } = useAuth();
     const [messages, setMessages] = useState<any[]>([]);
     const [inputText, setInputText] = useState('');
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
     const [loadingKey, setLoadingKey] = useState(true);
+    const [keyError, setKeyError] = useState<string | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const pendingSocketMsgs = useRef<any[]>([]);
 
     // Connection ID is consistently sorted to act as a unique channel
     const chatId = [user?.uid, peerId].sort().join('_');
@@ -33,7 +35,6 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
     useEffect(() => {
         const setupE2EE = async () => {
             try {
-                // Fetch Peer's public key from Firestore directly or assume it's passed
                 const peerDoc = await getDoc(doc(db, 'users', peerId));
                 if (!peerDoc.exists() || !peerDoc.data().publicKey) {
                     console.error("Peer has no public key");
@@ -43,18 +44,27 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
                 const peerPublicKeyStr = peerDoc.data().publicKey;
                 const peerKey = await importPublicKey(peerPublicKeyStr);
 
-                // Fetch our private key from LocalStorage
                 const privKeyStr = localStorage.getItem(`e2ee_priv_${user?.uid}`);
                 if (!privKeyStr) {
-                    console.error("Local private key missing");
+                    console.error("DEBUG: Local private key missing from LocalStorage for UID:", user?.uid);
+                    setKeyError("Encryption keys missing on this device. You need to re-initialize your secure chat profile.");
                     setLoadingKey(false);
                     return;
                 }
                 const myPrivKey = await importPrivateKey(privKeyStr);
 
-                // Derive shared key
                 const shared = await deriveSharedSecret(myPrivKey, peerKey);
                 setSharedKey(shared);
+                console.log("E2EE Shared Key Derived Successfully");
+
+                // Decrypt any buffered messages
+                if (pendingSocketMsgs.current.length > 0) {
+                    console.log(`Processing ${pendingSocketMsgs.current.length} buffered messages`);
+                    for (const data of pendingSocketMsgs.current) {
+                        handleIncomingMessage(data, shared);
+                    }
+                    pendingSocketMsgs.current = [];
+                }
             } catch (err) {
                 console.error("E2EE Setup failed", err);
             } finally {
@@ -64,52 +74,61 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
         if (user && peerId) setupE2EE();
     }, [user, peerId]);
 
-    // 2. WebSocket Connection
+    const handleIncomingMessage = async (data: any, key: CryptoKey) => {
+        try {
+            const decryptedText = await decryptMessage(key, data.ciphertext, data.iv);
+            const newMessage = {
+                id: `socket_${Date.now()}_${Math.random()}`,
+                senderId: data.senderId,
+                text: decryptedText,
+                ciphertext: data.ciphertext, // Use this for deduplication
+                createdAt: new Date(),
+                isSocket: true
+            };
+            setMessages(prev => {
+                const isDuplicate = prev.some(m => m.ciphertext === data.ciphertext);
+                if (isDuplicate) return prev;
+                return [...prev, newMessage];
+            });
+        } catch (err) {
+            console.error("Decryption failed for socket message", err);
+        }
+    };
+
+    // 2. WebSocket Connection (Permanent)
     useEffect(() => {
         if (!user || !peerId) return;
 
-        const socket = io(SOCKET_URL);
+        console.log(`DEBUG: SisterhoodChat connecting to Sockets at: ${apiUrl}`);
+        const socket = io(apiUrl);
         socketRef.current = socket;
 
         socket.on('connect', () => {
-            console.log("WebSocket connected to server");
+            console.log("WebSocket Status: CONNECTED");
+            socket.emit('join_room', { chatId });
         });
 
         socket.on('connect_error', (err) => {
-            console.error("WebSocket connection error:", err);
+            console.error("WebSocket Status: ERROR", err);
         });
 
-        socket.emit('join_room', { chatId });
-        console.log("Attempting to join room:", chatId);
-
-        socket.on('receive_message', async (data) => {
-            console.log("New socket message received:", data);
-            if (!sharedKey) return;
-            try {
-                const decryptedText = await decryptMessage(sharedKey, data.ciphertext, data.iv);
-                const newMessage = {
-                    id: Date.now().toString(), // Temporary ID for socket messages
-                    senderId: data.senderId,
-                    text: decryptedText,
-                    createdAt: new Date(),
-                    isSocket: true
-                };
-                setMessages(prev => {
-                    // Avoid duplicates if Firestore already added it
-                    if (prev.find(m => m.ciphertext === data.ciphertext)) return prev;
-                    return [...prev, newMessage];
-                });
-            } catch (err) {
-                console.error("Socket message decryption failed", err);
+        socket.on('receive_message', (data) => {
+            console.log("Socket: New encrypted message received");
+            if (sharedKey) {
+                handleIncomingMessage(data, sharedKey);
+            } else {
+                console.log("Socket: Buffering message (Key not ready)");
+                pendingSocketMsgs.current.push(data);
             }
         });
 
         return () => {
+            console.log("Cleaning up socket connection");
             socket.disconnect();
         };
-    }, [user, peerId, chatId, sharedKey]);
+    }, [user, peerId, chatId, !!sharedKey]); // Re-bind listener if sharedKey exists now
 
-    // 3. Listen to Firestore Messages (History)
+    // 3. Listen to Firestore Messages (Source of Truth)
     useEffect(() => {
         if (!sharedKey) return;
 
@@ -122,7 +141,6 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
             const msgs: any[] = [];
             for (const doc of snapshot.docs) {
                 const data = doc.data();
-                // Decrypt message
                 try {
                     const decryptedText = await decryptMessage(sharedKey, data.ciphertext, data.iv);
                     msgs.push({ id: doc.id, ...data, text: decryptedText });
@@ -130,7 +148,15 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
                     msgs.push({ id: doc.id, ...data, text: "[Decryption Failed]" });
                 }
             }
-            setMessages(msgs);
+
+            setMessages(prev => {
+                // Keep socket messages that aren't in Firestore yet
+                const firestoreCiphertexts = new Set(msgs.map(m => m.ciphertext));
+                const uniqueSocketMsgs = prev.filter(m => m.isSocket && !firestoreCiphertexts.has(m.ciphertext));
+
+                // Sort combined list by createdAt if possible, or just keep order
+                return [...msgs, ...uniqueSocketMsgs];
+            });
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
         });
 
@@ -147,14 +173,16 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
         try {
             const { ciphertext, iv } = await encryptMessage(sharedKey, plaintext);
 
-            // 1. Send via Socket for immediate real-time update
-            if (socketRef.current) {
+            // 1. Send via Socket
+            if (socketRef.current && socketRef.current.connected) {
                 socketRef.current.emit('send_message', {
                     chatId,
                     senderId: user.uid,
                     ciphertext,
                     iv
                 });
+            } else {
+                console.warn("Socket not connected, relying on Firestore only");
             }
 
             // 2. Persist in Firestore
@@ -183,8 +211,14 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
                         <img src={peerPhoto} alt={peerName} className="w-10 h-10 rounded-full object-cover border-2 border-white" />
                         <div>
                             <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{peerName}</h3>
-                            <div className="flex items-center gap-1 text-[10px] text-green-600 font-bold uppercase tracking-wider">
-                                <Lock className="w-3 h-3" /> End-to-End Encrypted
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 text-[10px] text-green-600 font-bold uppercase tracking-wider">
+                                    <Lock className="w-3 h-3" /> E2EE
+                                </div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${socketRef.current?.connected ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} title={`Backend: ${apiUrl}`} />
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                    {socketRef.current?.connected ? 'Live' : 'Reconnecting...'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -199,6 +233,36 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
                         <div className="h-full flex flex-col items-center justify-center text-slate-400">
                             <Lock className="w-8 h-8 mb-2 animate-pulse text-rose-300" />
                             <p className="text-sm font-bold">Securing connection...</p>
+                        </div>
+                    ) : keyError ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
+                                <Lock className="w-8 h-8 text-amber-500" />
+                            </div>
+                            <h4 className="font-bold text-slate-800 dark:text-white mb-2">Security Setup Needed</h4>
+                            <p className="text-sm text-slate-500 mb-6">{keyError}</p>
+                            <div className="flex flex-col gap-3 w-full">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs uppercase"
+                                >
+                                    Try Refreshing
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        localStorage.removeItem(`e2ee_priv_${user?.uid}`);
+                                        // Force user to onboarding by clearing public key too
+                                        // In a real app, you'd show a specialized reset UI
+                                        window.location.href = '/sisterhood';
+                                    }}
+                                    className="w-full py-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl font-bold text-xs uppercase"
+                                >
+                                    Reset Security Profile
+                                </button>
+                                <p className="text-[10px] text-slate-400 mt-2 italic">
+                                    Note: Encryption keys are device-specific. If you just logged in here, you may need to reset them in Sisterhood settings.
+                                </p>
+                            </div>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center px-6">
