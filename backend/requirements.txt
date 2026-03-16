@@ -25,3 +25,5 @@ langchain-groq
 firebase-admin
 beautifulsoup4
 lxml
+python-socketio
+websockets

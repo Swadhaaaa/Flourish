@@ -16,7 +16,37 @@ load_dotenv()
 from model_engine import generate_synthetic_data # We will use this to generate demo data if needed
 # from model_engine import predict_burnout # Uncomment when model_engine exposes this
 
+import uvicorn
+import socketio
+
 app = FastAPI(title="Flourish AI Backend", version="1.0.0")
+
+# --- Socket.io Setup ---
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+socket_app = socketio.ASGIApp(sio, app)
+
+@sio.event
+async def connect(sid, environ):
+    print(f"User connected: {sid}")
+
+@sio.event
+async def disconnect(sid):
+    print(f"User disconnected: {sid}")
+
+@sio.event
+async def join_room(sid, data):
+    room = data.get('chatId')
+    if room:
+        await sio.enter_room(sid, room)
+        print(f"User {sid} joined room: {room}")
+
+@sio.event
+async def send_message(sid, data):
+    room = data.get('chatId')
+    if room:
+        # Broadcast the message to everyone in the room except the sender
+        await sio.emit('receive_message', data, room=room, skip_sid=sid)
+        print(f"Message from {sid} sent to room {room}")
 
 from routers.scheduler import router as scheduler_router
 app.include_router(scheduler_router)
@@ -335,4 +365,4 @@ async def scrape_events_endpoint(city: str = "Mumbai", category: str = None):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:socket_app", host="0.0.0.0", port=8000, reload=True)

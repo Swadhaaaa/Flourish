@@ -5,6 +5,10 @@ import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { importPublicKey, importPrivateKey, deriveSharedSecret, encryptMessage, decryptMessage } from '../utils/e2ee';
+import { io, Socket } from 'socket.io-client';
+
+const SOCKET_URL = 'http://localhost:8000'; // Update this for production
+
 
 interface SisterhoodChatProps {
     peerId: string;
@@ -19,6 +23,7 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
     const [inputText, setInputText] = useState('');
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
     const [loadingKey, setLoadingKey] = useState(true);
+    const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Connection ID is consistently sorted to act as a unique channel
@@ -59,7 +64,52 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
         if (user && peerId) setupE2EE();
     }, [user, peerId]);
 
-    // 2. Listen to Messages
+    // 2. WebSocket Connection
+    useEffect(() => {
+        if (!user || !peerId) return;
+
+        const socket = io(SOCKET_URL);
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            console.log("WebSocket connected to server");
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error("WebSocket connection error:", err);
+        });
+
+        socket.emit('join_room', { chatId });
+        console.log("Attempting to join room:", chatId);
+
+        socket.on('receive_message', async (data) => {
+            console.log("New socket message received:", data);
+            if (!sharedKey) return;
+            try {
+                const decryptedText = await decryptMessage(sharedKey, data.ciphertext, data.iv);
+                const newMessage = {
+                    id: Date.now().toString(), // Temporary ID for socket messages
+                    senderId: data.senderId,
+                    text: decryptedText,
+                    createdAt: new Date(),
+                    isSocket: true
+                };
+                setMessages(prev => {
+                    // Avoid duplicates if Firestore already added it
+                    if (prev.find(m => m.ciphertext === data.ciphertext)) return prev;
+                    return [...prev, newMessage];
+                });
+            } catch (err) {
+                console.error("Socket message decryption failed", err);
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [user, peerId, chatId, sharedKey]);
+
+    // 3. Listen to Firestore Messages (History)
     useEffect(() => {
         if (!sharedKey) return;
 
@@ -96,6 +146,18 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, onClose }:
 
         try {
             const { ciphertext, iv } = await encryptMessage(sharedKey, plaintext);
+
+            // 1. Send via Socket for immediate real-time update
+            if (socketRef.current) {
+                socketRef.current.emit('send_message', {
+                    chatId,
+                    senderId: user.uid,
+                    ciphertext,
+                    iv
+                });
+            }
+
+            // 2. Persist in Firestore
             await addDoc(collection(db, `connections/${chatId}/messages`), {
                 senderId: user.uid,
                 ciphertext,
