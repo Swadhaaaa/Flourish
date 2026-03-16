@@ -22,7 +22,15 @@ import socketio
 app = FastAPI(title="Flourish AI Backend", version="1.0.0")
 
 # --- Socket.io Setup ---
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+# Explicitly define origins for both FastAPI and Socket.io
+ALLOWED_ORIGINS = [
+    "https://flourishh.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+]
+
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
 # We will wrap the app at the bottom of the file to ensure all routes are registered.
 
 @sio.event
@@ -66,7 +74,7 @@ app.include_router(scheduler_router)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict to frontend URL
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
