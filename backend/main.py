@@ -23,7 +23,7 @@ app = FastAPI(title="Flourish AI Backend", version="1.0.0")
 
 # --- Socket.io Setup ---
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
-socket_app = socketio.ASGIApp(sio, app)
+# We will wrap the app at the bottom of the file to ensure all routes are registered.
 
 @sio.event
 async def connect(sid, environ):
@@ -46,7 +46,19 @@ async def send_message(sid, data):
     if room:
         # Broadcast the message to everyone in the room except the sender
         await sio.emit('receive_message', data, room=room, skip_sid=sid)
-        print(f"Message from {sid} sent to room {room}")
+        print(f"Message from {sid} broadcast to room {room}")
+
+@sio.event
+async def typing(sid, data):
+    room = data.get('chatId')
+    if room:
+        await sio.emit('user_typing', data, room=room, skip_sid=sid)
+
+@sio.event
+async def stop_typing(sid, data):
+    room = data.get('chatId')
+    if room:
+        await sio.emit('user_stop_typing', data, room=room, skip_sid=sid)
 
 from routers.scheduler import router as scheduler_router
 app.include_router(scheduler_router)
@@ -372,6 +384,11 @@ async def scrape_events_endpoint(city: str = "Mumbai", category: str = None):
         print(f"Scraper endpoint error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Mount Socket.io ASGI app into FastAPI
+# This ensures that /socket.io/ requests are handled by Socket.io
+# while keeping 'app' as the FastAPI instance for Render/Gunicorn.
+app.mount("/socket.io", socketio.ASGIApp(sio, socketio_path=""))
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:socket_app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

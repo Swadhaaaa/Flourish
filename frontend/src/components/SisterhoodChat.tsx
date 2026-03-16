@@ -24,9 +24,11 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
     const [loadingKey, setLoadingKey] = useState(true);
     const [keyError, setKeyError] = useState<string | null>(null);
+    const [isPeerTyping, setIsPeerTyping] = useState(false);
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const pendingSocketMsgs = useRef<any[]>([]);
+    const typingTimeoutRef = useRef<any>(null);
 
     // Connection ID is consistently sorted to act as a unique channel
     const chatId = [user?.uid, peerId].sort().join('_');
@@ -88,6 +90,10 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
             setMessages(prev => {
                 const isDuplicate = prev.some(m => m.ciphertext === data.ciphertext);
                 if (isDuplicate) return prev;
+                // Play notification sound for incoming messages ONLY
+                if (data.senderId !== user?.uid) {
+                    new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3').play().catch(() => { });
+                }
                 return [...prev, newMessage];
             });
         } catch (err) {
@@ -121,6 +127,9 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                 pendingSocketMsgs.current.push(data);
             }
         });
+
+        socket.on('user_typing', () => setIsPeerTyping(true));
+        socket.on('user_stop_typing', () => setIsPeerTyping(false));
 
         return () => {
             console.log("Cleaning up socket connection");
@@ -163,12 +172,29 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
         return () => unsubscribe();
     }, [sharedKey, chatId]);
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputText(e.target.value);
+
+        if (socketRef.current?.connected) {
+            socketRef.current.emit('typing', { chatId });
+
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                socketRef.current?.emit('stop_typing', { chatId });
+            }, 2000);
+        }
+    };
+
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputText.trim() || !sharedKey || !user) return;
 
         const plaintext = inputText;
         setInputText('');
+
+        // Stop typing immediately on send
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        socketRef.current?.emit('stop_typing', { chatId });
 
         try {
             const { ciphertext, iv } = await encryptMessage(sharedKey, plaintext);
@@ -287,6 +313,18 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                             );
                         })
                     )}
+                    {isPeerTyping && (
+                        <div className="flex justify-start">
+                            <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 rounded-tl-sm flex items-center gap-1">
+                                <span className="text-[10px] font-bold text-slate-400 italic">{peerName} is typing</span>
+                                <span className="flex gap-0.5">
+                                    <span className="w-1 h-1 bg-rose-400 rounded-full animate-bounce" />
+                                    <span className="w-1 h-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <span className="w-1 h-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
 
@@ -296,7 +334,7 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                         <input
                             type="text"
                             value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
+                            onChange={handleInputChange}
                             placeholder="Type an encrypted message..."
                             disabled={loadingKey}
                             className="flex-1 bg-slate-100 dark:bg-slate-800 px-4 py-3 rounded-xl outline-none text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-rose-200"
