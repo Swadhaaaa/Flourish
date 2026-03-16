@@ -31,16 +31,21 @@ export default function Sisterhood() {
 
     // 1. Initial Profile & Onboarding Check
     useEffect(() => {
-        if (!userProfile) return;
-        const hasKeys = userProfile.publicKey;
+        if (!userProfile || !user) return;
+
+        // E2EE check: both public key in Firestore AND private key in LocalStorage
+        const hasPublicKey = !!userProfile.publicKey;
+        const hasLocalStorageKey = !!localStorage.getItem(`e2ee_priv_${user.uid}`);
+
         const hasProfileData = userProfile.industry && userProfile.role;
-        if (!hasKeys || !hasProfileData) {
+
+        if (!hasPublicKey || !hasLocalStorageKey || !hasProfileData) {
             setNeedsOnboarding(true);
         } else {
             setNeedsOnboarding(false);
             fetchMatches(userProfile);
         }
-    }, [userProfile]);
+    }, [userProfile, user]);
 
     // 2. Real-time Connection & Request Sync
     useEffect(() => {

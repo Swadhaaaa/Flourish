@@ -27,6 +27,7 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
     const [loadingKey, setLoadingKey] = useState(true);
     const [keyError, setKeyError] = useState<string | null>(null);
     const [isPeerTyping, setIsPeerTyping] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const pendingSocketMsgs = useRef<any[]>([]);
@@ -113,11 +114,18 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
 
         socket.on('connect', () => {
             console.log("WebSocket Status: CONNECTED");
+            setIsConnected(true);
             socket.emit('join_room', { chatId });
         });
 
         socket.on('connect_error', (err) => {
             console.error("WebSocket Status: ERROR", err);
+            setIsConnected(false);
+        });
+
+        socket.on('disconnect', () => {
+            console.log("WebSocket Status: DISCONNECTED");
+            setIsConnected(false);
         });
 
         socket.on('receive_message', (data) => {
@@ -243,9 +251,9 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                                 <div className="flex items-center gap-1 text-[10px] text-green-600 font-bold uppercase tracking-wider">
                                     <Lock className="w-3 h-3" /> E2EE
                                 </div>
-                                <div className={`w-1.5 h-1.5 rounded-full ${socketRef.current?.connected ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} title={`Backend: ${apiUrl}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} title={`Backend: ${apiUrl}`} />
                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                    {socketRef.current?.connected ? 'Live' : 'Reconnecting...'}
+                                    {isConnected ? 'Live' : 'Reconnecting...'}
                                 </span>
                             </div>
                         </div>
@@ -279,10 +287,9 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                                 <button
                                     onClick={() => {
                                         localStorage.removeItem(`e2ee_priv_${user?.uid}`);
-                                        // Force user to onboarding by clearing public key too
-                                        // Navigate to the correct WORK MODE sisterhood path
-                                        navigate('/work/sisterhood');
-                                        onClose();
+                                        // Use window.location.href for reset to ensure total state clearance
+                                        // regarding E2EE keys across all components
+                                        window.location.href = '/work/sisterhood';
                                     }}
                                     className="w-full py-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl font-bold text-xs uppercase"
                                 >
