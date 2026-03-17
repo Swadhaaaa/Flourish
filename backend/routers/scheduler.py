@@ -41,6 +41,7 @@ class TaskCreate(BaseModel):
     priority: str = "Medium"
     estimated_hours: float = 1.0
     deadline: Optional[str] = ""
+    fixed_schedule: Optional[Dict[str, str]] = None
     user_id: str = "1"
 
 class EmployeeCreate(BaseModel):
@@ -92,6 +93,26 @@ async def get_tasks(active_only: bool = True, user_id: str = "1"):
 async def add_task(task: TaskCreate):
     """Manually add a task."""
     id = db.add_task(task.title, task.description, task.priority, task.estimated_hours, task.deadline, task.user_id)
+    
+    if task.fixed_schedule:
+        day = task.fixed_schedule.get("day", "Monday")
+        start = task.fixed_schedule.get("start_time", "09:00")
+        end = task.fixed_schedule.get("end_time", "10:00")
+        
+        # Get default employee for this user
+        employees = db.get_all_employees(task.user_id)
+        emp_id = str(employees[0].id) if employees else "1"
+        emp_name = employees[0].name if employees else "Me"
+        
+        db.create_schedule(
+            emp_id, str(id), day, start, end,
+            task_title=task.title, emp_name=emp_name, priority=task.priority, user_id=task.user_id
+        )
+        if hasattr(db, 'update_task_status_with_user'):
+            db.update_task_status_with_user(str(id), "Scheduled", task.user_id)
+        else:
+            db.update_task_status(str(id), "Scheduled")
+
     return {"id": id, "message": "Task created"}
 
 # Employees

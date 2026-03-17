@@ -87,8 +87,9 @@ ANALYZE the input and history. OUTPUT a JSON object.
 
 POSSIBLE INTENTS:
 1. **task_creation**: User wants to add work OR a meeting. 
-   - RETURN: "internal_action": "add_task"
-   - IF specific time mentioned (e.g. "Meeting Tuesday 2pm"): Include "fixed_schedule": {{"day": "Tuesday", "start_time": "14:00", "end_time": "15:00"}}
+   - IF the user wants to schedule a meeting/event but HAS NOT provided a DAY, TIME, and DESCRIPTION, you MUST ASK for them. RETURN: "internal_action": "chat", "intent": "chat", "response_text": "Sure, I can schedule that for you. What day, time, and brief description should I use?"
+   - IF it is a meeting and they HAVE provided day/time/description (or if it is just a general task without time): RETURN: "internal_action": "add_task".
+   - IF specific time mentioned (e.g. "Meeting Tuesday 2pm to 3pm"): Include "fixed_schedule": {{"day": "Tuesday", "start_time": "14:00", "end_time": "15:00"}}
 2. **optimize_schedule**: User asks to "plan my day", "generate schedule", "optimize tasks", "make a schedule", "auto schedule", "schedule". RETURN: "internal_action": "optimize_schedule"
 3. **wellness_check**: User mentions stress, burnout, tiredness. RETURN: "internal_action": "log_wellness", "sentiment": "negative/stressed"
 5. **chat**: General conversation, advice, venting. RETURN: "internal_action": "chat"

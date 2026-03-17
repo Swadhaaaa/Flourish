@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '../../lib/firebase';
 import { AutoSchedulerMiniPopup } from '../../components/AutoSchedulerMiniPopup';
+import { syncScheduleToGoogleCalendar, type ScheduleSlot } from '../../utils/googleCalendar';
 
 const getWeekDays = () => {
     const today = new Date();
@@ -55,10 +56,13 @@ export default function AutoSchedule() {
 
     // Forms
     const [newTaskTitle, setNewTaskTitle] = useState('');
-    const [_newTaskTime, _setNewTaskTime] = useState('');
+    const [newTaskDesc, setNewTaskDesc] = useState('');
+    const [newTaskDay, setNewTaskDay] = useState('Monday');
+    const [newTaskStartTime, setNewTaskStartTime] = useState('09:00');
+    const [newTaskEndTime, setNewTaskEndTime] = useState('10:00');
     const [_newTaskStatus, _setNewTaskStatus] = useState('todo');
     const [newTaskPriority, setNewTaskPriority] = useState('Medium');
-    const [newTaskHours, setNewTaskHours] = useState(1);
+    const [newTaskHours] = useState(1);
 
     const [newEmp, setNewEmp] = useState({ name: '', role: '', email: '', weekly_hours_limit: 40 });
 
@@ -100,19 +104,32 @@ export default function AutoSchedule() {
         if (!newTaskTitle) return;
         setLoading(true);
         try {
-            const taskData = {
+            const taskData: Record<string, string | number | Record<string, string>> = {
                 title: newTaskTitle,
-                description: "Manual Entry",
+                description: newTaskDesc || "Manual Entry",
                 priority: newTaskPriority,
                 estimated_hours: newTaskHours,
-                deadline: "" // Optional
+                deadline: ""
             };
+
+            if (newTaskDay && newTaskStartTime && newTaskEndTime) {
+                taskData.fixed_schedule = {
+                    day: newTaskDay,
+                    start_time: newTaskStartTime,
+                    end_time: newTaskEndTime
+                };
+            }
+
             await addTask(taskData, _user?.uid);
 
             // Refetch
             await fetchData();
             setShowAddTask(false);
             setNewTaskTitle('');
+            setNewTaskDesc('');
+            setNewTaskDay('Monday');
+            setNewTaskStartTime('09:00');
+            setNewTaskEndTime('10:00');
         } catch (e) { console.error(e); showAlert("Error", "Failed to create task", "error"); } finally { setLoading(false); }
     };
 
@@ -177,41 +194,30 @@ export default function AutoSchedule() {
             const token = credential?.accessToken;
             if (!token) throw new Error("No access token found");
 
-            let count = 0;
-            const today = new Date();
+            const itemsToSync = schedule.length > 0 ? schedule : tasks;
 
-            // Sync generated schedule items
-            const itemsToSync = schedule.length > 0 ? schedule : tasks; // Fallback to tasks if no schedule
+            // Map frontend schema to ScheduleSlot for sync util
+            const slotsToSync: ScheduleSlot[] = itemsToSync.map(item => ({
+                task_title: item.task_title || item.title || "Scheduler Item",
+                scheduled_day: item.scheduled_day || "Monday",
+                start_time: item.start_time || "09:00",
+                end_time: item.end_time || "10:00",
+                priority: item.priority || "Medium"
+            }));
 
-            for (const item of itemsToSync) {
-                // If it's a schedule item, use start_time. If task, might not have time.
-                const title = item.task_title || item.title;
-                const startTime = item.start_time || "09:00";
+            const syncRes = await syncScheduleToGoogleCalendar(slotsToSync, token);
 
-                // Parse time (simple parser for HH:MM)
-                let [h, m] = startTime.split(':').map(Number);
-                const start = new Date(today);
-                start.setHours(h, m || 0, 0);
-                const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour default
-
-                const event = {
-                    summary: title,
-                    description: item.emp_name ? `Assigned to: ${item.emp_name}` : "Tea Hack Task",
-                    start: { dateTime: start.toISOString() },
-                    end: { dateTime: end.toISOString() },
-                };
-
-                await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(event)
-                });
-                count++;
+            if (syncRes.success > 0) {
+                showAlert("Sync Complete!", `Successfully synced ${syncRes.success} items to Google Calendar! ${syncRes.failed > 0 ? `(${syncRes.failed} failed)` : ''}`, 'success');
+            } else if (syncRes.failed > 0) {
+                showAlert("Sync Failed", `Failed to sync events. Errors: ${syncRes.errors.join(', ')}`, 'error');
+            } else {
+                showAlert("Nothing to sync", "There are no events in the schedule to sync.", 'success');
             }
-            showAlert("Sync Complete!", `Synced ${count} items to Google Calendar!`, 'success');
+
         } catch (error) {
             console.error(error);
-            showAlert("Sync Failed", "Please check permissions.", 'error');
+            showAlert("Sync Failed", "Please check permissions and make sure you authorized Calendar access.", 'error');
         } finally {
             setIsSyncing(false);
         }
@@ -503,24 +509,40 @@ export default function AutoSchedule() {
             {/* Add Task Modal */}
             {showAddTask && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[200] bg-black/30 backdrop-blur-sm flex items-end justify-center">
-                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} className="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl relative">
+                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} className="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar">
                         <button onClick={() => setShowAddTask(false)} className="absolute top-6 right-6 p-2 bg-slate-100 rounded-full"><X className="w-5 h-5 text-slate-500" /></button>
                         <h3 className="text-2xl font-black text-slate-900 mb-6">New Task</h3>
                         <div className="space-y-4">
                             <input className="w-full p-4 bg-slate-50 rounded-2xl font-bold" placeholder="Task Title" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} />
+                            <textarea className="w-full p-4 bg-slate-50 rounded-2xl font-medium resize-none text-sm placeholder:text-slate-400" placeholder="Description..." rows={2} value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} />
+
                             <div className="flex gap-4">
                                 <div className="flex-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority</label>
-                                    <select className="w-full p-4 bg-slate-50 rounded-2xl font-bold" value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)}>
-                                        <option>High</option><option>Medium</option><option>Low</option>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Day</label>
+                                    <select className="w-full p-3 bg-slate-50 rounded-2xl font-bold text-sm" value={newTaskDay} onChange={e => setNewTaskDay(e.target.value)}>
+                                        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                                        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
                                     </select>
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Hours</label>
-                                    <input type="number" className="w-full p-4 bg-slate-50 rounded-2xl font-bold" value={newTaskHours} onChange={e => setNewTaskHours(parseFloat(e.target.value))} />
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority</label>
+                                    <select className="w-full p-3 bg-slate-50 rounded-2xl font-bold text-sm" value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)}>
+                                        <option>High</option><option>Medium</option><option>Low</option>
+                                    </select>
                                 </div>
                             </div>
-                            <button onClick={handleCreateTask} className="w-full py-4 bg-[#FF8A71] text-white rounded-2xl font-black shadow-lg shadow-orange-200 mt-4">Create Task</button>
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Start Time</label>
+                                    <input type="time" className="w-full p-3 bg-slate-50 rounded-2xl font-bold text-sm" value={newTaskStartTime} onChange={e => setNewTaskStartTime(e.target.value)} />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">End Time</label>
+                                    <input type="time" className="w-full p-3 bg-slate-50 rounded-2xl font-bold text-sm" value={newTaskEndTime} onChange={e => setNewTaskEndTime(e.target.value)} />
+                                </div>
+                            </div>
+
+                            <button onClick={handleCreateTask} className="w-full py-4 bg-[#FF8A71] text-white rounded-2xl font-black shadow-lg shadow-orange-200 mt-4">Create & Schedule</button>
                         </div>
                     </motion.div>
                 </motion.div>
