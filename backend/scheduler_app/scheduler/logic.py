@@ -167,21 +167,19 @@ class SchedulerEngine:
         if action_type == "add_task":
             details = result.get("action_details", {})
             task_id = self.db.add_task(
-                title=details.get("title", "New Task"),
-                description=details.get("description", ""),
-                priority=details.get("priority", "Medium"),
-                estimated_hours=details.get("estimated_hours", 1.0),
-                deadline=details.get("deadline", ""),
+                title=details.get("title", "New Task") if isinstance(details, dict) else getattr(details, "title", "New Task"),
+                description=details.get("description", "") if isinstance(details, dict) else getattr(details, "description", ""),
+                priority=details.get("priority", "Medium") if isinstance(details, dict) else getattr(details, "priority", "Medium"),
+                estimated_hours=details.get("estimated_hours", 1.0) if isinstance(details, dict) else getattr(details, "estimated_hours", 1.0),
+                deadline=details.get("deadline", "") if isinstance(details, dict) else getattr(details, "deadline", ""),
                 user_id=user_id
             )
             
-            fixed = details.get("fixed_schedule")
-            if fixed and isinstance(fixed, dict):
-                # ... fixed schedule logic ...
-                # Reusing create_schedule
-                day = fixed.get("day", "Monday")
-                start = fixed.get("start_time", "09:00")
-                end = fixed.get("end_time")
+            fixed = details.get("fixed_schedule") if isinstance(details, dict) else getattr(details, "fixed_schedule", None)
+            if fixed:
+                day = fixed.get("day", "Monday") if isinstance(fixed, dict) else getattr(fixed, "day", "Monday")
+                start = fixed.get("start_time", "09:00") if isinstance(fixed, dict) else getattr(fixed, "start_time", "09:00")
+                end = fixed.get("end_time") if isinstance(fixed, dict) else getattr(fixed, "end_time", None)
                 if not end:
                     try:
                         h = int(start.split(':')[0])
@@ -210,7 +208,7 @@ class SchedulerEngine:
                 if hasattr(self.db, 'update_task_status_with_user'):
                     self.db.update_task_status_with_user(str(task_id), "Scheduled", user_id)
                 else:
-                    self.db.update_task_status(task_id, "Scheduled")
+                    self.db.update_task_status(str(task_id), "Scheduled")
             
         elif action_type == "optimize_schedule":
             # Constraint could be extracted from user text if needed, but for now we run default

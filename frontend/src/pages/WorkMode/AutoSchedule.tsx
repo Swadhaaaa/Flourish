@@ -225,13 +225,18 @@ export default function AutoSchedule() {
 
     // Helper to format tasks for the list UI
     const getFormattedTasks = () => {
-        return tasks.map(t => ({
-            ...t,
-            // Map backend fields to UI fields if needed
-            time: t.deadline || "Anytime",
-            desc: t.description || `${t.estimated_hours}h • ${t.priority}`,
-            color: t.priority === 'High' ? 'bg-rose-400' : 'bg-[#FF8A71] shadow-orange-200'
-        }));
+        return tasks.map(t => {
+            // Find if this task is mapped to a schedule
+            const mapping = schedule.find(s => s.task_id === t.id);
+            const timeStr = mapping ? `${mapping.scheduled_day} ${mapping.start_time}` : (t.deadline || "Anytime");
+
+            return {
+                ...t,
+                time: timeStr,
+                desc: t.description || "Manual Entry",
+                color: t.priority === 'High' ? 'bg-rose-400' : 'bg-[#FF8A71] shadow-orange-200'
+            };
+        });
     };
 
     const displayTasks = getFormattedTasks();
