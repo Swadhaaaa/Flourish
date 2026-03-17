@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateUserDailyData, type DailyData } from '../../utils/syntheticData';
 import { useAuth } from '../../context/AuthContext';
-import { addPeriodLog, getPeriodProfile, updatePeriodProfile, getPeriodLogs, type PeriodLog, type PeriodProfile } from '../../services/firestore';
+import { addPeriodLog, getPeriodProfile, updatePeriodProfile, getPeriodLogs, type PeriodLog } from '../../services/firestore';
 import { Utensils, Sparkles, Settings } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';

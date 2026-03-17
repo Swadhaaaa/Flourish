@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Lock, MessageCircle, Trash2 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, doc, deleteDoc } from 'firebase/firestore';
@@ -20,7 +20,6 @@ interface SisterhoodChatProps {
 
 export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, onClose }: SisterhoodChatProps) {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [messages, setMessages] = useState<any[]>([]);
     const [inputText, setInputText] = useState('');
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
