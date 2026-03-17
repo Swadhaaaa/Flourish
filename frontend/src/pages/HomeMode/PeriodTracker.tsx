@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateUserDailyData, type DailyData } from '../../utils/syntheticData';
 import { useAuth } from '../../context/AuthContext';
-import { addPeriodLog, getPeriodProfile, updatePeriodProfile, getPeriodLogs, type PeriodLog } from '../../services/firestore';
-import { Utensils, Sparkles } from 'lucide-react';
+import { addPeriodLog, getPeriodProfile, updatePeriodProfile, getPeriodLogs, type PeriodLog, type PeriodProfile } from '../../services/firestore';
+import { Utensils, Sparkles, Settings } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { PeriodTrackerMiniPopup } from '../../components/PeriodTrackerMiniPopup';
@@ -26,6 +26,13 @@ const PeriodTracker = () => {
     const [aiInsight, setAiInsight] = useState<string | null>(null);
     const [aiDiet, setAiDiet] = useState<any>(null);
 
+    // Settings State
+    const [cycleLength, setCycleLength] = useState<number>(28);
+    const [periodLength, setPeriodLength] = useState<number>(5);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [tempCycle, setTempCycle] = useState(28);
+    const [tempPeriod, setTempPeriod] = useState(5);
+
     // Logging State
     const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
     const [selectedMood, setSelectedMood] = useState<string>('Happy');
@@ -36,8 +43,12 @@ const PeriodTracker = () => {
         if (!user) return;
 
         getPeriodProfile(user.uid).then(profile => {
-            if (profile && profile.startDate) {
-                setStartDate(profile.startDate.toDate());
+            if (profile) {
+                if (profile.startDate) setStartDate(profile.startDate.toDate());
+                if (profile.cycleLength) setCycleLength(profile.cycleLength);
+                if (profile.periodLength) setPeriodLength(profile.periodLength);
+                setTempCycle(profile.cycleLength || 28);
+                setTempPeriod(profile.periodLength || 5);
             } else {
                 const d = new Date();
                 d.setDate(d.getDate() - 8);
@@ -64,9 +75,9 @@ const PeriodTracker = () => {
         const currentCycleDay = diffDays + 1;
         // If the date is in the future, we treat it as Day 1 or show 0? 
         // For a tracker, Day 1 is usually the start.
-        const cycleDay = currentCycleDay > 0 ? ((currentCycleDay - 1) % 28) + 1 : 1;
+        const cycleDay = currentCycleDay > 0 ? ((currentCycleDay - 1) % cycleLength) + 1 : 1;
 
-        const dailyData = generateUserDailyData(cycleDay);
+        const dailyData = generateUserDailyData(cycleDay, periodLength, cycleLength);
         setData({ ...dailyData, dayInCycle: cycleDay }); // Ensure dayInCycle matches our calc
         setLoading(false);
 
@@ -128,14 +139,25 @@ const PeriodTracker = () => {
         }
     };
 
+    const handleSaveSettings = () => {
+        if (!user) return;
+        setCycleLength(tempCycle);
+        setPeriodLength(tempPeriod);
+        updatePeriodProfile(user.uid, {
+            cycleLength: tempCycle,
+            periodLength: tempPeriod
+        });
+        setIsSettingsOpen(false);
+    };
+
     if (loading || !data) return <div className="p-10 text-center">Loading Cycles...</div>;
 
     return (
         <div className="min-h-screen bg-[#FFF8F5] dark:bg-slate-900 dark:text-slate-100 p-6 md:p-10 font-sans relative overflow-hidden">
             <PeriodTrackerMiniPopup />
 
-            {/* Top Toggle */}
-            <div className="flex justify-start mb-8">
+            {/* Top Toggle & Settings */}
+            <div className="flex justify-between items-start mb-8">
                 <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 inline-flex">
                     <button
                         onClick={() => setViewMode('tracker')}
@@ -150,7 +172,62 @@ const PeriodTracker = () => {
                         Log Dates
                     </button>
                 </div>
+                <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="p-3 bg-white hover:bg-slate-50 text-slate-400 hover:text-rose-500 rounded-full shadow-sm border border-slate-100 transition-colors"
+                    title="Cycle Settings"
+                >
+                    <Settings className="w-5 h-5" />
+                </button>
             </div>
+
+            {/* Settings Modal */}
+            <AnimatePresence>
+                {isSettingsOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSettingsOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl p-8 max-w-sm w-full relative z-10 shadow-2xl">
+                            <h3 className="text-xl font-bold text-slate-800 mb-6 font-display">Cycle Settings</h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Cycle Length (Days)</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="range"
+                                            min="21"
+                                            max="35"
+                                            value={tempCycle}
+                                            onChange={(e) => setTempCycle(parseInt(e.target.value))}
+                                            className="flex-1 accent-rose-500"
+                                        />
+                                        <span className="w-8 text-center font-bold text-slate-700">{tempCycle}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1">Typical: 28 days</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Period Length (Days)</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="range"
+                                            min="2"
+                                            max="8"
+                                            value={tempPeriod}
+                                            onChange={(e) => setTempPeriod(parseInt(e.target.value))}
+                                            className="flex-1 accent-rose-500"
+                                        />
+                                        <span className="w-8 text-center font-bold text-slate-700">{tempPeriod}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1">Typical: 5 days</p>
+                                </div>
+                                <div className="flex gap-3 mt-8">
+                                    <button onClick={() => setIsSettingsOpen(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors">Cancel</button>
+                                    <button onClick={handleSaveSettings} className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-md shadow-rose-200 transition-colors">Save</button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence mode="wait">
                 {viewMode === 'calendar' ? (
@@ -163,6 +240,7 @@ const PeriodTracker = () => {
                         <PeriodCalendar
                             selectedDate={startDate}
                             logs={logs}
+                            periodLength={periodLength}
                             onSelect={(date) => {
                                 setStartDate(date);
                                 if (user && date) {
@@ -189,13 +267,13 @@ const PeriodTracker = () => {
                                         <div className="w-40 h-40 rounded-full border-4 border-rose-300/50 flex flex-col items-center justify-center relative bg-white/40 backdrop-blur-sm shadow-inner shadow-rose-200/30">
                                             <span className="text-5xl font-black text-rose-950">{data.dayInCycle}</span>
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-rose-800/90">Cycle Day</span>
-                                            <span className="text-[9px] font-medium text-rose-700/60">of 28 Days</span>
+                                            <span className="text-[9px] font-medium text-rose-700/60">of {cycleLength} Days</span>
                                             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[50%] w-4 h-4 bg-rose-400 rounded-full shadow-[0_0_15px_rgba(244,63,94,0.4)] border-2 border-white" />
                                         </div>
                                         <div className="text-center w-64">
                                             <div className="inline-block px-3 py-1 rounded-full bg-rose-900/80 backdrop-blur-md border border-rose-800/30 mb-2 text-[10px] font-bold uppercase text-white">Next Period Likely</div>
                                             <div className="text-xl font-black">
-                                                {startDate && format(new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000), 'MMM d')}
+                                                {startDate && format(new Date(startDate.getTime() + cycleLength * 24 * 60 * 60 * 1000), 'MMM d')}
                                             </div>
                                         </div>
                                     </div>

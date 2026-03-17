@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Lock, MessageCircle } from 'lucide-react';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { X, Send, Lock, MessageCircle, Trash2 } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { importPublicKey, importPrivateKey, deriveSharedSecret, encryptMessage, decryptMessage } from '../utils/e2ee';
@@ -32,6 +32,7 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const pendingSocketMsgs = useRef<any[]>([]);
     const typingTimeoutRef = useRef<any>(null);
+    const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
 
     // Connection ID is consistently sorted to act as a unique channel
     const chatId = [user?.uid, peerId].sort().join('_');
@@ -233,6 +234,23 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
         }
     };
 
+    const deleteMessage = async (msgId: string) => {
+        if (!msgId) return;
+        setDeletingMsgId(msgId);
+        try {
+            // Remove from Firestore if it's a persisted message (not a socket-only one)
+            if (!msgId.startsWith('socket_')) {
+                await deleteDoc(doc(db, `connections/${chatId}/messages`, msgId));
+            }
+            // Remove from local state immediately
+            setMessages(prev => prev.filter(m => m.id !== msgId));
+        } catch (err) {
+            console.error('Failed to delete message', err);
+        } finally {
+            setDeletingMsgId(null);
+        }
+    };
+
     return (
         <AnimatePresence>
             <motion.div
@@ -312,7 +330,17 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                         messages.map((msg) => {
                             const isMe = msg.senderId === user?.uid;
                             return (
-                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group/msg`}>
+                                    {isMe && (
+                                        <button
+                                            onClick={() => deleteMessage(msg.id)}
+                                            disabled={deletingMsgId === msg.id}
+                                            className="self-center mr-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-rose-100 dark:hover:bg-slate-700 text-slate-300 hover:text-rose-500 dark:text-slate-600 dark:hover:text-rose-400"
+                                            title="Delete message"
+                                        >
+                                            <Trash2 className={`w-3.5 h-3.5 ${deletingMsgId === msg.id ? 'animate-pulse' : ''}`} />
+                                        </button>
+                                    )}
                                     <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${isMe
                                         ? 'bg-rose-500 text-white rounded-tr-sm'
                                         : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm border border-slate-100 dark:border-slate-700 rounded-tl-sm'

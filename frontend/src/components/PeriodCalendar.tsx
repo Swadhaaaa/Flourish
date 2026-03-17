@@ -17,11 +17,12 @@ import type { PeriodLog } from '../services/firestore';
 interface PeriodCalendarProps {
     selectedDate: Date | null;
     logs?: PeriodLog[];
+    periodLength?: number;
     onSelect: (date: Date) => void;
     onLogPeriod: () => void;
 }
 
-const PeriodCalendar = ({ selectedDate, logs = [], onSelect, onLogPeriod }: PeriodCalendarProps) => {
+const PeriodCalendar = ({ selectedDate, logs = [], periodLength = 5, onSelect, onLogPeriod }: PeriodCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -80,7 +81,7 @@ const PeriodCalendar = ({ selectedDate, logs = [], onSelect, onLogPeriod }: Peri
                         const diffTime = checkDay.getTime() - start.getTime();
                         const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-                        if (diffDays >= 0 && diffDays < 5) {
+                        if (diffDays >= 0 && diffDays < periodLength) {
                             isPeriodDay = true;
                         }
                         if (diffDays === 0) {

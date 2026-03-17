@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Heart, MessageCircle, Sparkles, CheckCircle2, UserPlus, Inbox, Check, X, Bell } from 'lucide-react';
+import { Users, Heart, MessageCircle, Sparkles, CheckCircle2, UserPlus, Inbox, Check, X, Bell, Lock } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { generateKeyPair, exportPublicKey, exportPrivateKey } from '../../utils/e2ee';
@@ -25,9 +25,28 @@ export default function Sisterhood() {
     const [needsOnboarding, setNeedsOnboarding] = useState(false);
     const [onboardingData, setOnboardingData] = useState({ industry: 'Technology', role: '', company: '' });
     const [isGeneratingKeys, setIsGeneratingKeys] = useState(false);
+    const [isRegeneratingKeys, setIsRegeneratingKeys] = useState(false);
 
     // Chat State
     const [activeChat, setActiveChat] = useState<{ id: string; name: string; photo: string } | null>(null);
+
+    // Auto-regenerate keys if user already has profile data but keys are missing
+    const regenerateKeys = async () => {
+        if (!user) return;
+        setIsRegeneratingKeys(true);
+        try {
+            const keyPair = await generateKeyPair();
+            const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
+            const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
+            localStorage.setItem(`e2ee_priv_${user.uid}`, privKeyB64);
+            await updateUserProfile({ publicKey: pubKeyB64 });
+            console.log("E2EE keys regenerated successfully");
+        } catch (err) {
+            console.error("Key regeneration failed", err);
+        } finally {
+            setIsRegeneratingKeys(false);
+        }
+    };
 
     // 1. Initial Profile & Onboarding Check
     useEffect(() => {
@@ -39,7 +58,13 @@ export default function Sisterhood() {
 
         const hasProfileData = userProfile.industry && userProfile.role;
 
-        if (!hasPublicKey || !hasLocalStorageKey || !hasProfileData) {
+        if (hasProfileData && (!hasPublicKey || !hasLocalStorageKey)) {
+            // User already onboarded but keys are missing — auto-regenerate
+            regenerateKeys();
+            setNeedsOnboarding(false);
+            fetchMatches(userProfile);
+        } else if (!hasProfileData) {
+            // First-time user — show full onboarding
             setNeedsOnboarding(true);
         } else {
             setNeedsOnboarding(false);
@@ -226,6 +251,16 @@ export default function Sisterhood() {
                         <div className="hidden md:flex items-center gap-1.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-200 dark:border-green-800/50"><CheckCircle2 className="w-3.5 h-3.5" /> E2EE Secure</div>
                     </div>
                 </header>
+
+                {isRegeneratingKeys && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 flex items-center gap-3">
+                        <Lock className="w-5 h-5 text-amber-500 animate-pulse" />
+                        <div>
+                            <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Regenerating encryption keys...</p>
+                            <p className="text-xs text-amber-500 dark:text-amber-500/70">Your secure chat profile is being restored.</p>
+                        </div>
+                    </motion.div>
+                )}
 
                 <AnimatePresence mode="wait">
                     {view === 'requests' ? (

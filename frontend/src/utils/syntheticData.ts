@@ -21,11 +21,19 @@ export interface DailyData {
     dailyInsight: string; // The GenAI Message
 }
 
-const PHASES = {
-    Menstrual: { start: 1, end: 5 },
-    Follicular: { start: 6, end: 14 },
-    Ovulation: { start: 15, end: 17 },
-    Luteal: { start: 18, end: 28 } // Assuming 28 day cycle for simplicity
+// Dynamic Phase Calculation based on user profile
+export const calculatePhaseBoundaries = (periodLength: number, cycleLength: number) => {
+    // Basic heuristics for phase lengths
+    const follicularEnd = Math.max(periodLength + 1, Math.floor(cycleLength / 2) - 1);
+    const ovulationStart = follicularEnd + 1;
+    const ovulationEnd = ovulationStart + 2; // Generally a 3-day window
+
+    return {
+        Menstrual: { start: 1, end: periodLength },
+        Follicular: { start: periodLength + 1, end: follicularEnd },
+        Ovulation: { start: ovulationStart, end: Math.min(ovulationEnd, cycleLength - 1) },
+        Luteal: { start: Math.min(ovulationEnd + 1, cycleLength), end: cycleLength }
+    };
 };
 
 // --- DATA DICTIONARIES ---
@@ -105,24 +113,28 @@ const WORK_RULES = {
 
 // --- LOGIC ---
 
-export const getPhase = (day: number): CyclePhase => {
-    if (day <= PHASES.Menstrual.end) return 'Menstrual';
-    if (day <= PHASES.Follicular.end) return 'Follicular';
-    if (day <= PHASES.Ovulation.end) return 'Ovulation';
+export const getPhase = (day: number, periodLength: number = 5, cycleLength: number = 28): CyclePhase => {
+    const boundaries = calculatePhaseBoundaries(periodLength, cycleLength);
+
+    if (day <= boundaries.Menstrual.end) return 'Menstrual';
+    if (day <= boundaries.Follicular.end) return 'Follicular';
+    if (day <= boundaries.Ovulation.end) return 'Ovulation';
     return 'Luteal';
 };
 
-export const generateUserDailyData = (day: number = 1): DailyData => {
-    // Clamp to 1-28 for safety
-    const safeDay = ((day - 1) % 28) + 1;
-    const phase = getPhase(safeDay);
+export const generateUserDailyData = (day: number = 1, periodLength: number = 5, cycleLength: number = 28): DailyData => {
+    // Clamp to 1-cycleLength for safety
+    const safeDay = ((day - 1) % cycleLength) + 1;
+    const phase = getPhase(safeDay, periodLength, cycleLength);
 
-    // Energy Logic
+    const boundaries = calculatePhaseBoundaries(periodLength, cycleLength);
+
+    // Energy Logic scaled roughly to cycle
     let energy: 1 | 2 | 3 | 4 | 5 = 3;
-    if (phase === 'Menstrual') energy = safeDay < 3 ? 1 : 2;
+    if (phase === 'Menstrual') energy = safeDay < Math.max(2, periodLength / 2) ? 1 : 2;
     if (phase === 'Follicular') energy = 4;
     if (phase === 'Ovulation') energy = 5;
-    if (phase === 'Luteal') energy = safeDay > 24 ? 2 : 3;
+    if (phase === 'Luteal') energy = safeDay > boundaries.Luteal.end - 4 ? 2 : 3;
 
     // Nutrition
     const nutritonData = NUTRITION_RULES[phase];
@@ -135,7 +147,7 @@ export const generateUserDailyData = (day: number = 1): DailyData => {
     return {
         dayInCycle: safeDay,
         phase,
-        daysUntilNextPeriod: 29 - safeDay,
+        daysUntilNextPeriod: cycleLength - safeDay + 1,
         energyLevel: energy,
         mood: phase === 'Luteal' ? "Reflective" : (phase === 'Ovulation' ? "Confident" : "Balanced"),
         symptoms: [],
