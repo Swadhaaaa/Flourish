@@ -162,9 +162,9 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                 const data = doc.data();
                 try {
                     const decryptedText = await decryptMessage(sharedKey, data.ciphertext, data.iv);
-                    msgs.push({ id: doc.id, ...data, text: decryptedText });
+                    msgs.push({ id: doc.id, senderId: data.senderId, text: decryptedText, ciphertext: data.ciphertext, createdAt: data.createdAt });
                 } catch (e) {
-                    msgs.push({ id: doc.id, ...data, text: "[Decryption Failed]" });
+                    msgs.push({ id: doc.id, senderId: data.senderId, text: "[Decryption Failed]", ciphertext: data.ciphertext, createdAt: data.createdAt });
                 }
             }
 

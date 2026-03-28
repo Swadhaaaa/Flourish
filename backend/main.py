@@ -281,6 +281,88 @@ async def send_connection_notification(request: NotificationRequest):
         print(f"Failed to send email: {e}")
         return {"status": "error", "message": str(e)}
 
+class ReminderNotification(BaseModel):
+    recipient_email: str
+    reminder_title: str
+    reminder_category: str
+    reminder_date: str
+    reminder_time: str
+    user_name: str
+    notes: Optional[str] = None
+
+@app.post("/api/notifications/reminder")
+async def send_reminder_notification(request: ReminderNotification):
+    """
+    Sends an email notification for a new life reminder (Home, Family, Self-Care).
+    """
+    sender_email = os.getenv("SENDER_EMAIL")
+    sender_password = os.getenv("SENDER_APP_PASSWORD")
+
+    if not sender_email or not sender_password:
+        return {"status": "error", "message": "Email credentials not configured"}
+
+    # Category-specific emoji and color
+    category_map = {
+        "Home": {"emoji": "🏠", "color": "#f59e0b", "label": "Home"},
+        "Family": {"emoji": "👨‍👩‍👧", "color": "#8b5cf6", "label": "Family"},
+        "Self-Care": {"emoji": "💆", "color": "#10b981", "label": "Self-Care"},
+    }
+    cat = category_map.get(request.reminder_category, {"emoji": "🔔", "color": "#f43f5e", "label": request.reminder_category})
+
+    notes_html = f'<p style="color:#666;font-size:14px;margin-top:10px;padding:12px;background:#f8fafc;border-radius:8px;border-left:3px solid {cat["color"]}">{request.notes}</p>' if request.notes else ""
+
+    subject = f'{cat["emoji"]} Reminder: {request.reminder_title}'
+    body = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; background: #fef7f0; padding: 20px;">
+        <div style="max-width: 520px; margin: 0 auto; background: white; padding: 32px; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
+            <div style="text-align:center; margin-bottom: 24px;">
+                <div style="display:inline-block; background:{cat['color']}15; padding: 12px 20px; border-radius: 12px;">
+                    <span style="font-size: 28px;">{cat['emoji']}</span>
+                </div>
+            </div>
+            <h2 style="color:{cat['color']}; text-align:center; margin-bottom:4px; font-size:20px;">
+                {cat['label']} Reminder
+            </h2>
+            <h3 style="text-align:center; color:#1e293b; font-size:22px; margin-top:4px; margin-bottom:20px;">
+                {request.reminder_title}
+            </h3>
+            <div style="background:#f8fafc; border-radius:12px; padding:16px; display:flex; gap:20px; justify-content:center; text-align:center; margin-bottom:16px;">
+                <div>
+                    <p style="color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin:0;">Date</p>
+                    <p style="color:#1e293b; font-size:16px; font-weight:bold; margin:4px 0 0;">{request.reminder_date}</p>
+                </div>
+                <div style="border-left:1px solid #e2e8f0;"></div>
+                <div>
+                    <p style="color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin:0;">Time</p>
+                    <p style="color:#1e293b; font-size:16px; font-weight:bold; margin:4px 0 0;">{request.reminder_time}</p>
+                </div>
+            </div>
+            {notes_html}
+            <hr style="border:none; border-top:1px solid #f1f5f9; margin:20px 0;" />
+            <p style="font-size:12px; color:#94a3b8; text-align:center;">
+                Set by {request.user_name} • Flourish Reminders
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = f"Flourish Reminders <{sender_email}>"
+    msg['To'] = request.recipient_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        return {"status": "success", "message": "Reminder notification sent"}
+    except Exception as e:
+        print(f"Failed to send reminder email: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/events/nearby")
 async def get_nearby_events(lat: float = 40.7128, long: float = -74.0060, category: str = None):
     """

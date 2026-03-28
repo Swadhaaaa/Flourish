@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Heart, MessageCircle, Sparkles, CheckCircle2, UserPlus, Inbox, Check, X, Bell, Lock } from 'lucide-react';
+import { Users, MessageCircle, Sparkles, CheckCircle2, UserPlus, Inbox, Check, X, Bell, Lock } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { generateKeyPair, exportPublicKey, exportPrivateKey } from '../../utils/e2ee';
@@ -30,19 +30,28 @@ export default function Sisterhood() {
     // Chat State
     const [activeChat, setActiveChat] = useState<{ id: string; name: string; photo: string } | null>(null);
 
-    // Auto-regenerate keys if user already has profile data but keys are missing
-    const regenerateKeys = async () => {
+    // Restore keys from Firestore if available, otherwise generate new ones
+    const restoreOrRegenerateKeys = async () => {
         if (!user) return;
         setIsRegeneratingKeys(true);
         try {
-            const keyPair = await generateKeyPair();
-            const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
-            const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
-            localStorage.setItem(`e2ee_priv_${user.uid}`, privKeyB64);
-            await updateUserProfile({ publicKey: pubKeyB64 });
-            console.log("E2EE keys regenerated successfully");
+            // Check if private key is stored in Firestore (synced from another device)
+            const firestorePrivKey = userProfile?.encryptedPrivateKey;
+            if (firestorePrivKey && userProfile?.publicKey) {
+                // Restore existing keys from Firestore — no new key generation
+                localStorage.setItem(`e2ee_priv_${user.uid}`, firestorePrivKey);
+                console.log("E2EE keys restored from Firestore (cross-device sync)");
+            } else {
+                // No keys in Firestore either — generate fresh keys
+                const keyPair = await generateKeyPair();
+                const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
+                const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
+                localStorage.setItem(`e2ee_priv_${user.uid}`, privKeyB64);
+                await updateUserProfile({ publicKey: pubKeyB64, encryptedPrivateKey: privKeyB64 });
+                console.log("E2EE keys generated and synced to Firestore");
+            }
         } catch (err) {
-            console.error("Key regeneration failed", err);
+            console.error("Key restore/regeneration failed", err);
         } finally {
             setIsRegeneratingKeys(false);
         }
@@ -59,8 +68,8 @@ export default function Sisterhood() {
         const hasProfileData = userProfile.industry && userProfile.role;
 
         if (hasProfileData && (!hasPublicKey || !hasLocalStorageKey)) {
-            // User already onboarded but keys are missing — auto-regenerate
-            regenerateKeys();
+            // User already onboarded but keys are missing locally — restore or regenerate
+            restoreOrRegenerateKeys();
             setNeedsOnboarding(false);
             fetchMatches(userProfile);
         } else if (!hasProfileData) {
@@ -69,6 +78,14 @@ export default function Sisterhood() {
         } else {
             setNeedsOnboarding(false);
             fetchMatches(userProfile);
+            // One-time sync: if user has keys locally but not yet backed up to Firestore
+            if (hasPublicKey && hasLocalStorageKey && !userProfile.encryptedPrivateKey) {
+                const localPrivKey = localStorage.getItem(`e2ee_priv_${user.uid}`);
+                if (localPrivKey) {
+                    updateUserProfile({ encryptedPrivateKey: localPrivKey });
+                    console.log("E2EE: Synced existing private key to Firestore for cross-device support");
+                }
+            }
         }
     }, [userProfile, user]);
 
@@ -120,7 +137,7 @@ export default function Sisterhood() {
                 profile: {
                     id: u.id, name: u.name || 'Member', role: u.role || 'Professional', company: u.company || '',
                     photo: u.photoURL || `https://ui-avatars.com/api/?name=${u.name || 'User'}&background=random`,
-                    publicKey: u.publicKey, email: u.email
+                    email: u.email
                 },
                 reason: "Community Peer",
                 ai_icebreaker: `Hi ${u.name || 'there'}, I'm ${userProfile?.name}. noticed we're both in the Sisterhood network. Let's connect!`
@@ -190,7 +207,8 @@ export default function Sisterhood() {
             const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
             const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
             localStorage.setItem(`e2ee_priv_${user?.uid}`, privKeyB64);
-            await updateUserProfile({ ...onboardingData, publicKey: pubKeyB64, isOnboarded: true });
+            // Store both public AND private key in Firestore for cross-device sync
+            await updateUserProfile({ ...onboardingData, publicKey: pubKeyB64, encryptedPrivateKey: privKeyB64, isOnboarded: true });
             setNeedsOnboarding(false);
             fetchMatches({ ...userProfile, ...onboardingData });
         } catch (err) { console.error("Setup failed", err); } finally { setIsGeneratingKeys(false); }
@@ -302,25 +320,26 @@ export default function Sisterhood() {
                                         const isPending = sentRequests.includes(match.profile.id);
                                         return (
                                             <motion.div key={idx} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }}
-                                                className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-7 shadow-xl shadow-rose-100/50 dark:shadow-none border border-rose-50/50 dark:border-slate-700 relative overflow-hidden group">
-                                                <div className="relative z-10 flex flex-col items-center text-center">
+                                                className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-7 shadow-xl shadow-rose-100/50 dark:shadow-none border border-rose-50/50 dark:border-slate-700 relative overflow-hidden group hover:shadow-2xl hover:shadow-rose-200/60 dark:hover:shadow-none hover:-translate-y-1 transition-all duration-300">
+                                                {/* Top gradient accent */}
+                                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 rounded-t-[2.5rem]" />
+                                                <div className="relative z-10 flex flex-col items-center text-center pt-2">
                                                     <div className="relative mb-5">
-                                                        <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-amber-200 to-rose-400">
+                                                        <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-amber-200 to-rose-400 shadow-lg shadow-rose-200/40 dark:shadow-none group-hover:shadow-rose-300/50 transition-shadow duration-300">
                                                             <img src={match.profile.photo} className="w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-800" alt="" />
                                                         </div>
-                                                        <Heart className="w-5 h-5 text-rose-500 absolute bottom-0 right-0 fill-rose-500 cursor-pointer hover:scale-110 transition-transform" />
                                                     </div>
                                                     <span className="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase tracking-[.2em] px-4 py-1.5 rounded-full mb-3 border border-rose-100 dark:border-rose-800/50">{match.reason}</span>
                                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">{match.profile.name}</h3>
                                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">{match.profile.role}</p>
-                                                    <div className="w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 mb-8 text-left relative border border-slate-100 dark:border-slate-800 group-hover:bg-rose-50/50 transition-colors">
-                                                        <Sparkles className="w-4 h-4 text-rose-400 absolute top-3 right-3" />
+                                                    <div className="w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 mb-8 text-left relative border border-slate-100 dark:border-slate-800 group-hover:bg-rose-50/50 dark:group-hover:bg-slate-900/80 transition-colors duration-300">
+                                                        <Sparkles className="w-4 h-4 text-rose-400 absolute top-3 right-3 group-hover:animate-spin" />
                                                         <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-1.5">AI Icebreaker</p>
                                                         <p className="text-slate-600 dark:text-slate-300 text-sm italic leading-relaxed">"{match.ai_icebreaker}"</p>
                                                     </div>
                                                     {isConnected ? (
                                                         <button onClick={() => setActiveChat({ id: match.profile.id, name: match.profile.name, photo: match.profile.photo })}
-                                                            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-black py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all">
+                                                            className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 font-black py-4 rounded-2xl shadow-lg shadow-amber-200/50 dark:shadow-none flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
                                                             <MessageCircle className="w-5 h-5 fill-slate-900" /> Chat Securely
                                                         </button>
                                                     ) : isPending ? (
@@ -329,7 +348,7 @@ export default function Sisterhood() {
                                                         </button>
                                                     ) : (
                                                         <button onClick={() => handleSendRequest(match)}
-                                                            className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2 transition-all">
+                                                            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
                                                             <UserPlus className="w-5 h-5" /> Send Request
                                                         </button>
                                                     )}
