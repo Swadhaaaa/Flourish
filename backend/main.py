@@ -392,6 +392,27 @@ async def period_insight(request: PeriodInsightRequest):
         print(f"AI Generation Failed: {e}")
         return {"insight": f"Day {request.day} ({request.phase}): Listen to your body and prioritize rest if needed."}
 
+class FoodAnalysisRequest(BaseModel):
+    query: str
+
+@app.post("/api/ai/analyze-food")
+async def analyze_food(request: FoodAnalysisRequest):
+    """
+    Analyzes a text description of a meal and returns estimated macros via AI.
+    """
+    try:
+        data = ai_service.analyze_food(request.query)
+        return data
+    except Exception as e:
+        print(f"Food Analysis Endpoint Failed: {e}")
+        return {
+            "name": "Custom Meal",
+            "calories": 500,
+            "protein": 20,
+            "carbs": 50,
+            "fat": 15
+        }
+
 
 import httpx
 

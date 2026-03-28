@@ -596,3 +596,39 @@ class AIService:
             {"id": "uber", "provider": "Uber", "price": base - 10, "eta": "7 min", "safety_score": 85, "type": "Go"},
             {"id": "ola", "provider": "Ola", "price": base + 5, "eta": "5 min", "safety_score": 88, "type": "Mini"}
         ]
+    def analyze_food(self, text_input: str):
+        """
+        Uses Groq API to estimate nutritional macros from a text description.
+        """
+        system_prompt = "You are an expert nutritionist AI. Output valid JSON only."
+        user_prompt = f"""
+        Estimate the nutritional macros for the following meal description: "{text_input}"
+        Provide a realistic estimate. 
+        "name" should be a clean, appetizing title for the food (e.g. "Grilled Salmon Salad").
+        "calories", "protein", "carbs", and "fat" should be integers.
+        Ensure protein + carbs + fat roughly aligns with total calories (protein/carbs=4kcal/g, fat=9kcal/g).
+        
+        Output JSON format exactly like this:
+        {{
+            "name": "Clean Food Name",
+            "calories": 450,
+            "protein": 25,
+            "carbs": 40,
+            "fat": 15
+        }}
+        """
+        try:
+            response = self.groq_ai.generate_json_response(system_prompt, user_prompt)
+            if response and "name" in response and "calories" in response:
+                return response
+        except Exception as e:
+            print(f"Analyze Food Failed: {e}")
+            
+        # Fallback if AI fails or times out
+        return {
+            "name": text_input.title() if len(text_input) < 30 else "Custom Meal",
+            "calories": 500,
+            "protein": 20,
+            "carbs": 50,
+            "fat": 15
+        }

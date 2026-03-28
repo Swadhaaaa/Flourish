@@ -38,7 +38,7 @@ export default function Appointments() {
     const [activeCategory, setActiveCategory] = useState<ReminderCategory>('Home');
     const [lifeReminders, setLifeReminders] = useState<any[]>([]);
     const [showAddForm, setShowAddForm] = useState(false);
-    const [newReminder, setNewReminder] = useState({ title: '', notes: '', date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', sendEmail: false });
+    const [newReminder, setNewReminder] = useState({ title: '', notes: '', date: format(new Date(), 'yyyy-MM-dd'), time: format(new Date(), 'HH:mm'), sendEmail: false });
     const [addingReminder, setAddingReminder] = useState(false);
 
     // --- Mood Check-in State ---
@@ -201,31 +201,34 @@ export default function Appointments() {
                 notes: fromPreset ? '' : newReminder.notes,
                 category: activeCategory,
                 date: fromPreset ? format(new Date(), 'yyyy-MM-dd') : newReminder.date,
-                time: fromPreset ? '09:00' : newReminder.time,
+                time: fromPreset ? format(new Date(), 'HH:mm') : newReminder.time,
                 completed: false,
                 createdAt: serverTimestamp()
             };
             await addDoc(collection(db, `users/${user.uid}/life_reminders`), reminderData);
 
-            // Send email notification if toggled on (custom form only)
-            if (!fromPreset && newReminder.sendEmail && userProfile?.email) {
-                try {
-                    await axios.post(`${API_URL}/api/notifications/reminder`, {
-                        recipient_email: userProfile.email,
-                        reminder_title: title.trim(),
-                        reminder_category: activeCategory,
-                        reminder_date: newReminder.date,
-                        reminder_time: newReminder.time,
-                        user_name: userProfile.name || 'User',
-                        notes: newReminder.notes || null
-                    });
-                } catch (emailErr) {
-                    console.error('Email notification failed:', emailErr);
+            // Send email notification
+            if (userProfile?.email) {
+                const shouldSendEmail = fromPreset || newReminder.sendEmail;
+                if (shouldSendEmail) {
+                    try {
+                        await axios.post(`${API_URL}/api/notifications/reminder`, {
+                            recipient_email: userProfile.email,
+                            reminder_title: title.trim(),
+                            reminder_category: activeCategory,
+                            reminder_date: fromPreset ? format(new Date(), 'yyyy-MM-dd') : newReminder.date,
+                            reminder_time: fromPreset ? format(new Date(), 'HH:mm') : newReminder.time,
+                            user_name: userProfile.name || 'User',
+                            notes: fromPreset ? null : (newReminder.notes || null)
+                        });
+                    } catch (emailErr) {
+                        console.error('Email notification failed:', emailErr);
+                    }
                 }
             }
 
             // Reset form
-            setNewReminder({ title: '', notes: '', date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', sendEmail: false });
+            setNewReminder({ title: '', notes: '', date: format(new Date(), 'yyyy-MM-dd'), time: format(new Date(), 'HH:mm'), sendEmail: false });
             setShowAddForm(false);
         } catch (err) {
             console.error('Failed to add life reminder:', err);
@@ -359,10 +362,10 @@ export default function Appointments() {
                         </div>
 
                         {/* Legend */}
-                        <div className="flex items-center gap-4 mb-4 px-1">
+                        <div className="flex items-center gap-3 mb-4 px-1 flex-wrap">
                             <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Home</span>
                             <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="w-2 h-2 rounded-full bg-violet-400" /> Family</span>
-                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Self-Care</span>
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Care</span>
                         </div>
 
                         {/* Calendar Grid */}
@@ -451,14 +454,14 @@ export default function Appointments() {
                     </div>
 
                     {/* Top Row: Stats + Streak + Mood */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                         {/* Reminder Stats */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-5 relative overflow-hidden flex flex-col justify-between h-48 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none"
+                            className="bg-white dark:bg-slate-800 rounded-3xl p-4 relative overflow-hidden flex flex-col justify-between min-h-[180px] border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none"
                         >
                             <div className="flex justify-between items-start z-10">
                                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Progress</span>
@@ -495,7 +498,7 @@ export default function Appointments() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-[2.5rem] p-5 text-white flex flex-col justify-between h-48 relative shadow-lg shadow-orange-500/20 overflow-hidden"
+                            className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-3xl p-4 text-white flex flex-col justify-between min-h-[180px] relative shadow-lg shadow-orange-500/20 overflow-hidden"
                         >
                             <div className="flex justify-between items-start">
                                 <span className="text-xs font-bold opacity-80 uppercase tracking-wider">Streak</span>
@@ -520,7 +523,7 @@ export default function Appointments() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-5 flex flex-col justify-between h-48 relative border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none"
+                            className="bg-white dark:bg-slate-800 rounded-3xl p-4 flex flex-col justify-between min-h-[180px] relative border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none overflow-hidden"
                         >
                             <div className="flex justify-between items-start">
                                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Mood</span>
@@ -528,13 +531,13 @@ export default function Appointments() {
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400 mb-2">How are you feeling?</p>
-                                <div className="flex gap-1.5">
+                                <div className="flex gap-1">
                                     {MOODS.map((m) => (
                                         <button
                                             key={m.label}
                                             onClick={() => handleMoodSelect(m.emoji)}
                                             className={cn(
-                                                'w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 border-2',
+                                                'w-8 h-8 rounded-full flex items-center justify-center text-base transition-all hover:scale-110 border-2',
                                                 todayMood === m.emoji
                                                     ? m.color + ' scale-110 shadow-sm'
                                                     : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -548,9 +551,9 @@ export default function Appointments() {
                             </div>
                             {/* 7-day mood history */}
                             <div className="flex gap-1 items-center">
-                                <span className="text-[9px] text-slate-300 font-medium mr-1">7d</span>
+                                <span className="text-[9px] text-slate-300 font-medium mr-0.5">7d</span>
                                 {[...Array(7)].map((_, i) => (
-                                    <div key={i} className="w-5 h-5 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-[10px]">
+                                    <div key={i} className="w-4 h-4 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-[9px]">
                                         {moodHistory[6 - i]?.mood || '·'}
                                     </div>
                                 ))}

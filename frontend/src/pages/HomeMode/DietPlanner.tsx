@@ -1,14 +1,28 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MoreHorizontal, Flame, Droplets, Wheat, Atom, ScanLine, Camera, Plus } from 'lucide-react';
+import { X, MoreHorizontal, Flame, Droplets, Wheat, Atom, ScanLine, Camera, Plus, Search } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { DietPlannerMiniPopup } from '../../components/DietPlannerMiniPopup';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { db } from '../../lib/firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
+import { startOfDay, endOfDay } from 'date-fns';
 
 export default function DietPlanner() {
     const [step, setStep] = useState<'intro' | 'camera' | 'scanning' | 'result'>('intro');
     const [showDailyLog, setShowDailyLog] = useState(false);
+    
+    const { user } = useAuth();
+    
+    // AI Integration State
+    const [textInput, setTextInput] = useState('');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [aiResult, setAiResult] = useState<any>(null);
+    const [selectedMealType, setSelectedMealType] = useState<'breakfast'|'lunch'|'dinner'>('lunch');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-    // Mock Data representing the result
+    // Mock Data representing the fallback result
     const foodData = {
         name: "Kiwi Smoothie Bowl with Granola",
         type: "Breakfast",
@@ -19,34 +33,20 @@ export default function DietPlanner() {
         image: "https://images.unsplash.com/photo-1638159579998-dfe4c8dbd582?q=80&w=2692&auto=format&fit=crop"
     };
 
-    // State for Meal Plan (Categorized)
-    const [mealPlan, setMealPlan] = useState({
-        breakfast: {
-            calories: 398,
-            items: [
-                { name: "Oatmeal", serving: "1.0 serving", calories: 210, icon: "🥣" },
-                { name: "Truroots Organic", serving: "1.0 serving", calories: 138, icon: "🥛" },
-                { name: "Orange Juice", serving: "1.0 serving", calories: 50, icon: "🍊" }
-            ]
-        },
-        lunch: {
-            calories: 421,
-            items: [
-                { name: "BBQ Meat", serving: "1.0 serving", calories: 210, icon: "🍖" },
-                { name: "Rice with Chicken", serving: "1.0 serving", calories: 138, icon: "🍚" }
-            ]
-        },
-        dinner: {
-            calories: 630,
-            items: [
-                { name: "Grilled Salmon", serving: "1.0 serving", calories: 350, icon: "🐟" },
-                { name: "Quinoa Salad", serving: "1.0 serving", calories: 280, icon: "🥗" }
-            ]
-        }
+    // State for Meal Plan (Categorized) - Dynamic
+    type MealItem = { name: string, serving: string, calories: number, icon: string };
+    const [mealPlan, setMealPlan] = useState<{
+        [key in 'breakfast' | 'lunch' | 'dinner']: { calories: number, items: MealItem[] }
+    }>({
+        breakfast: { calories: 0, items: [] as MealItem[] },
+        lunch: { calories: 0, items: [] as MealItem[] },
+        dinner: { calories: 0, items: [] as MealItem[] }
     });
+    const [totalCalories, setTotalCalories] = useState(0);
+    const [totalMacros, setTotalMacros] = useState({ protein: 0, carbs: 0, fat: 0 });
 
     const [activeTab, setActiveTab] = useState<'meal-plan' | 'progress'>('meal-plan');
-    const [calorieLimit, setCalorieLimit] = useState(2500); // Initial random limit
+    const [calorieLimit, setCalorieLimit] = useState(2500); 
     const [isEditingLimit, setIsEditingLimit] = useState(false);
     const [mockWeeklyData] = useState([
         { day: 'S', calories: 1600 },
@@ -58,24 +58,111 @@ export default function DietPlanner() {
         { day: 'S', calories: 2200 },
     ]);
 
-    const handleAddMeal = () => {
-        // Mock adding the scanned item to 'Lunch' for demo purposes
-        const newLunchItems = [...mealPlan.lunch.items, {
-            name: foodData.name,
-            serving: "1.0 serving",
-            calories: foodData.calories,
-            icon: "🥑" // Generic icon for scanned food
-        }];
+    // Firestore Integration: Fetch Today's Meals
+    useEffect(() => {
+        if (!user) return;
+        const todayStart = startOfDay(new Date());
+        const todayEnd = endOfDay(new Date());
 
-        setMealPlan({
-            ...mealPlan,
-            lunch: {
-                ...mealPlan.lunch,
-                calories: mealPlan.lunch.calories + foodData.calories,
-                items: newLunchItems
-            }
+        const q = query(
+            collection(db, `users/${user.uid}/diet_log`),
+            where('timestamp', '>=', todayStart),
+            where('timestamp', '<=', todayEnd),
+            orderBy('timestamp', 'asc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newMealPlan = {
+                breakfast: { calories: 0, items: [] as MealItem[] },
+                lunch: { calories: 0, items: [] as MealItem[] },
+                dinner: { calories: 0, items: [] as MealItem[] }
+            };
+            let totalCals = 0;
+            let macros = { protein: 0, carbs: 0, fat: 0 };
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const type = data.mealType as 'breakfast'|'lunch'|'dinner';
+                if(newMealPlan[type]) {
+                    newMealPlan[type].items.push({
+                        name: data.name,
+                        serving: "1 portion",
+                        calories: data.calories,
+                        icon: data.icon || '🥗'
+                    });
+                    newMealPlan[type].calories += data.calories;
+                }
+                totalCals += (data.calories || 0);
+                macros.protein += (data.protein || 0);
+                macros.carbs += (data.carbs || 0);
+                macros.fat += (data.fat || 0);
+            });
+
+            setMealPlan(newMealPlan);
+            setTotalCalories(totalCals);
+            setTotalMacros(macros);
         });
-        setShowDailyLog(true);
+
+        return () => unsubscribe();
+    }, [user]);
+
+    // Handle Mock Scan Delay
+    useEffect(() => {
+        if (step === 'scanning' && !isAnalyzing) {
+            // Only auto-redirect if it's the mock camera scan
+            const timer = setTimeout(() => setStep('result'), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [step, isAnalyzing]);
+
+    const handleAnalyzeText = async () => {
+        if (!textInput.trim()) return;
+        setIsAnalyzing(true);
+        setStep('scanning');
+        try {
+            const response = await axios.post(`${API_URL}/api/ai/analyze-food`, {
+                query: textInput
+            });
+            const data = response.data;
+            setAiResult({
+                name: data.name,
+                type: 'AI Logged',
+                calories: data.calories,
+                protein: data.protein,
+                carbs: data.carbs,
+                fat: data.fat,
+                image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2653&auto=format&fit=crop" // Generic healthy food image
+            });
+            setStep('result');
+        } catch (error) {
+            console.error("AI Analysis Failed", error);
+            setAiResult(foodData); // Fallback to mock
+            setStep('result');
+        } finally {
+            setIsAnalyzing(false);
+            setTextInput('');
+        }
+    };
+
+    const handleAddMeal = async () => {
+        if (!user) return;
+        const itemToAdd = aiResult || foodData;
+        try {
+            await addDoc(collection(db, `users/${user.uid}/diet_log`), {
+                name: itemToAdd.name,
+                calories: itemToAdd.calories || 0,
+                protein: itemToAdd.protein || 0,
+                carbs: itemToAdd.carbs || 0,
+                fat: itemToAdd.fat || 0,
+                mealType: selectedMealType,
+                icon: selectedMealType === 'breakfast' ? "🍳" : "🥗",
+                timestamp: serverTimestamp()
+            });
+            setShowDailyLog(true);
+            setStep('intro'); // reset UI after adding
+        } catch(error) {
+            console.error("Failed to add meal to Firestore", error);
+        }
     };
 
     // Intro View (Pop-up style landing)
@@ -98,16 +185,46 @@ export default function DietPlanner() {
                     <Camera className="w-10 h-10" />
                 </motion.div>
                 <h1 className="text-3xl font-display font-bold text-rose-950 mb-3">Track Your Nutrition</h1>
-                <p className="text-rose-900/60 mb-8 leading-relaxed">
-                    Snap a photo of your meal to instantly analyze calories and macros.
+                <p className="text-rose-900/60 mb-6 leading-relaxed">
+                    Snap a photo of your meal or log it manually to instantly analyze calories and macros.
                 </p>
-                <button
-                    onClick={() => setStep('camera')}
-                    className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                >
-                    <ScanLine className="w-5 h-5" />
-                    Scan Your Meal
-                </button>
+                
+                <div className="flex flex-col gap-4">
+                    <button
+                        onClick={() => setStep('camera')}
+                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <ScanLine className="w-5 h-5" />
+                        Scan Your Meal
+                    </button>
+
+                    <div className="relative flex items-center my-1">
+                        <div className="flex-grow border-t border-rose-100"></div>
+                        <span className="flex-shrink-0 mx-4 text-rose-300 text-sm font-medium uppercase tracking-wider">OR</span>
+                        <div className="flex-grow border-t border-rose-100"></div>
+                    </div>
+
+                    <div className="bg-rose-50 border border-rose-100 p-2 rounded-2xl flex items-center gap-2 transition-all hover:bg-rose-100/50 focus-within:bg-rose-100 focus-within:ring-2 focus-within:ring-rose-200">
+                        <Search className="w-5 h-5 text-rose-400 ml-2" />
+                        <input 
+                            type="text" 
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            placeholder="Type (e.g., 2 eggs & toast)"
+                            className="flex-1 bg-transparent text-rose-900 outline-none placeholder:text-rose-300 text-sm py-2"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleAnalyzeText();
+                            }}
+                        />
+                        <button 
+                            onClick={handleAnalyzeText}
+                            disabled={isAnalyzing || !textInput.trim()}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors disabled:opacity-50 uppercase tracking-wide"
+                        >
+                            {isAnalyzing ? '...' : 'Analyze'}
+                        </button>
+                    </div>
+                </div>
             </motion.div>
         </div>
     );
@@ -150,7 +267,10 @@ export default function DietPlanner() {
 
                 {/* Shutter Button */}
                 <button
-                    onClick={() => setStep('scanning')}
+                    onClick={() => {
+                        setAiResult(foodData); // mock scan
+                        setStep('scanning');
+                    }}
                     className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                     <div className="w-16 h-16 bg-white rounded-full" />
@@ -160,16 +280,35 @@ export default function DietPlanner() {
                     <ScanLine className="w-6 h-6 text-white/60" />
                 </button>
             </div>
+
+            {/* AI Text Input Fallback */}
+            <div className="absolute top-20 left-4 right-4 z-20">
+                <div className="bg-black/60 backdrop-blur-md border border-white/20 p-2 rounded-2xl flex items-center gap-2 shadow-2xl">
+                    <Search className="w-5 h-5 text-white/50 ml-2" />
+                    <input 
+                        type="text" 
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        placeholder="Log manually (e.g., 2 eggs and toast)"
+                        className="flex-1 bg-transparent text-white outline-none placeholder:text-white/40 text-[13px] py-2"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAnalyzeText();
+                        }}
+                    />
+                    <button 
+                        onClick={handleAnalyzeText}
+                        disabled={isAnalyzing || !textInput.trim()}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-4 py-2 rounded-xl text-xs transition-colors disabled:opacity-50 uppercase tracking-wide"
+                    >
+                        {isAnalyzing ? '...' : 'Analyze'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 
     // Scanning Animation Overlay
     const ScanningOverlay = () => {
-        useEffect(() => {
-            const timer = setTimeout(() => setStep('result'), 2000);
-            return () => clearTimeout(timer);
-        }, []);
-
         return (
             <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
                 <div className="relative w-24 h-24 mb-6">
@@ -241,13 +380,13 @@ export default function DietPlanner() {
                                                 strokeWidth="8"
                                                 fill="transparent"
                                                 strokeDasharray={351.86}
-                                                strokeDashoffset={351.86 * 0.25} // 75%
+                                                strokeDashoffset={351.86 * ((100 - Math.min(100, (totalCalories / calorieLimit) * 100)) / 100)} 
                                                 strokeLinecap="round"
                                                 className="transition-all duration-1000 ease-out"
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-3xl font-bold font-display">2074</span>
+                                            <span className="text-3xl font-bold font-display">{Math.max(0, calorieLimit - totalCalories)}</span>
                                             <span className="text-[10px] uppercase tracking-wider opacity-80">Calories left</span>
                                         </div>
                                     </div>
@@ -256,29 +395,29 @@ export default function DietPlanner() {
                                     <div className="flex-1 space-y-4">
                                         <div>
                                             <div className="flex justify-between text-xs font-bold mb-1">
-                                                <span>783</span>
+                                                <span>{totalMacros.carbs}</span>
                                                 <span className="opacity-60">Carbs</span>
                                             </div>
                                             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-[#ECCC68] w-[70%] rounded-full" />
+                                                <div className="h-full bg-[#ECCC68] rounded-full transition-all" style={{ width: `${Math.min(100, (totalMacros.carbs / 250) * 100)}%` }} />
                                             </div>
                                         </div>
                                         <div>
                                             <div className="flex justify-between text-xs font-bold mb-1">
-                                                <span>115</span>
+                                                <span>{totalMacros.protein}</span>
                                                 <span className="opacity-60">Protein</span>
                                             </div>
                                             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-[#FF856F] w-[40%] rounded-full" />
+                                                <div className="h-full bg-[#FF856F] rounded-full transition-all" style={{ width: `${Math.min(100, (totalMacros.protein / 150) * 100)}%` }} />
                                             </div>
                                         </div>
                                         <div>
                                             <div className="flex justify-between text-xs font-bold mb-1">
-                                                <span>623</span>
+                                                <span>{totalMacros.fat}</span>
                                                 <span className="opacity-60">Fat</span>
                                             </div>
                                             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-[#2ED573] w-[85%] rounded-full" />
+                                                <div className="h-full bg-[#2ED573] rounded-full transition-all" style={{ width: `${Math.min(100, (totalMacros.fat / 80) * 100)}%` }} />
                                             </div>
                                         </div>
                                     </div>
@@ -454,13 +593,15 @@ export default function DietPlanner() {
 
 
     // Result View (Screenshot Match) - PEACH THEME & SLIDE DOWN
-    const ResultView = () => (
+    const ResultView = () => {
+        const item = aiResult || foodData;
+        return (
         <div className="h-full relative bg-[#FFF0E5] flex flex-col"> {/* Peach Background */}
 
             {/* Top Image Area */}
             <div className="h-[45%] relative">
                 <img
-                    src={foodData.image}
+                    src={item.image}
                     alt="Food"
                     className="w-full h-full object-cover"
                 />
@@ -494,27 +635,40 @@ export default function DietPlanner() {
                 >
                     <div className="flex justify-between items-start">
                         <div>
-                            <span className="text-rose-400 font-bold text-sm uppercase tracking-wider">{foodData.type}</span>
+                            <span className="text-rose-400 font-bold text-sm uppercase tracking-wider">{item.type || 'Meal'}</span>
                             <h1 className="text-3xl font-display font-bold text-rose-950 mt-1 leading-tight max-w-[280px]">
-                                {foodData.name}
+                                {item.name}
                             </h1>
                         </div>
 
                         {/* Calorie Badge - Peach Style */}
                         <div className="flex items-center gap-2 bg-white text-rose-500 px-4 py-3 rounded-2xl border border-rose-100 shadow-sm shadow-rose-100/50">
                             <Flame className="w-5 h-5 fill-current" />
-                            <span className="font-display font-bold text-xl">{foodData.calories}</span>
+                            <span className="font-display font-bold text-xl">{item.calories}</span>
                             <span className="text-sm font-medium opacity-80">Cal</span>
                         </div>
+                    </div>
+
+                    {/* Meal Selector */}
+                    <div className="flex bg-rose-100/50 p-1.5 rounded-2xl mb-2 items-center">
+                        {['breakfast', 'lunch', 'dinner'].map(m => (
+                            <button 
+                                key={m}
+                                onClick={() => setSelectedMealType(m as any)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl capitalize transition-all ${selectedMealType === m ? 'bg-white text-rose-600 shadow-sm border border-rose-100 scale-105' : 'text-rose-500/70 hover:bg-rose-100/50'}`}
+                            >
+                                {m}
+                            </button>
+                        ))}
                     </div>
 
                     {/* Add Meal Button */}
                     <button
                         onClick={handleAddMeal}
-                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-200 transition-colors flex items-center justify-center gap-2"
+                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-rose-200 transition-colors flex items-center justify-center gap-2"
                     >
                         <Plus className="w-5 h-5" />
-                        Add Meal to Daily Log
+                        Add to {selectedMealType}
                     </button>
 
                 </motion.div>
@@ -534,7 +688,7 @@ export default function DietPlanner() {
                             <span className="font-bold text-md">Calories</span>
                         </div>
                         <div>
-                            <span className="text-4xl font-display font-bold text-rose-950">{foodData.calories}</span>
+                            <span className="text-4xl font-display font-bold text-rose-950">{item.calories}</span>
                         </div>
                     </motion.div>
 
@@ -550,7 +704,7 @@ export default function DietPlanner() {
                             <span className="font-bold text-md">Protein</span>
                         </div>
                         <div>
-                            <span className="text-4xl font-display font-bold text-slate-900">{foodData.protein}</span>
+                            <span className="text-4xl font-display font-bold text-slate-900">{item.protein}</span>
                             <span className="text-sm font-medium text-slate-500 ml-1">gm</span>
                         </div>
                     </motion.div>
@@ -567,7 +721,7 @@ export default function DietPlanner() {
                             <span className="font-bold text-md">Carbs</span>
                         </div>
                         <div>
-                            <span className="text-4xl font-display font-bold text-slate-900">{foodData.carbs}</span>
+                            <span className="text-4xl font-display font-bold text-slate-900">{item.carbs}</span>
                             <span className="text-sm font-medium text-slate-500 ml-1">gm</span>
                         </div>
                     </motion.div>
@@ -584,7 +738,7 @@ export default function DietPlanner() {
                             <span className="font-bold text-md">Fat</span>
                         </div>
                         <div>
-                            <span className="text-4xl font-display font-bold text-slate-900">{foodData.fat}</span>
+                            <span className="text-4xl font-display font-bold text-slate-900">{item.fat}</span>
                             <span className="text-sm font-medium text-slate-500 ml-1">gm</span>
                         </div>
                     </motion.div>
@@ -592,19 +746,20 @@ export default function DietPlanner() {
                 </div>
             </motion.div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="h-screen bg-black overflow-hidden relative font-sans">
             <DietPlannerMiniPopup />
             <AnimatePresence>
-                {showDailyLog && <DailyLogModal />}
+                {showDailyLog && DailyLogModal()}
             </AnimatePresence>
 
-            {step === 'intro' && <IntroView />}
-            {step === 'scanning' && <ScanningOverlay />}
-            {step === 'result' && <ResultView />}
-            {step === 'camera' && <CameraView />}
+            {step === 'intro' && IntroView()}
+            {step === 'scanning' && ScanningOverlay()}
+            {step === 'result' && ResultView()}
+            {step === 'camera' && CameraView()}
         </div>
     );
 }
