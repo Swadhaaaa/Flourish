@@ -29,13 +29,11 @@ export default function Sisterhood() {
 
     // Chat State
     const [activeChat, setActiveChat] = useState<{ id: string; name: string; photo: string } | null>(null);
-    const [keyRestoreError, setKeyRestoreError] = useState<string | null>(null);
 
     // Restore keys from Firestore if available, otherwise generate new ones seamlessly
     const restoreOrRegenerateKeys = async () => {
         if (!user) return;
         setIsRegeneratingKeys(true);
-        setKeyRestoreError(null);
         try {
             // Check if private key is stored in Firestore (synced from another device)
             const firestorePrivKey = userProfile?.encryptedPrivateKey;
@@ -69,7 +67,6 @@ export default function Sisterhood() {
             }
         } catch (err) {
             console.error("Key restore/regeneration failed", err);
-            setKeyRestoreError("Failed to initialize secure connection. Please try again.");
         } finally {
             setIsRegeneratingKeys(false);
         }
