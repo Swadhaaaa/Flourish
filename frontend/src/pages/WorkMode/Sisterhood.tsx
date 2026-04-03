@@ -29,11 +29,13 @@ export default function Sisterhood() {
 
     // Chat State
     const [activeChat, setActiveChat] = useState<{ id: string; name: string; photo: string } | null>(null);
+    const [keyRestoreError, setKeyRestoreError] = useState<string | null>(null);
 
-    // Restore keys from Firestore if available, otherwise generate new ones
+    // Restore keys from Firestore if available, otherwise generate new ones seamlessly
     const restoreOrRegenerateKeys = async () => {
         if (!user) return;
         setIsRegeneratingKeys(true);
+        setKeyRestoreError(null);
         try {
             // Check if private key is stored in Firestore (synced from another device)
             const firestorePrivKey = userProfile?.encryptedPrivateKey;
@@ -42,16 +44,32 @@ export default function Sisterhood() {
                 localStorage.setItem(`e2ee_priv_${user.uid}`, firestorePrivKey);
                 console.log("E2EE keys restored from Firestore (cross-device sync)");
             } else {
-                // No keys in Firestore either — generate fresh keys
-                const keyPair = await generateKeyPair();
-                const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
-                const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
-                localStorage.setItem(`e2ee_priv_${user.uid}`, privKeyB64);
-                await updateUserProfile({ publicKey: pubKeyB64, encryptedPrivateKey: privKeyB64 });
-                console.log("E2EE keys generated and synced to Firestore");
+                if (sessionStorage.getItem('isGeneratingE2EKey')) {
+                    console.log("DEBUG: Key generation already in progress, skipping duplicate call.");
+                    return;
+                }
+                sessionStorage.setItem('isGeneratingE2EKey', 'true');
+
+                // Private key is missing (either entirely new user, or a new device where backup was lost)
+                // SILENTLY REGENERATE keys to allow the user to continue chatting seamlessly as requested.
+                // Old messages encrypted with previous keys will gracefully show [Key Mismatch].
+                try {
+                    const keyPair = await generateKeyPair();
+                    const pubKeyB64 = await exportPublicKey(keyPair.publicKey);
+                    const privKeyB64 = await exportPrivateKey(keyPair.privateKey);
+                    
+                    // MUST be synchronous before network call
+                    localStorage.setItem(`e2ee_priv_${user.uid}`, privKeyB64);
+                    
+                    await updateUserProfile({ publicKey: pubKeyB64, encryptedPrivateKey: privKeyB64 });
+                    console.log("E2EE keys generated and synced to Firestore (Silent Rotation)");
+                } finally {
+                    sessionStorage.removeItem('isGeneratingE2EKey');
+                }
             }
         } catch (err) {
             console.error("Key restore/regeneration failed", err);
+            setKeyRestoreError("Failed to initialize secure connection. Please try again.");
         } finally {
             setIsRegeneratingKeys(false);
         }
@@ -274,8 +292,8 @@ export default function Sisterhood() {
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 flex items-center gap-3">
                         <Lock className="w-5 h-5 text-amber-500 animate-pulse" />
                         <div>
-                            <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Regenerating encryption keys...</p>
-                            <p className="text-xs text-amber-500 dark:text-amber-500/70">Your secure chat profile is being restored.</p>
+                            <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Securing your profile...</p>
+                            <p className="text-xs text-amber-500 dark:text-amber-500/70">Initializing your device-specific encryption keys.</p>
                         </div>
                     </motion.div>
                 )}

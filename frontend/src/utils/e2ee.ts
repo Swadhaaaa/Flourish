@@ -18,15 +18,23 @@ export async function generateKeyPair(): Promise<CryptoKeyPair> {
 // Export Public Key to a Base64 string to store in Firestore
 export async function exportPublicKey(key: CryptoKey): Promise<string> {
     const exported = await window.crypto.subtle.exportKey("spki", key);
-    const exportedAsString = String.fromCharCode.apply(null, new Uint8Array(exported) as any);
-    return window.btoa(exportedAsString);
+    let binary = "";
+    const bytes = new Uint8Array(exported);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
 }
 
 // Export Private Key to a Base64 string to store in IndexedDB or LocalStorage
 export async function exportPrivateKey(key: CryptoKey): Promise<string> {
     const exported = await window.crypto.subtle.exportKey("pkcs8", key);
-    const exportedAsString = String.fromCharCode.apply(null, new Uint8Array(exported) as any);
-    return window.btoa(exportedAsString);
+    let binary = "";
+    const bytes = new Uint8Array(exported);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
 }
 
 // Import Public Key from Base64 string (from Firestore)
@@ -98,8 +106,18 @@ export async function encryptMessage(sharedKey: CryptoKey, text: string): Promis
         encoded
     );
 
-    const ciphertextB64 = window.btoa(String.fromCharCode.apply(null, new Uint8Array(ciphertextBuffer) as any));
-    const ivB64 = window.btoa(String.fromCharCode.apply(null, new Uint8Array(iv) as any));
+    let ciphertextBinary = "";
+    const ciphertextBytes = new Uint8Array(ciphertextBuffer);
+    for (let i = 0; i < ciphertextBytes.byteLength; i++) {
+        ciphertextBinary += String.fromCharCode(ciphertextBytes[i]);
+    }
+    const ciphertextB64 = window.btoa(ciphertextBinary);
+
+    let ivBinary = "";
+    for (let i = 0; i < iv.byteLength; i++) {
+        ivBinary += String.fromCharCode(iv[i]);
+    }
+    const ivB64 = window.btoa(ivBinary);
 
     return { ciphertext: ciphertextB64, iv: ivB64 };
 }
@@ -129,7 +147,8 @@ export async function decryptMessage(sharedKey: CryptoKey, ciphertextB64: string
         );
         return new TextDecoder().decode(decryptedBuffer);
     } catch (e) {
-        console.error("Decryption failed", e);
+        // We expect decryption to fail for old messages when keys rotate.
+        // Returning the placeholder string tells the UI it's intentionally locked.
         return "[Encrypted Message - Key Mismatch]";
     }
 }

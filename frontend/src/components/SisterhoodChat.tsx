@@ -38,45 +38,55 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
 
     // 1. Establish E2EE Key
     useEffect(() => {
+        let unsubscribePeer: (() => void) | null = null;
+        
         const setupE2EE = async () => {
             try {
-                const peerDoc = await getDoc(doc(db, 'users', peerId));
-                if (!peerDoc.exists() || !peerDoc.data().publicKey) {
-                    console.error("Peer has no public key");
-                    setLoadingKey(false);
-                    return;
-                }
-                const peerPublicKeyStr = peerDoc.data().publicKey;
-                const peerKey = await importPublicKey(peerPublicKeyStr);
-
-                const privKeyStr = localStorage.getItem(`e2ee_priv_${user?.uid}`);
+                let privKeyStr = localStorage.getItem(`e2ee_priv_${user?.uid}`);
                 if (!privKeyStr) {
-                    console.error("DEBUG: Local private key missing from LocalStorage for UID:", user?.uid);
-                    setKeyError("Encryption keys missing on this device. You need to re-initialize your secure chat profile.");
+                    // We wait for Sisterhood.tsx to handle key generation, no duplicate work.
+                    // Or they must click Reset.
+                    console.warn("Keys missing. Awaiting Sisterhood.tsx auto-repair or manual Reset.");
+                    setKeyError("Encryption keys missing. Please click the Reset (Trash) button in the top right header.");
                     setLoadingKey(false);
                     return;
                 }
                 const myPrivKey = await importPrivateKey(privKeyStr);
 
-                const shared = await deriveSharedSecret(myPrivKey, peerKey);
-                setSharedKey(shared);
-                console.log("E2EE Shared Key Derived Successfully");
+                // Listen to peer's public key changes in real-time
+                unsubscribePeer = onSnapshot(doc(db, 'users', peerId), async (docSnap) => {
+                    if (docSnap.exists() && docSnap.data().publicKey) {
+                        const peerPublicKeyStr = docSnap.data().publicKey;
+                        const peerKey = await importPublicKey(peerPublicKeyStr);
+                        const shared = await deriveSharedSecret(myPrivKey, peerKey);
+                        setSharedKey(shared);
+                        console.log("E2EE Shared Key Derived/Updated Successfully");
 
-                // Decrypt any buffered messages
-                if (pendingSocketMsgs.current.length > 0) {
-                    console.log(`Processing ${pendingSocketMsgs.current.length} buffered messages`);
-                    for (const data of pendingSocketMsgs.current) {
-                        handleIncomingMessage(data, shared);
+                        // Decrypt any buffered messages
+                        if (pendingSocketMsgs.current.length > 0) {
+                            console.log(`Processing ${pendingSocketMsgs.current.length} buffered messages`);
+                            for (const data of pendingSocketMsgs.current) {
+                                handleIncomingMessage(data, shared);
+                            }
+                            pendingSocketMsgs.current = [];
+                        }
+                    } else {
+                        console.error("Peer has no public key");
                     }
-                    pendingSocketMsgs.current = [];
-                }
+                    setLoadingKey(false);
+                });
+
             } catch (err) {
                 console.error("E2EE Setup failed", err);
-            } finally {
                 setLoadingKey(false);
             }
         };
+        
         if (user && peerId) setupE2EE();
+        
+        return () => {
+            if (unsubscribePeer) unsubscribePeer();
+        };
     }, [user, peerId]);
 
     const handleIncomingMessage = async (data: any, key: CryptoKey) => {
@@ -275,9 +285,25 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                             </div>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 bg-white dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-100">
-                        <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async () => {
+                                if (window.confirm("Cannot read messages? This will reset your encryption keys to fix sync issues. Proceed?")) {
+                                    localStorage.removeItem(`e2ee_priv_${user?.uid}`);
+                                    const { updateDoc } = await import('firebase/firestore');
+                                    await updateDoc(doc(db, 'users', user!.uid), { publicKey: null, encryptedPrivateKey: null });
+                                    window.location.reload();
+                                }
+                            }}
+                            className="p-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-800 rounded-full transition-colors"
+                            title="Reset Secure Keys"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={onClose} className="p-2 bg-white dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-100">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Messages Area */}
@@ -289,33 +315,11 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                         </div>
                     ) : keyError ? (
                         <div className="h-full flex flex-col items-center justify-center text-center px-6">
-                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
-                                <Lock className="w-8 h-8 text-amber-500" />
+                            <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mb-4">
+                                <MessageCircle className="w-8 h-8 text-rose-500" />
                             </div>
-                            <h4 className="font-bold text-slate-800 dark:text-white mb-2">Security Setup Needed</h4>
-                            <p className="text-sm text-slate-500 mb-6">{keyError}</p>
-                            <div className="flex flex-col gap-3 w-full">
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs uppercase"
-                                >
-                                    Try Refreshing
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        localStorage.removeItem(`e2ee_priv_${user?.uid}`);
-                                        // Use window.location.href for reset to ensure total state clearance
-                                        // regarding E2EE keys across all components
-                                        window.location.href = '/work/sisterhood';
-                                    }}
-                                    className="w-full py-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl font-bold text-xs uppercase"
-                                >
-                                    Reset Security Profile
-                                </button>
-                                <p className="text-[10px] text-slate-400 mt-2 italic">
-                                    Note: Encryption keys are device-specific. If you just logged in here, you may need to reset them in Sisterhood settings.
-                                </p>
-                            </div>
+                            <h4 className="font-bold text-slate-800 dark:text-white mb-2">Error connecting</h4>
+                            <p className="text-sm text-slate-500">{keyError}</p>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center px-6">
