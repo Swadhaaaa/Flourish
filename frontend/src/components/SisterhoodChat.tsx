@@ -60,6 +60,19 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                         const peerKey = await importPublicKey(peerPublicKeyStr);
                         const shared = await deriveSharedSecret(myPrivKey, peerKey);
                         setSharedKey(shared);
+                        
+                        try {
+                            // Math checksum to prove both devices derived the EXACT same key
+                            const testIv = new Uint8Array(12);
+                            const testCipher = await window.crypto.subtle.encrypt(
+                                { name: "AES-GCM", iv: testIv }, 
+                                shared, 
+                                new TextEncoder().encode("SYNC_TEST")
+                            );
+                            const testArr = new Uint8Array(testCipher);
+                            console.log(`E2EE Derived Checksum: ${testArr[0]}-${testArr[1]}-${testArr[2]}-${testArr[3]}`);
+                        } catch (e) {}
+
                         console.log("E2EE Shared Key Derived/Updated Successfully");
 
                         // Decrypt any buffered messages

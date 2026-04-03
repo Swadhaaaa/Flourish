@@ -77,13 +77,14 @@ export default function Sisterhood() {
         if (!userProfile || !user) return;
 
         // E2EE check: both public key in Firestore AND private key in LocalStorage
+        const localKey = localStorage.getItem(`e2ee_priv_${user.uid}`);
         const hasPublicKey = !!userProfile.publicKey;
-        const hasLocalStorageKey = !!localStorage.getItem(`e2ee_priv_${user.uid}`);
-
+        const hasLocalStorageKey = !!localKey;
+        const isKeyDesynced = hasPublicKey && localKey && localKey !== userProfile.encryptedPrivateKey;
         const hasProfileData = userProfile.industry && userProfile.role;
 
-        if (hasProfileData && (!hasPublicKey || !hasLocalStorageKey)) {
-            // User already onboarded but keys are missing locally — restore or regenerate
+        if (hasProfileData && (!hasPublicKey || !hasLocalStorageKey || isKeyDesynced)) {
+            // User already onboarded but keys are missing locally or desynced across devices — restore or regenerate
             restoreOrRegenerateKeys();
             setNeedsOnboarding(false);
             fetchMatches(userProfile);
