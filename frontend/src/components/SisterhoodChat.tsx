@@ -60,19 +60,6 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                         const peerKey = await importPublicKey(peerPublicKeyStr);
                         const shared = await deriveSharedSecret(myPrivKey, peerKey);
                         setSharedKey(shared);
-                        
-                        try {
-                            // Math checksum to prove both devices derived the EXACT same key
-                            const testIv = new Uint8Array(12);
-                            const testCipher = await window.crypto.subtle.encrypt(
-                                { name: "AES-GCM", iv: testIv }, 
-                                shared, 
-                                new TextEncoder().encode("SYNC_TEST")
-                            );
-                            const testArr = new Uint8Array(testCipher);
-                            console.log(`E2EE Derived Checksum: ${testArr[0]}-${testArr[1]}-${testArr[2]}-${testArr[3]}`);
-                        } catch (e) {}
-
                         console.log("E2EE Shared Key Derived/Updated Successfully");
 
                         // Decrypt any buffered messages
@@ -378,6 +365,21 @@ export default function SisterhoodChat({ peerId, peerName, peerPhoto, apiUrl, on
                                 </span>
                             </div>
                         </div>
+                    )}
+
+                    {isPeerTyping && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="flex justify-start mb-4"
+                        >
+                            <div className="bg-slate-100 dark:bg-slate-800 text-slate-500 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1.5 shadow-sm border border-slate-200/50 dark:border-slate-700 w-fit">
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            </div>
+                        </motion.div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
