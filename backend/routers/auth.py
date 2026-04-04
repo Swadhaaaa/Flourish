@@ -12,17 +12,16 @@ async def get_google_auth_url(user_id: str, request: Request):
         # Dynamic redirect based on where the app is being called from
         base_url = str(request.base_url).rstrip('/')
         
-        # Use ENV variable if explicitly set (highest priority)
-        env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
-        if env_redirect:
-            redirect_uri = env_redirect
+        # Hardcoded Production URI (Highest reliability for Render)
+        if "localhost" not in base_url and "127.0.0.1" not in base_url:
+            redirect_uri = "https://tea-hack.onrender.com/api/auth/google/callback"
         else:
-            # FORCE HTTPS for Production (Render/Cloud)
-            # We assume if it's not localhost, it MUST be https for Google to be happy
-            if "localhost" not in base_url and "127.0.0.1" not in base_url:
-                redirect_uri = f"{base_url.replace('http://', 'https://')}/api/auth/google/callback"
-            else:
-                redirect_uri = f"{base_url}/api/auth/google/callback"
+            redirect_uri = f"{base_url}/api/auth/google/callback"
+        
+        # Override with ENV variable if explicitly set
+        env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
+        if env_redirect and len(env_redirect) > 0:
+            redirect_uri = env_redirect
         
         print(f"FORCING PRODUCTION REDIRECT: {redirect_uri}")
         
@@ -48,14 +47,14 @@ async def google_auth_callback(request: Request):
     
     # Must use the same redirect_uri that was used for the code generation
     base_url = str(request.base_url).rstrip('/')
-    env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
-    if env_redirect:
-        redirect_uri = env_redirect
+    if "localhost" not in base_url and "127.0.0.1" not in base_url:
+        redirect_uri = "https://tea-hack.onrender.com/api/auth/google/callback"
     else:
-        if "localhost" not in base_url and "127.0.0.1" not in base_url:
-            redirect_uri = f"{base_url.replace('http://', 'https://')}/api/auth/google/callback"
-        else:
-            redirect_uri = f"{base_url}/api/auth/google/callback"
+        redirect_uri = f"{base_url}/api/auth/google/callback"
+    
+    env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
+    if env_redirect and len(env_redirect) > 0:
+        redirect_uri = env_redirect
     
     if not code or not user_id:
         print("Callback missing code or state")
@@ -95,12 +94,11 @@ async def auth_debug(request: Request):
     final_uri = env_redirect if env_redirect else f"{forced_base}/api/auth/google/callback"
     
     return {
-        "debug_version_timestamp": "2026-04-04-18:50 (FRESH CODE!)",
+        "debug_version": "3.0 (CLEANUP_FINAL)",
         "is_production_mode": is_prod,
-        "base_url_received": base_url,
-        "force_https_active": is_prod,
         "final_redirect_uri_being_sent": final_uri,
         "credentials_json_found": "Yes" if creds_json else "No",
         "active_client_id": active_client_id,
-        "google_console_instruction": "Confirm that 'active_client_id' and 'final_redirect_uri_being_sent' EXACTLY match what you see in the Google Console."
+        "CHECKLIST_1_GOOGLE_CONSOLE": f"Redirect URI must be: {final_uri}",
+        "CHECKLIST_2_JS_ORIGIN": "Authorized JavaScript origins must be: https://tea-hack.onrender.com"
     }

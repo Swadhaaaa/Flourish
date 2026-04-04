@@ -51,30 +51,32 @@ class GmailService:
         
     def get_authorization_url(self, user_id: str, redirect_uri: str):
         """Generates the Google Authorization URL for a Web Flow."""
-        # Hybrid Loader: Check for file first, then ENV variable
-        if os.path.exists('credentials.json'):
-            flow = Flow.from_client_secrets_file(
-                'credentials.json', 
-                scopes=SCOPES,
-                redirect_uri=redirect_uri
-            )
-        else:
-            creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-            if not creds_json:
-                raise FileNotFoundError("credentials.json not found and GOOGLE_CREDENTIALS_JSON not set.")
-            
-            # Load from JSON string in Cloud Environment
-            client_config = json.loads(creds_json)
-            flow = Flow.from_client_config(
-                client_config,
-                scopes=SCOPES,
-                redirect_uri=redirect_uri
-            )
-
-        # Construct the URL
+        client_config = None
         
-        # Construct the URL
-        # We pass user_id in 'state' so we know who it belongs to when they return
+        # Try ENV first
+        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if creds_json:
+            try:
+                clean_json = creds_json.strip()
+                if clean_json.startswith('{ {'): clean_json = clean_json[1:].strip()
+                if clean_json.endswith('} }'): clean_json = clean_json[:-1].strip()
+                client_config = json.loads(clean_json)
+            except:
+                pass
+        
+        if not client_config and os.path.exists('credentials.json'):
+            with open('credentials.json', 'r') as f:
+                client_config = json.load(f)
+
+        if not client_config:
+            raise FileNotFoundError("Google credentials not found.")
+
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=SCOPES,
+            redirect_uri=redirect_uri
+        )
+
         auth_url, _ = flow.authorization_url(
             prompt='select_account',
             access_type='offline',
@@ -85,23 +87,31 @@ class GmailService:
 
     def exchange_code(self, user_id: str, code: str, redirect_uri: str):
         """Exchanges the authorization code for a token and saves to Firestore."""
-        if os.path.exists('credentials.json'):
-            flow = Flow.from_client_secrets_file(
-                'credentials.json', 
-                scopes=SCOPES,
-                redirect_uri=redirect_uri
-            )
-        else:
-            creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-            if not creds_json:
-                raise FileNotFoundError("credentials.json not found and GOOGLE_CREDENTIALS_JSON not set.")
-            
-            client_config = json.loads(creds_json)
-            flow = Flow.from_client_config(
-                client_config,
-                scopes=SCOPES,
-                redirect_uri=redirect_uri
-            )
+        client_config = None
+        
+        # Try ENV first
+        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if creds_json:
+            try:
+                clean_json = creds_json.strip()
+                if clean_json.startswith('{ {'): clean_json = clean_json[1:].strip()
+                if clean_json.endswith('} }'): clean_json = clean_json[:-1].strip()
+                client_config = json.loads(clean_json)
+            except:
+                pass
+        
+        if not client_config and os.path.exists('credentials.json'):
+            with open('credentials.json', 'r') as f:
+                client_config = json.load(f)
+
+        if not client_config:
+            raise FileNotFoundError("Google credentials not found.")
+
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=SCOPES,
+            redirect_uri=redirect_uri
+        )
         
         flow.fetch_token(code=code)
         creds = flow.credentials
