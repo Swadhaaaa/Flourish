@@ -2,7 +2,7 @@ import os.path
 import base64
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from typing import List
 from typing import List, Optional
@@ -49,18 +49,15 @@ class GmailService:
             print(f"Error fetching profile: {e}")
             return None
         
-    def get_authorization_url(self, user_id: str = "1"):
+    def get_authorization_url(self, user_id: str, redirect_uri: str):
         """Generates the Google Authorization URL for a Web Flow."""
         if not os.path.exists('credentials.json'):
             raise FileNotFoundError("credentials.json not found.")
 
-        # Important: For Web Flow, we use redirect_uri from the credentials or env
-        # On Render, this must match the one in Google Console
-        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://tea-hack.onrender.com/api/auth/google/callback")
-        
-        flow = InstalledAppFlow.from_client_secrets_file(
+        # Using standard 'Flow' for Web Applications instead of InstalledAppFlow
+        flow = Flow.from_client_secrets_file(
             'credentials.json', 
-            SCOPES,
+            scopes=SCOPES,
             redirect_uri=redirect_uri
         )
         
@@ -74,13 +71,11 @@ class GmailService:
         )
         return auth_url
 
-    def exchange_code(self, user_id: str, code: str):
+    def exchange_code(self, user_id: str, code: str, redirect_uri: str):
         """Exchanges the authorization code for a token and saves to Firestore."""
-        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://tea-hack.onrender.com/api/auth/google/callback")
-        
-        flow = InstalledAppFlow.from_client_secrets_file(
+        flow = Flow.from_client_secrets_file(
             'credentials.json', 
-            SCOPES,
+            scopes=SCOPES,
             redirect_uri=redirect_uri
         )
         
