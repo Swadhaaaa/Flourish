@@ -62,9 +62,16 @@ self.addEventListener('fetch', (event) => {
 
                 return response;
             })
-            .catch(() => {
+            .catch(async () => {
                 // Only return from cache if network fails
-                return caches.match(request);
+                const cachedResponse = await caches.match(request);
+                if (cachedResponse) return cachedResponse;
+                
+                // If both fail, return a basic error response instead of undefined
+                return new Response('Network error occurred', {
+                    status: 408,
+                    headers: { 'Content-Type': 'text/plain' }
+                });
             })
     );
 });

@@ -93,11 +93,10 @@ export default function WorkDashboard() {
             orderBy('date', 'asc')
         );
 
-        // 2. Listen to Reminders (Completed)
+        // 2. Listen to Reminders (Fetch last 7 days, filter/sort in JS to avoid composite index)
         const remindersQuery = query(
             collection(db, `users/${user.uid}/reminders`),
-            where('completed', '==', true),
-            orderBy('date', 'asc')
+            where('date', '>=', format(sevenDaysAgo, 'yyyy-MM-dd'))
         );
 
         const unsubMoods = onSnapshot(moodQuery, (moodSnap) => {
@@ -110,7 +109,7 @@ export default function WorkDashboard() {
 
                 const tasksByDay = remSnap.docs.reduce((acc: any, d) => {
                     const data = d.data();
-                    if (data.date >= format(sevenDaysAgo, 'yyyy-MM-dd')) {
+                    if (data.completed) {
                         acc[data.date] = (acc[data.date] || 0) + 1;
                     }
                     return acc;
