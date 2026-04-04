@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from scheduler_app.services.gmail_service import gmail_service
 import os
 
@@ -68,3 +68,28 @@ async def google_auth_callback(request: Request):
     except Exception as e:
         print(f"Callback Exchange Error: {e}")
         return RedirectResponse(url=f"{frontend_url}/work/tone-shield?status=error")
+
+@router.get("/debug")
+async def auth_debug(request: Request):
+    """Debug endpoint to verify production OAuth settings."""
+    base_url = str(request.base_url).rstrip('/')
+    
+    # Check if HTTPS is being forced correctly
+    is_prod = "localhost" not in base_url and "127.0.0.1" not in base_url
+    forced_base = base_url.replace('http://', 'https://') if is_prod else base_url
+    
+    # Check env vars
+    env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
+    creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    
+    # The final URI we are sending to Google
+    final_uri = env_redirect if env_redirect else f"{forced_base}/api/auth/google/callback"
+    
+    return {
+        "is_production_mode": is_prod,
+        "base_url_received": base_url,
+        "force_https_active": is_prod,
+        "final_redirect_uri_being_sent": final_uri,
+        "credentials_json_found": "Yes" if creds_json else "No (CHECK RENDER ENV VARS)",
+        "google_console_instruction": "Make sure the 'final_redirect_uri_being_sent' exactly matches your Google Cloud Console Authorized Redirect URIs."
+    }
