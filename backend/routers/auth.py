@@ -80,7 +80,7 @@ async def google_auth_callback(request: Request):
         print(f"Callback Exchange Error: {e}")
         return RedirectResponse(url=f"{frontend_url}/work/tone-shield?status=error")
 
-@router.post("/auth/google/firebase-token")
+@router.post("/google/firebase-token")
 async def save_firebase_token(req: FirebaseTokenRequest):
     """Saves a token received directly from the frontend (Firebase Popup)."""
     try:

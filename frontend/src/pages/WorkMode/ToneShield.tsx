@@ -147,11 +147,13 @@ export default function ToneShield() {
                 })
             });
 
-            if (response.ok) {
+            const data = await response.json();
+
+            if (response.ok && data.status !== 'error') {
                 setIsGmailConnected(true);
                 alert("Gmail Connected Securely via Firebase!");
             } else {
-                alert("Backend failed to save the Gmail token.");
+                alert(`Backend Error: ${data.message || "Unknown error during token save."}`);
             }
         } catch (e: any) {
             console.error("Firebase Auth Error", e);
