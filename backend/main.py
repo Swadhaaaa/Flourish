@@ -238,7 +238,7 @@ class NotificationRequest(BaseModel):
     type: str = "connection_request"
 
 @app.post("/api/notifications/connection-request")
-async def send_connection_notification(request: NotificationRequest):
+def send_connection_notification(request: NotificationRequest):
     """
     Sends an email notification for a new connection request.
     """
@@ -291,7 +291,7 @@ class ReminderNotification(BaseModel):
     notes: Optional[str] = None
 
 @app.post("/api/notifications/reminder")
-async def send_reminder_notification(request: ReminderNotification):
+def send_reminder_notification(request: ReminderNotification):
     """
     Sends an email notification for a new life reminder (Home, Family, Self-Care).
     """
@@ -452,7 +452,7 @@ class EmailShareRequest(BaseModel):
     message: str
 
 @app.post("/api/ridesync/share")
-async def ridesync_share(request: EmailShareRequest):
+def ridesync_share(request: EmailShareRequest):
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText

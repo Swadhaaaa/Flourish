@@ -508,7 +508,7 @@ export default function DietPlanner() {
                                     <span className="text-sm font-medium text-slate-400">Average: 1497 Cal 🔥</span>
                                 </div>
 
-                                <div className="h-64 w-full">
+                                <div className="h-48 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={mockWeeklyData}>
                                             <Tooltip

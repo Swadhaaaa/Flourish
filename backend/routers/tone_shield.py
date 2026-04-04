@@ -17,11 +17,17 @@ async def analyze_tone_shield(request: ToneRequest):
         # 1. Run ML Analysis
         result = analyze_tone(request.content)
         
-        # 2. Add 'Rewrite' Logic (Mock/Heuristic for now, or call LLM if available)
-        if result.is_toxic:
-             result.rewritten = "Rephrased: " + request.content.replace("stupid", "unclear").replace("hate", "disagree with") + " [AI Softened]"
-        
-        # 3. Check for Invisible Labor
+        # 3. Create a Manual Report for the Simulator (to make it dynamic)
+        mock_email = EmailData(
+            id=str(uuid.uuid4()),
+            sender=request.sender or "Manual Entry",
+            recipient="User",
+            subject="Manual Tone Analysis",
+            body=request.content
+        )
+        create_report(mock_email, result)
+
+        # 4. Check for Invisible Labor
         labor_keywords = ["schedule", "plan", "organize", "take notes", "book", "order lunch"]
         if any(word in request.content.lower() for word in labor_keywords):
             result.is_invisible_labor = True
@@ -41,8 +47,9 @@ async def analyze_tone_shield(request: ToneRequest):
 
 # --- New Endpoints from TIAA TS ---
 
-from scheduler_app.services.gmail_service import gmail_service
+from scheduler_app.services.gmail_service import gmail_service, EmailData
 from scheduler_app.services.reporting_service import create_report, get_all_reports, Report
+import uuid
 
 @router.post("/sync-gmail", response_model=list[ToneAnalysisResult])
 async def sync_gmail(user_id: str = "1"):

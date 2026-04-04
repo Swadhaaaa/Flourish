@@ -50,7 +50,7 @@ class GmailService:
             return None
         
     def authenticate(self, user_id: str = "1", prompt_login: bool = True):
-        """Authenticates the user, forcing account selection if no token exists."""
+        """Authenticates the user, forcing account selection if no token exists in Firestore."""
         creds = None
         
         # 1. Check Firestore for existing secure token
@@ -63,12 +63,6 @@ class GmailService:
                 print(f"Failed to parse token from Firestore: {e}")
                 creds = None
                 
-        # 2. Fallback to default local token.json if no user token and prompt_login is False (Hackathon fallback)
-        if not creds and prompt_login == False:
-            if os.path.exists('token.json'):
-                print(f"Token for {user_id} not found in Firestore, falling back to default shared token.json")
-                creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:

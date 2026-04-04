@@ -7,7 +7,10 @@ import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 import { MusicPlayer } from '../../components/MusicPlayer';
 import InvisibleLaborLog from '../../components/InvisibleLaborLog';
-import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Bar, Tooltip, ResponsiveContainer, Cell, Line, ComposedChart, XAxis, YAxis } from 'recharts';
+import { db } from '../../lib/firebase';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { format, subDays, startOfDay } from 'date-fns';
 
 // Tilt Card Component for extra "Wow" factor
 function TiltCard({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) {
@@ -51,16 +54,14 @@ function TiltCard({ children, className, onClick }: { children: React.ReactNode,
     );
 }
 
-// Mock Data for Analytics
-const ANALYTICS_DATA = [
-    { day: 'Mon', focus: 65 },
-    { day: 'Tue', focus: 85 },
-    { day: 'Wed', focus: 45 },
-    { day: 'Thu', focus: 90 },
-    { day: 'Fri', focus: 75 },
-    { day: 'Sat', focus: 30 },
-    { day: 'Sun', focus: 50 },
-];
+// Mood mapping to energy score
+const MOOD_SCORES: Record<string, number> = {
+    'Great': 100,
+    'Good': 80,
+    'Okay': 60,
+    'Low': 40,
+    'Stressed': 20
+};
 
 export default function WorkDashboard() {
     const { user, userProfile, updateUserProfile } = useAuth();
@@ -76,8 +77,68 @@ export default function WorkDashboard() {
     // Music Player State
     const [showMusicPlayer, setShowMusicPlayer] = useState(false);
 
-    // Invisible Labor Log State
+    const [weeklyStats, setWeeklyStats] = useState<any[]>([]);
     const [showLaborLog, setShowLaborLog] = useState(false);
+
+    // Fetch Moods and Reminders for the last 7 days
+    useEffect(() => {
+        if (!user) return;
+
+        const sevenDaysAgo = startOfDay(subDays(new Date(), 7));
+
+        // 1. Listen to Moods
+        const moodQuery = query(
+            collection(db, `users/${user.uid}/mood_checkins`),
+            where('date', '>=', format(sevenDaysAgo, 'yyyy-MM-dd')),
+            orderBy('date', 'asc')
+        );
+
+        // 2. Listen to Reminders (Completed)
+        const remindersQuery = query(
+            collection(db, `users/${user.uid}/reminders`),
+            where('completed', '==', true),
+            orderBy('date', 'asc')
+        );
+
+        const unsubMoods = onSnapshot(moodQuery, (moodSnap) => {
+            const unsubReminders = onSnapshot(remindersQuery, (remSnap) => {
+                const moodsByDay = moodSnap.docs.reduce((acc: any, d) => {
+                    const data = d.data();
+                    acc[data.date] = MOOD_SCORES[data.mood] || 50;
+                    return acc;
+                }, {});
+
+                const tasksByDay = remSnap.docs.reduce((acc: any, d) => {
+                    const data = d.data();
+                    if (data.date >= format(sevenDaysAgo, 'yyyy-MM-dd')) {
+                        acc[data.date] = (acc[data.date] || 0) + 1;
+                    }
+                    return acc;
+                }, {});
+
+                // Generate 7-day stats
+                const stats = [];
+                let totalTasks = 0;
+                for (let i = 6; i >= 0; i--) {
+                    const date = subDays(new Date(), i);
+                    const dateStr = format(date, 'yyyy-MM-dd');
+                    const taskCount = tasksByDay[dateStr] || 0;
+                    totalTasks += taskCount;
+                    stats.push({
+                        date: dateStr,
+                        day: format(date, 'EEE'),
+                        energy: moodsByDay[dateStr] || 0, // 0 if not logged
+                        productivity: taskCount * 20, // scale for chart visibility
+                        rawProductivity: taskCount
+                    });
+                }
+                setWeeklyStats(stats);
+            });
+            return () => unsubReminders();
+        });
+
+        return () => unsubMoods();
+    }, [user]);
 
     useEffect(() => {
         if (!loading && user && userProfile) {
@@ -162,16 +223,16 @@ export default function WorkDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[180px]">
 
                     {/* 1. Main Feature: Tone Shield (Large Card) */}
-                    <Link to="/work/tone-shield" className="md:col-span-2 md:row-span-2 group perspective-1000">
-                        <TiltCard className="h-full bg-gradient-to-br from-[#FDEEE8] to-[#F8DDD4] rounded-[2.5rem] p-8 text-rose-950 shadow-2xl shadow-rose-200/50 overflow-hidden relative">
+                    <Link to="/work/tone-shield" className="md:col-span-2 row-span-2 group perspective-1000">
+                        <TiltCard className="h-full bg-gradient-to-br from-[#FDEEE8] to-[#F8DDD4] rounded-[2.5rem] p-6 md:p-8 text-rose-950 shadow-2xl shadow-rose-200/50 overflow-hidden relative">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full blur-3xl -mr-16 -mt-16" />
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <div className="w-16 h-16 bg-white/60 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-sm">
                                     <Shield className="w-8 h-8 text-rose-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-3xl font-black mb-2 text-rose-950">Tone Shield</h3>
-                                    <p className="text-rose-800/80 font-medium text-lg leading-relaxed max-w-xs">
+                                    <h3 className="text-2xl md:text-3xl font-black mb-2 text-rose-950">Tone Shield</h3>
+                                    <p className="text-rose-800/80 font-medium text-base md:text-lg leading-relaxed max-w-xs">
                                         Detect & diffuse conflict before it starts. AI-powered communication armor.
                                     </p>
                                 </div>
@@ -206,26 +267,58 @@ export default function WorkDashboard() {
                         </TiltCard>
                     </div>
 
-                    {/* 3. Analytics Chart - NEW */}
-                    <div className="md:col-span-1 md:row-span-2 bg-card border border-border rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden flex flex-col">
+                    <div className="md:col-span-1 md:row-span-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-card-foreground">Weekly Focus</h3>
-                            <div className="bg-emerald-50 text-emerald-600 text-xs font-black px-2 py-1 rounded-lg">+12%</div>
+                            <h3 className="font-bold text-slate-800 dark:text-white">Inner Progress</h3>
+                            <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-500 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider">Flow State</div>
                         </div>
-                        <div className="flex-1 w-full -ml-4">
-                            <ResponsiveContainer width="115%" height="100%">
-                                <BarChart data={ANALYTICS_DATA}>
+                        <div className="flex-1 w-full h-[120px] -ml-2">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={weeklyStats.length > 0 ? weeklyStats : [
+                                    { day: 'M', energy: 40, productivity: 20 },
+                                    { day: 'T', energy: 60, productivity: 40 },
+                                    { day: 'W', energy: 30, productivity: 70 },
+                                ]}>
+                                    <XAxis dataKey="day" hide />
+                                    <YAxis hide domain={[0, 100]} />
                                     <Tooltip
-                                        cursor={{ fill: '#f8fafc' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: 'transparent' }}
+                                        contentStyle={{ 
+                                            borderRadius: '16px', 
+                                            border: 'none', 
+                                            boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            padding: '12px'
+                                        }}
+                                        itemStyle={{ padding: '2px 0' }}
                                     />
-                                    <Bar dataKey="focus" radius={[4, 4, 0, 0]}>
-                                        {ANALYTICS_DATA.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.focus > 80 ? '#FF8A71' : '#cbd5e1'} />
+                                    <Bar dataKey="energy" radius={[6, 6, 6, 6]} barSize={8}>
+                                        {(weeklyStats.length > 0 ? weeklyStats : []).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.energy > 60 ? '#fb7185' : '#e2e8f0'} />
                                         ))}
                                     </Bar>
-                                </BarChart>
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="productivity" 
+                                        stroke="#f43f5e" 
+                                        strokeWidth={3} 
+                                        dot={{ r: 3, fill: '#f43f5e' }}
+                                        activeDot={{ r: 5, strokeWidth: 0 }}
+                                        animationDuration={1500}
+                                    />
+                                </ComposedChart>
                             </ResponsiveContainer>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full bg-rose-400"></div>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Energy</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 bg-rose-600 rounded-sm"></div>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Tasks</span>
+                            </div>
                         </div>
                     </div>
 

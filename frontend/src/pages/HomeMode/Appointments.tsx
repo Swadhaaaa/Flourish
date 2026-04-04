@@ -13,10 +13,10 @@ import {
     Users,
     Heart,
     Trash2,
-    Send,
     Clock,
     Flame,
-    Sparkles
+    Sparkles,
+    X
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { format, startOfWeek, startOfMonth, endOfMonth, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths, addDays } from 'date-fns';
@@ -220,9 +220,9 @@ export default function Appointments() {
                             reminder_time: fromPreset ? format(new Date(), 'HH:mm') : newReminder.time,
                             user_name: userProfile.name || 'User',
                             notes: fromPreset ? null : (newReminder.notes || null)
-                        });
+                        }, { timeout: 8000 }); // 8 second timeout to prevent hanging
                     } catch (emailErr) {
-                        console.error('Email notification failed:', emailErr);
+                        console.warn('Email notification failed to send, but reminder was saved:', emailErr);
                     }
                 }
             }
@@ -754,92 +754,125 @@ export default function Appointments() {
                     </div>
                 </div>
 
-                {/* Custom Add Form */}
-                <AnimatePresence>
-                    {showAddForm && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            className="overflow-hidden"
-                        >
-                            <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none">
-                                <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                    <Bell className="w-4 h-4 text-rose-500" />
-                                    Custom Reminder
-                                </h3>
-                                <div className="space-y-4">
-                                    <input
-                                        type="text"
-                                        placeholder="What do you need to remember?"
-                                        value={newReminder.title}
-                                        onChange={(e) => setNewReminder({ ...newReminder, title: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900"
-                                    />
-                                    <textarea
-                                        placeholder="Notes (optional)"
-                                        value={newReminder.notes}
-                                        onChange={(e) => setNewReminder({ ...newReminder, notes: e.target.value })}
-                                        rows={2}
-                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 resize-none"
-                                    />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">Date</label>
-                                            <input
-                                                type="date"
-                                                value={newReminder.date}
-                                                onChange={(e) => setNewReminder({ ...newReminder, date: e.target.value })}
-                                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-200"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">Time</label>
-                                            <input
-                                                type="time"
-                                                value={newReminder.time}
-                                                onChange={(e) => setNewReminder({ ...newReminder, time: e.target.value })}
-                                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-200"
-                                            />
-                                        </div>
-                                    </div>
+            {/* ═══════════════════════ MODAL: CUSTOM REMINDER ═══════════════════════ */}
+            <AnimatePresence>
+                {showAddForm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowAddForm(false)}
+                    className="absolute inset-0 bg-rose-950/20 dark:bg-black/60 backdrop-blur-sm"
+                    />
+                    
+                    {/* Modal Content */}
+                    <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 shadow-2xl border border-white dark:border-slate-700 z-10"
+                    >
+                    <button 
+                        onClick={() => setShowAddForm(false)}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
 
-                                    {/* Email Toggle */}
-                                    <div className="flex items-center justify-between bg-rose-50/50 dark:bg-slate-700/50 p-3 rounded-xl border border-rose-100 dark:border-slate-600">
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="w-4 h-4 text-rose-400" />
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Send email notification</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setNewReminder({ ...newReminder, sendEmail: !newReminder.sendEmail })}
-                                            className={cn(
-                                                'w-11 h-6 rounded-full transition-colors relative',
-                                                newReminder.sendEmail ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-600'
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                'w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-transform',
-                                                newReminder.sendEmail ? 'translate-x-[22px]' : 'translate-x-0.5'
-                                            )} />
-                                        </button>
-                                    </div>
+                    <h3 className="text-2xl font-display font-bold text-rose-950 dark:text-white mb-6 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center">
+                        <Bell className="w-5 h-5 text-rose-500" />
+                        </div>
+                        Custom Reminder
+                    </h3>
 
-                                    <button
-                                        onClick={() => handleAddLifeReminder(newReminder.title)}
-                                        disabled={!newReminder.title.trim() || addingReminder}
-                                        className="w-full bg-rose-950 hover:bg-rose-900 text-white font-bold py-3.5 rounded-xl transition-all shadow-xl shadow-rose-900/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {addingReminder ? (
-                                            <><Clock className="w-4 h-4 animate-spin" /> Saving...</>
-                                        ) : (
-                                            <><Send className="w-4 h-4" /> Add Reminder{newReminder.sendEmail ? ' & Notify' : ''}</>
-                                        )}
-                                    </button>
-                                </div>
+                    <div className="space-y-5">
+                        <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 ml-1 block">Reminder Title</label>
+                        <input
+                            type="text"
+                            placeholder="What do you need to remember?"
+                            value={newReminder.title}
+                            onChange={(e) => setNewReminder({ ...newReminder, title: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900"
+                        />
+                        </div>
+
+                        <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 ml-1 block">Notes (Optional)</label>
+                        <textarea
+                            placeholder="Add some details..."
+                            value={newReminder.notes}
+                            onChange={(e) => setNewReminder({ ...newReminder, notes: e.target.value })}
+                            rows={3}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 resize-none"
+                        />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 ml-1 block">Date</label>
+                            <input
+                            type="date"
+                            value={newReminder.date}
+                            onChange={(e) => setNewReminder({ ...newReminder, date: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 ml-1 block">Time</label>
+                            <input
+                            type="time"
+                            value={newReminder.time}
+                            onChange={(e) => setNewReminder({ ...newReminder, time: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-200"
+                            />
+                        </div>
+                        </div>
+
+                        {/* Email Toggle */}
+                        <div className="flex items-center justify-between bg-rose-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-rose-100 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center">
+                            <Mail className="w-4 h-4 text-rose-400" />
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            <div>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Email Notification</p>
+                            <p className="text-[10px] text-slate-400">Get alerted in your inbox</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setNewReminder({ ...newReminder, sendEmail: !newReminder.sendEmail })}
+                            className={cn(
+                            'w-12 h-6.5 rounded-full transition-colors relative',
+                            newReminder.sendEmail ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-700'
+                            )}
+                        >
+                            <div className={cn(
+                            'w-5.5 h-5.5 bg-white rounded-full shadow-md absolute top-0.5 transition-transform left-0.5',
+                            newReminder.sendEmail ? 'translate-x-[22px]' : 'translate-x-0'
+                            )} />
+                        </button>
+                        </div>
+
+                        <button
+                        onClick={() => handleAddLifeReminder(newReminder.title)}
+                        disabled={!newReminder.title.trim() || addingReminder}
+                        className="w-full bg-rose-950 hover:bg-rose-900 text-white font-bold py-5 rounded-2xl transition-all shadow-xl shadow-rose-900/20 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                        >
+                        {addingReminder ? (
+                            <><Clock className="w-5 h-5 animate-spin" /> Processing...</>
+                        ) : (
+                            <><Plus className="w-5 h-5" /> Save Reminder{newReminder.sendEmail ? ' & Notify' : ''}</>
+                        )}
+                        </button>
+                    </div>
+                    </motion.div>
+                </div>
+                )}
+            </AnimatePresence>
 
                 {/* Active Reminders List */}
                 <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 border border-white dark:border-slate-700 shadow-lg shadow-rose-900/5 dark:shadow-none">
