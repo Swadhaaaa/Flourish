@@ -81,10 +81,11 @@ class GmailService:
             if client_id and client_secret:
                 return {
                     "web": {
-                        "client_id": client_id.group(1),
-                        "client_secret": client_secret.group(1),
+                        "client_id": client_id.group(1).strip(),
+                        "client_secret": client_secret.group(1).strip(),
                         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                         "token_uri": "https://oauth2.googleapis.com/token",
+                        "redirect_uris": ["https://tea-hack.onrender.com/api/auth/google/callback"]
                     }
                 }
         except:

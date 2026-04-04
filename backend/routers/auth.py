@@ -87,14 +87,22 @@ async def auth_debug(request: Request):
     active_client_id = client_config.get("web", {}).get("client_id", "ID NOT FOUND") if client_config else "INVALID JSON"
 
     # The final URI we are sending to Google
-    final_uri = env_redirect if env_redirect else "https://tea-hack.onrender.com/api/auth/google/callback"
+    final_uri = "https://tea-hack.onrender.com/api/auth/google/callback"
+    
+    # Generate a REAL test link
+    test_link = "Not possible (no creds found)"
+    try:
+        test_link = gmail_service.get_authorization_url("debug_test_user", final_uri)
+    except Exception as e:
+        test_link = f"Error generating link: {str(e)}"
     
     # Forensic check for hidden characters (masking middle for security)
     creds_len = len(creds_json) if creds_json else 0
     creds_preview = f"{creds_json[:5]}...{creds_json[-5:]}" if creds_len > 10 else "SHORT"
     
     return {
-        "debug_version": "4.0 (INDESTRUCTIBLE_PARSER)",
+        "debug_version": "5.0 (TEST_LINK_ENABLED)",
+        "CLICK_TO_TEST_OAUTH": test_link,
         "is_production_mode": is_prod,
         "final_redirect_uri_being_sent": final_uri,
         "credentials_json_found": "Yes" if creds_json else "No",
