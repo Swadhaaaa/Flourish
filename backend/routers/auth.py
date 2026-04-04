@@ -82,6 +82,15 @@ async def auth_debug(request: Request):
     env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     
+    # Extract client_id from JSON to verify it's the right one
+    active_client_id = "Not Found"
+    if creds_json:
+        try:
+            creds_data = json.loads(creds_json)
+            active_client_id = creds_data.get("web", {}).get("client_id", "Not in web block")
+        except:
+            active_client_id = "Error parsing JSON"
+
     # The final URI we are sending to Google
     final_uri = env_redirect if env_redirect else f"{forced_base}/api/auth/google/callback"
     
@@ -90,6 +99,7 @@ async def auth_debug(request: Request):
         "base_url_received": base_url,
         "force_https_active": is_prod,
         "final_redirect_uri_being_sent": final_uri,
-        "credentials_json_found": "Yes" if creds_json else "No (CHECK RENDER ENV VARS)",
-        "google_console_instruction": "Make sure the 'final_redirect_uri_being_sent' exactly matches your Google Cloud Console Authorized Redirect URIs."
+        "credentials_json_found": "Yes" if creds_json else "No",
+        "active_client_id": active_client_id,
+        "google_console_instruction": "Confirm that 'active_client_id' and 'final_redirect_uri_being_sent' EXACTLY match what you see in the Google Console."
     }
