@@ -8,6 +8,7 @@ from typing import List
 from typing import List, Optional
 from pydantic import BaseModel
 import json
+import re
 from scheduler_app.database.firestore_manager import FirestoreManager
 
 class EmailData(BaseModel):
@@ -49,27 +50,59 @@ class GmailService:
             print(f"Error fetching profile: {e}")
             return None
         
+    def _get_indestructible_config(self):
+        """Attempts to recover valid client_config from potentially malformed ENV strings."""
+        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if not creds_json:
+            return None
+            
+        # 1. Standard JSON Parse (with common cleanup)
+        try:
+            clean = creds_json.strip()
+            # Remove any leading/trailing garbage that isn't a brace
+            while clean and not clean.startswith('{'): clean = clean[1:].strip()
+            while clean and not clean.endswith('}'): clean = clean[:-1].strip()
+            
+            # Special check for the common '{{' error
+            if clean.startswith('{{'): 
+                # Try to see if it's double wrapped
+                try: return json.loads(clean[1:-1])
+                except: pass
+                
+            return json.loads(clean)
+        except Exception as e:
+            print(f"Standard JSON parse failed ({e}), trying Regex recovery...")
+            
+        # 2. Regex Recovery (Find ID and Secret regardless of JSON damage)
+        try:
+            client_id = re.search(r'"client_id"\s*:\s*"([^"]+)"', creds_json)
+            client_secret = re.search(r'"client_secret"\s*:\s*"([^"]+)"', creds_json)
+            
+            if client_id and client_secret:
+                return {
+                    "web": {
+                        "client_id": client_id.group(1),
+                        "client_secret": client_secret.group(1),
+                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                        "token_uri": "https://oauth2.googleapis.com/token",
+                    }
+                }
+        except:
+            pass
+            
+        return None
+
     def get_authorization_url(self, user_id: str, redirect_uri: str):
         """Generates the Google Authorization URL for a Web Flow."""
-        client_config = None
+        client_config = self._get_indestructible_config()
         
-        # Try ENV first
-        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-        if creds_json:
-            try:
-                clean_json = creds_json.strip()
-                if clean_json.startswith('{ {'): clean_json = clean_json[1:].strip()
-                if clean_json.endswith('} }'): clean_json = clean_json[:-1].strip()
-                client_config = json.loads(clean_json)
-            except:
-                pass
-        
+        # Local File Fallback (Local Dev only)
         if not client_config and os.path.exists('credentials.json'):
             with open('credentials.json', 'r') as f:
                 client_config = json.load(f)
 
         if not client_config:
-            raise FileNotFoundError("Google credentials not found.")
+            raise FileNotFoundError("Google credentials could not be recovered from ENV or file.")
 
         flow = Flow.from_client_config(
             client_config,
@@ -87,25 +120,14 @@ class GmailService:
 
     def exchange_code(self, user_id: str, code: str, redirect_uri: str):
         """Exchanges the authorization code for a token and saves to Firestore."""
-        client_config = None
-        
-        # Try ENV first
-        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-        if creds_json:
-            try:
-                clean_json = creds_json.strip()
-                if clean_json.startswith('{ {'): clean_json = clean_json[1:].strip()
-                if clean_json.endswith('} }'): clean_json = clean_json[:-1].strip()
-                client_config = json.loads(clean_json)
-            except:
-                pass
+        client_config = self._get_indestructible_config()
         
         if not client_config and os.path.exists('credentials.json'):
             with open('credentials.json', 'r') as f:
                 client_config = json.load(f)
 
         if not client_config:
-            raise FileNotFoundError("Google credentials not found.")
+            raise FileNotFoundError("Google credentials could not be recovered for exchange.")
 
         flow = Flow.from_client_config(
             client_config,

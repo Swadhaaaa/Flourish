@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
 from scheduler_app.services.gmail_service import gmail_service
 import os
+import json
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
@@ -82,23 +83,26 @@ async def auth_debug(request: Request):
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     
     # Extract client_id from JSON to verify it's the right one
-    active_client_id = "Not Found"
-    if creds_json:
-        try:
-            creds_data = json.loads(creds_json)
-            active_client_id = creds_data.get("web", {}).get("client_id", "Not in web block")
-        except:
-            active_client_id = "Error parsing JSON"
+    client_config = gmail_service._get_indestructible_config()
+    active_client_id = client_config.get("web", {}).get("client_id", "ID NOT FOUND") if client_config else "INVALID JSON"
 
     # The final URI we are sending to Google
-    final_uri = env_redirect if env_redirect else f"{forced_base}/api/auth/google/callback"
+    final_uri = env_redirect if env_redirect else "https://tea-hack.onrender.com/api/auth/google/callback"
+    
+    # Forensic check for hidden characters (masking middle for security)
+    creds_len = len(creds_json) if creds_json else 0
+    creds_preview = f"{creds_json[:5]}...{creds_json[-5:]}" if creds_len > 10 else "SHORT"
     
     return {
-        "debug_version": "3.0 (CLEANUP_FINAL)",
+        "debug_version": "4.0 (INDESTRUCTIBLE_PARSER)",
         "is_production_mode": is_prod,
         "final_redirect_uri_being_sent": final_uri,
         "credentials_json_found": "Yes" if creds_json else "No",
         "active_client_id": active_client_id,
+        "forensic_info": {
+            "json_length": creds_len,
+            "json_preview": creds_preview
+        },
         "CHECKLIST_1_GOOGLE_CONSOLE": f"Redirect URI must be: {final_uri}",
-        "CHECKLIST_2_JS_ORIGIN": "Authorized JavaScript origins must be: https://tea-hack.onrender.com"
+        "CHECKLIST_2_JS_ORIGIN": "Authorized JavaScript origins must be: https://tea-hack.onrender.com (and also https://flourishh.vercel.app)"
     }
