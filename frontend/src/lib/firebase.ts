@@ -15,4 +15,9 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
+googleProvider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+googleProvider.setCustomParameters({
+    access_type: 'offline',
+    prompt: 'consent'
+});
 export const db = getFirestore(app);

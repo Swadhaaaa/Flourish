@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { ToneShieldMiniPopup } from '../../components/ToneShieldMiniPopup';
 import { useAuth } from '../../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth, googleProvider } from '../../lib/firebase';
 
 export default function ToneShield() {
     const navigate = useNavigate();
@@ -124,15 +126,40 @@ export default function ToneShield() {
 
     const handleConnectGmail = async () => {
         try {
-            const res = await fetch(`${API_URL}/api/auth/google/url?user_id=${user?.uid || "1"}`);
-            const data = await res.json();
-            if (data.url) {
-                // Redirect user to Google
-                window.location.href = data.url;
+            // New Firebase Popup Flow
+            const result = await signInWithPopup(auth, googleProvider);
+            const credential: any = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential?.accessToken;
+
+            if (!token) {
+                alert("Failed to get Google Access Token from Firebase.");
+                return;
             }
-        } catch (e) {
-            console.error("Failed to get auth URL", e);
-            alert("Could not start Gmail connection. Check if server is up.");
+
+            // Send token to backend
+            const response = await fetch(`${API_URL}/api/auth/google/firebase-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user?.uid || "1",
+                    access_token: token,
+                    email: result.user.email
+                })
+            });
+
+            if (response.ok) {
+                setIsGmailConnected(true);
+                alert("Gmail Connected Securely via Firebase!");
+            } else {
+                alert("Backend failed to save the Gmail token.");
+            }
+        } catch (e: any) {
+            console.error("Firebase Auth Error", e);
+            if (e.code === 'auth/popup-blocked') {
+                alert("Popup was blocked! Please allow popups for this site.");
+            } else {
+                alert("Failed to connect Gmail via Firebase: " + e.message);
+            }
         }
     };
 

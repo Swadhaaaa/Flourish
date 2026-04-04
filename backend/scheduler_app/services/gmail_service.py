@@ -148,6 +148,33 @@ class GmailService:
         print(f"Gmail token exchanged and saved to Firestore for user: {user_id}")
         return True
 
+    def set_firebase_token(self, user_id: str, access_token: str):
+        """Saves a raw access token from Firebase Popup into Firestore."""
+        # Create a basic token info dict
+        token_info = {
+            "token": access_token,
+            "refresh_token": None,
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "client_id": None,
+            "client_secret": None,
+            "scopes": SCOPES,
+            "expiry": None
+        }
+        
+        # Save to Firestore
+        self.db.save_user_token(user_id, json.dumps(token_info))
+        
+        # Initialize service immediately for this session
+        try:
+            creds = Credentials(access_token)
+            self.creds_map[user_id] = creds
+            self.services[user_id] = build('gmail', 'v1', credentials=creds)
+            print(f"Gmail service initialized from Firebase token for user: {user_id}")
+            return True
+        except Exception as e:
+            print(f"Failed to init Gmail with Firebase token: {e}")
+            return False
+
     def authenticate(self, user_id: str = "1", prompt_login: bool = True):
         """Authenticates from Firestore (No local server fallback)."""
         creds = None

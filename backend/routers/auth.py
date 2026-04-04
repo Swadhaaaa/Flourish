@@ -4,7 +4,15 @@ from scheduler_app.services.gmail_service import gmail_service
 import os
 import json
 
+from pydantic import BaseModel
+from typing import Optional
+
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
+
+class FirebaseTokenRequest(BaseModel):
+    user_id: str
+    access_token: str
+    email: Optional[str] = None
 
 @router.get("/google/url")
 async def get_google_auth_url(user_id: str, request: Request):
@@ -22,8 +30,9 @@ async def get_google_auth_url(user_id: str, request: Request):
         # Override with ENV variable if explicitly set
         env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
         if env_redirect and len(env_redirect) > 0:
-            redirect_uri = env_redirect
+            redirect_uri = env_redirect.strip()
         
+        redirect_uri = redirect_uri.strip()
         print(f"FORCING PRODUCTION REDIRECT: {redirect_uri}")
         
         url = gmail_service.get_authorization_url(user_id, redirect_uri)
@@ -55,7 +64,9 @@ async def google_auth_callback(request: Request):
     
     env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
     if env_redirect and len(env_redirect) > 0:
-        redirect_uri = env_redirect
+        redirect_uri = env_redirect.strip()
+    
+    redirect_uri = redirect_uri.strip()
     
     if not code or not user_id:
         print("Callback missing code or state")
@@ -68,6 +79,19 @@ async def google_auth_callback(request: Request):
     except Exception as e:
         print(f"Callback Exchange Error: {e}")
         return RedirectResponse(url=f"{frontend_url}/work/tone-shield?status=error")
+
+@router.post("/auth/google/firebase-token")
+async def save_firebase_token(req: FirebaseTokenRequest):
+    """Saves a token received directly from the frontend (Firebase Popup)."""
+    try:
+        success = gmail_service.set_firebase_token(req.user_id, req.access_token)
+        if success:
+            return {"status": "success", "message": "Token saved successfully"}
+        else:
+            return {"status": "error", "message": "Failed to save token"}
+    except Exception as e:
+        print(f"Firebase token save error: {e}")
+        return {"status": "error", "message": str(e)}
 
 @router.get("/debug")
 async def auth_debug(request: Request):
@@ -101,16 +125,12 @@ async def auth_debug(request: Request):
     creds_preview = f"{creds_json[:5]}...{creds_json[-5:]}" if creds_len > 10 else "SHORT"
     
     return {
-        "debug_version": "5.0 (TEST_LINK_ENABLED)",
-        "CLICK_TO_TEST_OAUTH": test_link,
+        "debug_version": "6.0 (FIREBASE_RESCUE)",
         "is_production_mode": is_prod,
         "final_redirect_uri_being_sent": final_uri,
         "credentials_json_found": "Yes" if creds_json else "No",
         "active_client_id": active_client_id,
-        "forensic_info": {
-            "json_length": creds_len,
-            "json_preview": creds_preview
-        },
-        "CHECKLIST_1_GOOGLE_CONSOLE": f"Redirect URI must be: {final_uri}",
-        "CHECKLIST_2_JS_ORIGIN": "Authorized JavaScript origins must be: https://tea-hack.onrender.com (and also https://flourishh.vercel.app)"
+        "FIREBASE_FLOW_READY": "Yes",
+        "CHECKLIST_1_POPUP": "Ensure browser popups are allowed",
+        "CHECKLIST_2_FIREBASE_URI": "URI 1 in Google Console must be registered (Firebase Callback)"
     }
