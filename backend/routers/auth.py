@@ -12,17 +12,19 @@ async def get_google_auth_url(user_id: str, request: Request):
         # Dynamic redirect based on where the app is being called from
         base_url = str(request.base_url).rstrip('/')
         
-        # Use ENV variable if explicitly set (best for production)
+        # Use ENV variable if explicitly set (highest priority)
         env_redirect = os.getenv("GOOGLE_REDIRECT_URI")
         if env_redirect:
             redirect_uri = env_redirect
         else:
-            # Force https for any production-like environment (non-localhost)
+            # FORCE HTTPS for Production (Render/Cloud)
+            # We assume if it's not localhost, it MUST be https for Google to be happy
             if "localhost" not in base_url and "127.0.0.1" not in base_url:
-                base_url = base_url.replace("http://", "https://")
-            redirect_uri = f"{base_url}/api/auth/google/callback"
+                redirect_uri = f"{base_url.replace('http://', 'https://')}/api/auth/google/callback"
+            else:
+                redirect_uri = f"{base_url}/api/auth/google/callback"
         
-        print(f"Generating Auth URL for redirect: {redirect_uri}")
+        print(f"FORCING PRODUCTION REDIRECT: {redirect_uri}")
         
         url = gmail_service.get_authorization_url(user_id, redirect_uri)
         return {"url": url}
@@ -45,8 +47,9 @@ async def google_auth_callback(request: Request):
         redirect_uri = env_redirect
     else:
         if "localhost" not in base_url and "127.0.0.1" not in base_url:
-            base_url = base_url.replace("http://", "https://")
-        redirect_uri = f"{base_url}/api/auth/google/callback"
+            redirect_uri = f"{base_url.replace('http://', 'https://')}/api/auth/google/callback"
+        else:
+            redirect_uri = f"{base_url}/api/auth/google/callback"
     
     if not code or not user_id:
         print("Callback missing code or state")

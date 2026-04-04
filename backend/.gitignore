@@ -20,3 +20,4 @@ env/
 
 # OAuth Tokens
 token*.json
+credentials.json
