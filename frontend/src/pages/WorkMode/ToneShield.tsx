@@ -4,9 +4,11 @@ import { Shield, ChevronLeft, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ToneShieldMiniPopup } from '../../components/ToneShieldMiniPopup';
 import { useAuth } from '../../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 export default function ToneShield() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const [isActive, setIsActive] = useState(true);
@@ -43,11 +45,24 @@ export default function ToneShield() {
     // Check connection status on load
     const [isGmailConnected, setIsGmailConnected] = useState(false);
     useEffect(() => {
-        fetch(`${API_URL}/api/ai/tone-shield/status`)
-            .then(res => res.json())
-            .then(data => setIsGmailConnected(!!data.connected_email))
-            .catch(() => setIsGmailConnected(false));
-    }, []);
+        const fetchStatus = () => {
+            fetch(`${API_URL}/api/ai/tone-shield/status?user_id=${user?.uid || "1"}`)
+                .then(res => res.json())
+                .then(data => setIsGmailConnected(!!data.connected_email))
+                .catch(() => setIsGmailConnected(false));
+        };
+        fetchStatus();
+
+        // If redirected back with success, toast or alert
+        if (searchParams.get('status') === 'connected') {
+            alert("Gmail Connected Successfully!");
+            // Remove param from URL
+            navigate('/work/tone-shield', { replace: true });
+        } else if (searchParams.get('status') === 'error') {
+            alert("Failed to connect Gmail. Please try again.");
+            navigate('/work/tone-shield', { replace: true });
+        }
+    }, [user, searchParams, navigate]);
 
     const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -88,14 +103,36 @@ export default function ToneShield() {
     };
 
     const handleSync = async () => {
+        if (!isGmailConnected) {
+            handleConnectGmail();
+            return;
+        }
         setSyncLoading(true);
         try {
-            await fetch(`${API_URL}/api/ai/tone-shield/sync-gmail?user_id=${user?.uid || "1"}`, { method: 'POST' });
+            const res = await fetch(`${API_URL}/api/ai/tone-shield/sync-gmail?user_id=${user?.uid || "1"}`, { method: 'POST' });
+            if (res.status === 401) {
+                handleConnectGmail();
+                return;
+            }
             await fetchReports();
         } catch (e) {
             console.error(e);
         } finally {
             setSyncLoading(false);
+        }
+    };
+
+    const handleConnectGmail = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/google/url?user_id=${user?.uid || "1"}`);
+            const data = await res.json();
+            if (data.url) {
+                // Redirect user to Google
+                window.location.href = data.url;
+            }
+        } catch (e) {
+            console.error("Failed to get auth URL", e);
+            alert("Could not start Gmail connection. Check if server is up.");
         }
     };
 
@@ -179,16 +216,26 @@ export default function ToneShield() {
                             ))}
                         </div>
 
-                        {/* Sync Button */}
+                        {/* Sync / Connect Button */}
                         <div className="text-center">
-                            <button
-                                onClick={handleSync}
-                                disabled={syncLoading}
-                                className="inline-flex items-center gap-2 bg-[#DB4437] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-red-600 transition-colors disabled:opacity-50"
-                            >
-                                <Mail className="w-5 h-5" />
-                                {syncLoading ? 'Syncing Gmail...' : 'Sync Recent Gmails'}
-                            </button>
+                            {!isGmailConnected ? (
+                                <button
+                                    onClick={handleConnectGmail}
+                                    className="inline-flex items-center gap-2 bg-[#DB4437] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-red-600 transition-colors"
+                                >
+                                    <Mail className="w-5 h-5" />
+                                    Connect Gmail for Sync
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSync}
+                                    disabled={syncLoading}
+                                    className="inline-flex items-center gap-2 bg-emerald-500 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                                >
+                                    <Mail className="w-5 h-5" />
+                                    {syncLoading ? 'Syncing Gmail...' : 'Sync Recent Gmails'}
+                                </button>
+                            )}
                             {isGmailConnected && <p className="text-xs font-bold text-emerald-600 mt-2">Connected Securely</p>}
                         </div>
 

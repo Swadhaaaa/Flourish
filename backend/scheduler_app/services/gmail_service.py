@@ -49,49 +49,84 @@ class GmailService:
             print(f"Error fetching profile: {e}")
             return None
         
+    def get_authorization_url(self, user_id: str = "1"):
+        """Generates the Google Authorization URL for a Web Flow."""
+        if not os.path.exists('credentials.json'):
+            raise FileNotFoundError("credentials.json not found.")
+
+        # Important: For Web Flow, we use redirect_uri from the credentials or env
+        # On Render, this must match the one in Google Console
+        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://tea-hack.onrender.com/api/auth/google/callback")
+        
+        flow = InstalledAppFlow.from_client_secrets_file(
+            'credentials.json', 
+            SCOPES,
+            redirect_uri=redirect_uri
+        )
+        
+        # Construct the URL
+        # We pass user_id in 'state' so we know who it belongs to when they return
+        auth_url, _ = flow.authorization_url(
+            prompt='select_account',
+            access_type='offline',
+            include_granted_scopes='true',
+            state=user_id
+        )
+        return auth_url
+
+    def exchange_code(self, user_id: str, code: str):
+        """Exchanges the authorization code for a token and saves to Firestore."""
+        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://tea-hack.onrender.com/api/auth/google/callback")
+        
+        flow = InstalledAppFlow.from_client_secrets_file(
+            'credentials.json', 
+            SCOPES,
+            redirect_uri=redirect_uri
+        )
+        
+        flow.fetch_token(code=code)
+        creds = flow.credentials
+        
+        # Save securely
+        self.db.save_user_token(user_id, creds.to_json())
+        
+        # Initialize service for this user
+        self.creds_map[user_id] = creds
+        self.services[user_id] = build('gmail', 'v1', credentials=creds)
+        print(f"Gmail token exchanged and saved to Firestore for user: {user_id}")
+        return True
+
     def authenticate(self, user_id: str = "1", prompt_login: bool = True):
-        """Authenticates the user, forcing account selection if no token exists in Firestore."""
+        """Authenticates from Firestore (No local server fallback)."""
         creds = None
         
         # 1. Check Firestore for existing secure token
         token_str = self.db.get_user_token(user_id)
         if token_str:
-            print(f"Using securely encrypted token from Firestore for user_id: {user_id}")
             try:
                 creds = Credentials.from_authorized_user_info(json.loads(token_str), SCOPES)
             except Exception as e:
                 print(f"Failed to parse token from Firestore: {e}")
                 creds = None
                 
-        # If there are no (valid) credentials available, let the user log in.
+        # If there are no valid credentials, we cannot 'prompt' here in an API call
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 try:
                     creds.refresh(Request())
+                    # Resave refreshed token
+                    self.db.save_user_token(user_id, creds.to_json())
                 except Exception:
                    creds = None
 
             if not creds:
-                if not prompt_login:
-                    raise Exception("Login required")
-                    
-                if not os.path.exists('credentials.json'):
-                    raise FileNotFoundError("credentials.json not found. Please place it in the project root.")
-                    
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES)
-                
-                # prompt='select_account' forces the account chooser
-                # Note: This opens a window on the SERVER. For local hackathon app this is fine.
-                creds = flow.run_local_server(port=0, prompt='select_account')
-            
-                # Save the credentials securely to Firestore for the next run
-                self.db.save_user_token(user_id, creds.to_json())
-                print(f"Saved new securely encrypted token to Firestore for user_id: {user_id}")
+                # In Production Web Flow, we don't 'run_local_server'
+                # We expect the user to have gone through the /auth/google/url flow
+                raise Exception("Gmail connection required")
 
         self.creds_map[user_id] = creds
         self.services[user_id] = build('gmail', 'v1', credentials=creds)
-        print(f"Gmail service authenticated for user {user_id}.")
+        return True
 
     def fetch_recent_emails(self, max_results=10, user_id: str = "1") -> List[EmailData]:
         if user_id not in self.services:

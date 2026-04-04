@@ -129,6 +129,9 @@ def health_check():
 from routers.tone_shield import router as tone_shield_router
 app.include_router(tone_shield_router)
 
+from routers.auth import router as auth_router
+app.include_router(auth_router)
+
 @app.post("/api/ai/boundary-defense")
 async def boundary_defense(request: BoundaryRequest):
     """
