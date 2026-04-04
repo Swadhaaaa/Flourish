@@ -95,6 +95,7 @@ async def auth_debug(request: Request):
     final_uri = env_redirect if env_redirect else f"{forced_base}/api/auth/google/callback"
     
     return {
+        "debug_version_timestamp": "2026-04-04-18:50 (FRESH CODE!)",
         "is_production_mode": is_prod,
         "base_url_received": base_url,
         "force_https_active": is_prod,
