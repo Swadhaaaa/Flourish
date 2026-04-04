@@ -29,8 +29,14 @@ async def get_google_auth_url(user_id: str, request: Request):
         url = gmail_service.get_authorization_url(user_id, redirect_uri)
         return {"url": url}
     except Exception as e:
-        print(f"Auth URL Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        print(f"Auth URL Error: {error_msg}")
+        if "credentials.json not found" in error_msg:
+            return JSONResponse(
+                status_code=500, 
+                content={"error": "Server Configuration Missing: Please set GOOGLE_CREDENTIALS_JSON in Render settings."}
+            )
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/google/callback")
 async def google_auth_callback(request: Request):
