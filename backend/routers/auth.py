@@ -53,7 +53,7 @@ async def google_auth_callback(request: Request):
     code = request.query_params.get("code")
     user_id = request.query_params.get("state") # We stored this in state earlier
     
-    frontend_url = os.getenv("FRONTEND_URL", "https://flourishh.vercel.app")
+    frontend_url = os.getenv("FRONTEND_URL", "https://tea-hack.vercel.app")
     
     # Must use the same redirect_uri that was used for the code generation
     base_url = str(request.base_url).rstrip('/')

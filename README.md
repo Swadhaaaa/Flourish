@@ -9,6 +9,8 @@ AI-powered workplace wellness platform combining conversational AI, burnout pred
 [![Groq](https://img.shields.io/badge/Groq-F5A623?style=for-the-badge)](https://groq.com/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
+**Live Demo**: [tea-hack.vercel.app](https://tea-hack.vercel.app/)
+
 ---
 
 ## Project Metrics
@@ -164,7 +166,7 @@ VITE_BACKEND_URL=http://localhost:8000
 ## Screenshots
 
 ### Landing Dashboard Preview
-![Landing Page Screenshot](./assets/screenshots/Landing.png)
+[![Landing Page Screenshot](./assets/screenshots/Landing.png)](https://tea-hack.vercel.app/)
 
 ---
 

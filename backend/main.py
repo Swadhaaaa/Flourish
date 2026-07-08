@@ -24,7 +24,7 @@ app = FastAPI(title="Flourish AI Backend", version="1.0.0")
 # --- Socket.io Setup ---
 # Explicitly define origins for both FastAPI and Socket.io
 ALLOWED_ORIGINS = [
-    "https://flourishh.vercel.app",
+    "https://tea-hack.vercel.app",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
