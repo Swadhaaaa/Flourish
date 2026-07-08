@@ -194,11 +194,27 @@ export default function WorkDashboard() {
                 <header className="mb-12 flex justify-between items-end">
                     <div>
                         <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-6xl font-black text-foreground tracking-tighter mb-2"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-6xl font-black text-foreground tracking-tighter mb-2 flex flex-wrap items-center"
                         >
-                            Hello, <span className="text-[#FF8A71]">{userProfile?.name?.split(' ')[0] || 'Friend'}</span>.
+                            {"Hello, Ayushi!".split("").map((char, index) => (
+                                <motion.span
+                                    key={index}
+                                    initial={{ y: -120, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{
+                                        type: "spring",
+                                        damping: 7,
+                                        stiffness: 200,
+                                        delay: index * 0.08,
+                                        mass: 1.5
+                                    }}
+                                    className={cn(char === " " ? "mr-3" : "")}
+                                >
+                                    {char}
+                                </motion.span>
+                            ))}
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0 }}

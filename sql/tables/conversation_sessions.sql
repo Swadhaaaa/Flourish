@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS conversation_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT DEFAULT 'New Chat',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    user_id TEXT NOT NULL
+);
