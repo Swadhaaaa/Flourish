@@ -163,25 +163,6 @@ VITE_BACKEND_URL=http://localhost:8000
 
 ---
 
-## Screenshots
-
-### 1. Landing Page
-[![Landing Page](./assets/screenshots/landing.png)](https://tea-hack.vercel.app/)
-
-### 2. Login Modal
-[![Login Modal](./assets/screenshots/login.png)](https://tea-hack.vercel.app/)
-
-### 3. Mode Selection
-[![Mode Selection](./assets/screenshots/mode_select.png)](https://tea-hack.vercel.app/)
-
-### 4. Work Dashboard
-[![Work Dashboard](./assets/screenshots/dashboard.png)](https://tea-hack.vercel.app/)
-
-### 5. Period Tracker
-[![Period Tracker](./assets/screenshots/period_tracker.png)](https://tea-hack.vercel.app/)
-
----
-
 ## API Overview
 
 For comprehensive specification parameters, refer to [docs/API.md](docs/API.md).
@@ -211,9 +192,9 @@ Refer to [Database Design](docs/Database.md) and [SQLite Schemas](sql/schema.sql
 
 ## Contributors
 
+*   **Swadha** - [GitHub](https://github.com/Swadhaaaa)
 *   **Ayushi Ranjan** - [GitHub](https://github.com/ayushiii2707)
 *   **Devanshu Desai** - [GitHub](https://github.com/desaidevanshu)
-*   **Swadha** - [GitHub](https://github.com/Swadha06)
 
 ---
 
